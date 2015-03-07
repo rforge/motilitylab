@@ -16,4 +16,5 @@ Suggests:
     DescTools,
     pracma,
     ggplot2,
-    testthat
+    testthat,
+    adehabitatLT

@@ -1,64 +1,71 @@
 # TODO Johannes: Stimmt die Doku?
 #' Convert from Tracks to Data Frame
 #' 
-#' Converts a \emph{tracks} object into a data frame.
+#' Converts a \code{tracks} object into a data frame.
 #' 
-#' @param tracks the tracks object that ist to be converted into a data frame.
+#' @param x the  \code{tracks} object to be coerced to a data frame.
 #' 
-#' @details Returns one data frame containing all data of the indiviual 
-#' tracks from the input with a prepended column named "id" which contains 
+#' @param row.names ‘NULL’ or a character vector giving the row names for the
+#'  data frame.  Missing values are not allowed.
+#'
+#' @param optional logical. Column names are always assigned to the resulting
+#'  data frame regardless of the setting of this option.
+#'
+#' @details Returns one data frame containing all indiviual 
+#' tracks from the input with a prepended column "id" containing
 #' each track's name in the list of the \emph{tracks} object.
 #' 
 #' @return Returns one data frame containing all data of the indiviual 
 #' tracks from the input with a prepended column named "id" which contains 
 #' each track's name in the list of the \emph{tracks} object.
-as.data.frame.tracks <- function(tracks) {
-	ids <- rep(names(tracks), lapply(tracks,nrow))
-	cbind(id=ids, Reduce(rbind, tracks))
+as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE, ...) {
+	ids <- rep(names(x), lapply(x,nrow))
+	r <- cbind(id=ids, Reduce(rbind, x))
+	if( !is.null(row.names) && length(row.names)==nrow(r) ){
+		rownames(r) <- row.names
+	}
+	return(r)
 }
-
 
 #' Convert to tracks
 #' 
-#' Converts an object to a \emph{tracks} object
+#' Coerces \code{x} to a \code{tracks} object.
 #' 
-#' @param object the object that is to be turned into a track.
+#' @param x the object to be coerced.
 #'
-#' @details the S3 Method corresponding to the \code{object}'s type (should be 
-#' a list) is called.
+#' @details the S3 Method corresponding to \code{x}'s type (usually a list) is called.
 #'  
-#' @return the input \code{object}'s conversion into a \emph{tracks} object is 
-#' returned. 
-as.tracks <- function(object) 
-  UseMethod("as.tracks", object)
+#' @return the coerced object of S3 class \code{tracks}.
+as.tracks <- function(x,...) 
+  UseMethod("as.tracks")
 
 
 #' Convert from Tracks to List
 #' 
-#' Converts a \emph{tracks} object into a list
+#' Coerces a \code{tracks} object to a list
 #' 
-#' @param tracks the \emph{tracks} object that is to be converted into a list.
+#' @param x the \code{tracks} object to be coerced to a list.
 #' 
-#' @details the input \emph{tracks} object is restructured into a list.
+#' @details the input \code{tracks} object is coerced to a list.
 #' 
-#' @return the input \emph{tracks} object is returned as a list (containing the
+#' @return \code{x} is returned as a list (containing the
 #' data frames which represent the tracks)
-as.list.tracks <- function(tracks) 
-  structure( tracks, class="list" )
+as.list.tracks <- function(x, ...) 
+  structure( x, class="list" )
 
 
 #' Convert from List to Tracks
 #' 
 #' Converts a List into a \emph{Tracks} Object
 #' 
-#' @param list the list that is to be converted into a \emph{tracks} object.
+#' @param x the list that is to be converted into a \emph{tracks} object.
 #' 
-#' @details The input list is restructured into a \emph{tracks} object.
+#' @details The input list is assigned the S3 class \code{tracks}.
 #' 
-#' @return The input list is returned as a \emph{tracks} object (containing the
-#' data frames which represent the tracks).
-as.tracks.list <- function(list) 
-  structure(list, class="tracks")
+#' @return the coerced object of S3 class \code{tracks} (i.e., a list 
+#'  containing a data frame for each track)
+as.tracks.list <- function(x,...) 
+  structure(x, class="tracks")
 
 
 ## TODO remove for loop
@@ -84,19 +91,23 @@ getTracks <- function(tracks, ids) {
 }
 
 
-#' Sort each Track's Points by Time
+#' Sort each Track's Positions by Time
 #' 
-#' Sorts the lines of each track in a \emph{tracks} object by time.
+#' Sorts the positions in each track in a \emph{tracks} object by time.
 #' 
-#' @param tracks the \emph{tracks} object whose tracks are to be sorted by time.
+#' @param x the \emph{tracks} object whose tracks are to be sorted by time.
 #' 
-#' @details Sorts the lines of each track (represented as a data frame) in the 
-#' \emph{tracks} object by time (given in the column t) in ascending order. 
+#' @param decreasing logical.  Should the sort be increasing or decreasing? 
+#'  Provided only for consistency with the generic sort method. The positions in
+#'  each track should be sorted in increasing time order.
+#'
+#' @details Sorts the positions of each track (represented as a data frame) in the 
+#' \emph{tracks} object by time (given in the column t). 
 #' 
 #' @return A \emph{tracks object} that contains the tracks from the input object 
 #' sorted by time is returned.
-sort.tracks <- function(tracks) {
-	as.tracks(lapply(tracks, function(d){d[order(d$t),]}))
+sort.tracks <- function(x, decreasing=FALSE, ...) {
+	as.tracks(lapply(x, function(d) d[order(d$t),decreasing=decreasing] ))
 }
 
 
@@ -168,13 +179,15 @@ read.tracks.csv <- function(file, ...) {
 #' Plots tracks contained in a "tracks" object into a twodimensional space
 #' pallelel to the data's axes.
 #' 
-#' @param tracks the tracks that shall be plotted, in the form of a object of 
-#' class "tracks", as returned by \code{\link{read.tracks.csv}}.
+#' @param x the tracks that shall be plotted, in the form of a object of 
+#' class "tracks", as returned by e.g. \code{\link{read.tracks.csv}}.
 #' @param dims a vector giving the dimensions of the track data that shall be 
 #' plotted, e.g. \code{c('x','y')} for the \eqn{x} and \eqn{y} dimension.
 #' @param add boolean value indicating whether the tracks are to be added to the
 #' current plot.
-#' @param col a specification of the color(s) to be used.
+#' @param col a specification of the color(s) to be used. This can be a vector
+#'  of size \code{length(x)}, where each entry specififes the color for the 
+#'  corresponding track.
 #' @param xlab a sting that should be used as a label for the x axis.
 #' @param ylab a sting that should be used as a label for the y axis.
 #' @param ... additional parameters to be passed to \code{\link[graphics]{plot}} 
@@ -186,44 +199,38 @@ read.tracks.csv <- function(file, ...) {
 #' of \code{xlab} and \code{ylab}. The color can be set through \code{col}.
 #' If the tracks should be added to an existing plot, \code{add} is to be set 
 #' to \code{TRUE}.
-plot.tracks <- function(tracks, dims=c('x','y'), add=F,
-		col=order(names(tracks)), xlab="X position", ylab="Y position", 
-    ...) {
+plot.tracks <- function(x, dims=c('x','y'), add=F,
+		col=order(names(x)), xlab="X position", ylab="Y position", ... ) {
 	args <- list(...)
 
-	ids <- names(tracks)
+	ids <- names(x)
   	lcol <- rep_len(col, length(ids))
-  	pcol <- rep(lcol, lapply(tracks,nrow))
-	x <- .ulapply(tracks,'[[',dims[1])
-	y <- .ulapply(tracks,'[[',dims[2])
+  	pcol <- rep(lcol, lapply(x,nrow))
+	px <- .ulapply(x,'[[',dims[1])
+	py <- .ulapply(x,'[[',dims[2])
 
 	if (add==T) {
-		points( x, y, col=pcol, cex=.5, ... )
+		points( px, py, col=pcol, cex=.5, ... )
 	} else {
-		plot(x, y, xlab=xlab, ylab=ylab, col=pcol, cex=.5, ...)
+		plot( px, py, xlab=xlab, ylab=ylab, col=pcol, cex=.5, ...)
 	}
   
-  starting.points <- lapply( tracks, function(p) p[1,] )
-	x <- sapply(starting.points,'[[',dims[1])
-	y <- sapply(starting.points,'[[',dims[2])
-# 	print(x)
-# 	print(y)
-# 	print(col)
-	points( x, y, col=col, cex=2 )
+	starting.points <- lapply( x, function(p) p[1,] )
+	px <- sapply(starting.points,'[[',dims[1])
+	py <- sapply(starting.points,'[[',dims[2])
+	points( px, py, col=col, cex=2 )
   
 	lseg <- function(f,i) {
-    function(d) {
-      f( d[,dims[i]], -1 ) 
-    } 
+	    function(d) f( d[,dims[i]], -1 ) 
 	}
 
-	x0 <- .ulapply(tracks,lseg(head,1))
-	y0 <- .ulapply(tracks,lseg(head,2))
+	x0 <- .ulapply(x,lseg(head,1))
+	y0 <- .ulapply(x,lseg(head,2))
 
-	x1 <- .ulapply(tracks,lseg(tail,1))
-	y1 <- .ulapply(tracks,lseg(tail,2))
+	x1 <- .ulapply(x,lseg(tail,1))
+	y1 <- .ulapply(x,lseg(tail,2))
 
-	lcol <- rep(lcol, lapply(tracks, function(d) {
+	lcol <- rep(lcol, lapply(x, function(d) {
       nrow(d) - 1
     }))
 	segments(x0, y0, x1, y1, col=lcol)
@@ -809,7 +816,7 @@ boundingBox <- function(tracks) {
   if( class(tracks) != "tracks" ){
     tracks <- as.tracks( list(T1=tracks) ) 
   }
-  bounding.boxes <- lapply(tracks, boundingBoxTrack)
+  bounding.boxes <- lapply(tracks, .boundingBoxTrack)
 #   print(bounding.boxes)
  
   empty <- mat.or.vec(nrow(bounding.boxes[[1]]), ncol(bounding.boxes[[1]]))

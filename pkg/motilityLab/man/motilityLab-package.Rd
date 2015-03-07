@@ -34,7 +34,6 @@ Maintainer: Johannes Textor <johannes.textor@gmx.de>
 \keyword{cluster
 spatial}
 \seealso{
-\code{\link[adehabitatLT:adehabitatLT-package]{adehabitatLT}}
 }
 \examples{
 ## a simple hierarchical clustering based on 2D asphericity
