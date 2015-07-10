@@ -883,3 +883,64 @@ hotellingsTest <- function(tracks, dim=c("x", "y"), plot=FALSE) {
 byPrefixLength <- function( tracks, f, simplify=TRUE ){
   
 }
+
+
+
+
+# Extracts tracks based on user defined properties
+#' @param tracks the tracks from which subsetting is to be done on 
+#' @param measure the track measure for which the subsetting is to be based on 
+#' @param ll specifies the lower-limit of the allowable measure
+#' @param ul specifies the upper-limit of the allowable measure
+getSubsetOfTracks <- function(tracks,measure,ll,ul){
+  if(class(tracks)=="tracks"){
+    mdat <- sapply(tracks,measure)
+    selection <- tracks[(mdat<=ul & mdat>=ll) == T]
+    return(as.tracks(selection))
+  }else{
+    obj <-deparse(substitute(tracks))
+    warning(sprintf("Obj:%s is not a tracks object",obj))
+  }
+}
+
+
+
+# TODO: somehow get rid of for-loop and still have unique colors 
+#' @param tracks the tracks for which will be plotted in 3d
+plot3d <- function(tracks){
+  tracks_df <- as.data.frame.tracks(tracks)
+  xlimits <- c(min(tracks_df[,3]),max(tracks_df[,3]))
+  ylimits <- c(min(tracks_df[,4]),max(tracks_df[,4]))
+  zlimits <- c(min(tracks_df[,5]),max(tracks_df[,5]))
+  
+  i=names(tracks)[1]
+  sd3 <- scatterplot3d(x=tracks[[i]]$x,y=tracks[[i]]$y,z=tracks[[i]]$z,type="l",xlab="X Position",ylab="Y Position",zlab="Z Position",xlim=xlimits,ylim=ylimits,zlim=zlimits)
+  colnum <- 1
+  colvec <- rainbow(length(names(tracks)))
+  for(i in names(tracks)){
+    colnum <- colnum+1
+    sd3$points(x=tracks[[i]]$x,y=tracks[[i]]$y,z=tracks[[i]]$z,type="l",col=colvec[colnum])
+  }
+}
+
+
+
+
+
+
+#' This will be the start of trying to use fractal dimensions to determine which model 
+#' the set of tracks fits the best. 
+#' TODO: will be worthwile to try to create MLE functions to assign a probability 
+#' for any given model. 
+fdsims <- NULL
+for(i in 1:10000){
+  BMtrack <- BM()
+  fdout <- fd.estim.variogram(matrix(BMtrack))
+  fdsims <- c(fdsims,fdout$fd)
+}
+sdfdsims <- sd(fdsims)
+UL <- 1.5+2*sdfdsims
+LL <- 1.5-2*sdfdsims
+cbind(LL,UL)
+
+
