@@ -932,15 +932,15 @@ plot3d <- function(tracks){
 #' the set of tracks fits the best. 
 #' TODO: will be worthwile to try to create MLE functions to assign a probability 
 #' for any given model. 
-fdsims <- NULL
-for(i in 1:10000){
-  BMtrack <- BM()
-  fdout <- fd.estim.variogram(matrix(BMtrack))
-  fdsims <- c(fdsims,fdout$fd)
-}
-sdfdsims <- sd(fdsims)
-UL <- 1.5+2*sdfdsims
-LL <- 1.5-2*sdfdsims
-cbind(LL,UL)
+# fdsims <- NULL
+# for(i in 1:10000){
+#  BMtrack <- BM()
+#  fdout <- fd.estim.variogram(matrix(BMtrack))
+#  fdsims <- c(fdsims,fdout$fd)
+#}
+#sdfdsims <- sd(fdsims)
+#UL <- 1.5+2*sdfdsims
+#LL <- 1.5-2*sdfdsims
+#cbind(LL,UL)
 
 
