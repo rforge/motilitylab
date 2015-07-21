@@ -107,7 +107,7 @@ getTracks <- function(tracks, ids) {
 #' @return A \emph{tracks object} that contains the tracks from the input object 
 #' sorted by time is returned.
 sort.tracks <- function(x, decreasing=FALSE, ...) {
-	as.tracks(lapply(x, function(d) d[order(d$t),decreasing=decreasing] ))
+	as.tracks(lapply(x, function(d) d[order(d[,"t"],decreasing=decreasing),] ))
 }
 
 
@@ -133,7 +133,7 @@ c.tracks <- function(...) {
 # TODO: What is pos?
 #' Data Input form a CSV File
 #' 
-#' Reads cell tracks from a CSV file which contains a number of tracks, each 
+#' Reads cell tracks from a CSV file. which contains a number of tracks, each 
 #' with a distinct value in the first field 'id', and with at least 3 points 
 #' per track, represented by their pos (?), time stamp \eqn{t} and 
 #' coordinate(s), \eqn{x}, \eqn{x} and \eqn{y} or \eqn{x}, \eqn{y} and \eqn{z}.
@@ -168,7 +168,7 @@ read.tracks.csv <- function(file, ...) {
 		colnames(data.raw) <- c("id", "pos", "t", "x", "y", "z")
 	}
 	sort.tracks(structure( 
-		split( data.raw[,3:ncol(data.raw)], data.raw$id ),
+		split.data.frame( as.matrix(data.raw[,3:ncol(data.raw)]), data.raw$id ),
 		class="tracks"))
 }
 
@@ -206,8 +206,8 @@ plot.tracks <- function(x, dims=c('x','y'), add=F,
 	ids <- names(x)
   	lcol <- rep_len(col, length(ids))
   	pcol <- rep(lcol, lapply(x,nrow))
-	px <- .ulapply(x,'[[',dims[1])
-	py <- .ulapply(x,'[[',dims[2])
+	px <- unlist( lapply(x,'[', , dims[1]) )
+	py <- unlist( lapply(x,'[', , dims[2]) )
 
 	if (add==T) {
 		points( px, py, col=pcol, cex=.5, ... )
@@ -316,11 +316,9 @@ staggered <- function(measure, ...){
 #' computeStaggered(getTracks(TCells, "1")$'1', overallAngle, matrix=TRUE, 
 #' min.segments = 2)
 computeStaggered <- function(track, measure, matrix=FALSE, min.segments=1) {
-  ## old method slightly slower (ca. 9 s vs. 10 s in 1000 replications)
-  lag.track <- data.frame(track)
   if (matrix) {
-		mat <- matrix(nrow=nrow(track), ncol=nrow(track), 0)
-    diag(mat) <- NA
+	mat <- matrix(nrow=nrow(track), ncol=nrow(track), 0)
+	diag(mat) <- NA
   } else {
     stag.meas <- c()
   }
@@ -393,7 +391,7 @@ forEveryPrefix <- function(measure, min.length=1) {
 computeForEveryPrefix <- function(track, measure, min.length=1) {
   res <- c()
   for (i in (min.length:nrow(track))) {
-    res <- c(res, measure(track[1:i,]))
+    res <- c(res, measure(track[1:i,,drop=FALSE]))
   }
   return(res)
 }
@@ -412,14 +410,7 @@ computeForEveryPrefix <- function(track, measure, min.length=1) {
 #' @return Retruns the translation of the input track whose starting point is 
 #' on the origin of ordinates.
 normalizeTrack <- function(track) {
-  # Subtract first row from each row
-  norm.track <- data.frame(track$t, 
-                           Reduce(rbind, apply(as.matrix(track[, 2:ncol(track)]), 
-                                               1, function(v) {
-                                                 v - track[1, 2:ncol(track)]
-                                               }), c()))
-  colnames(norm.track) <- colnames(track)
-  return(norm.track)
+	cbind( track[,"t",drop=FALSE], sweep(track[,-1],2,track[1,-1]) )
 }
 
 
@@ -435,9 +426,6 @@ normalizeTrack <- function(track) {
 #' @return A \emph{tracks} object with the tracks from the input object translated 
 #' such that their starting point is in the origin of ordinates.
 normalizeTracks <- function(tracks) as.tracks(lapply(tracks, normalizeTrack))
-
-
-
 
 #' All Subtracks of a Given Length
 #' 
@@ -466,10 +454,8 @@ computeSubtracksOfISegments <- function(track, i, overlap=i-1) {
     overlap <- i-1
   }
   l <- list()
-#   print(paste("i:", i, "overlap", overlap))
   for (j in seq(1, (nrow(track)-i),i-overlap)) {
-#     print(paste(j, j+i))
-    l[[as.character(j)]] <- track[j:(j+i), ]    #l[[as.character(j)]]
+    l[[as.character(j)]] <- track[j:(j+i), ]
   }    
   structure(l, class="tracks")
 }
@@ -677,8 +663,9 @@ plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0},
 #' On all the values obtained for a certain value of \eqn{i}, the given 
 #' statistic is computed, and all the resulting values are returned.
 #' 
-#' @param tracks the tracks object whose subtracks are to be regarded.
-#' @param number.of.segments either a numeric value \eqn{i}, indicating that only 
+#' @param tracks the tracks object whose subtracks are to be considered. If a single track
+#' is given, it will be coerced to a tracks object using \code{\link{wrapTrack}}.
+#' @param subtrack.length either a numeric value \eqn{i}, indicating that only 
 #' subtracks of exactly \eqn{i} segments are to be regarded, or a vector of all
 #' the values \eqn{i} that shall be used.
 #' @param measure the measure that is to be computed on the subtracks.
@@ -699,85 +686,94 @@ plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0},
 #'  25-percent-quartile as a lower and and the 75-percent-quartile as an 
 #'  upper bound}
 #' }
+#' @param max.overlap Determines the amount by which the subtracks that are taken into
+#' account can overlap. A maximum overlap of \code{max(subtrack.length)} will imply
+#' that all subtracks are considered. For a maximum overlap of 0, only non-overlapping
+#' subtracks are considered. A negative overlap can be used to ensure that only subtracks
+#' a certain distance apart are considered. In general, for non-Brownian motion there will
+#' be correlations between subsequent steps, such that a negative overlap may be necessary
+#' to get a proper error estimate.
+#'
 #' @details For every number of segments \eqn{i} in the set defined by 
-#' \code{number.of.segments}, all subtracks of any track in the input 
+#' \code{subtrack.length}, all subtracks of any track in the input 
 #' \emph{\code{tracks}} object, that consist of exactly \eqn{i} segments are 
 #' regarded. The input \code{measure} is applied to the subtracks individually, 
 #' and the \code{statistic} is used to agglomerate the obtained values. 
 #' The return values of the agglomeration function are returned for each value 
 #' of \eqn{i} in a data frame.
 #' @return Returns a data frame with one line for every \eqn{i} in the set 
-#' specified by \code{number.of.segments}. The first column contains the values 
+#' specified by \code{subtrack.length}. The first column contains the values 
 #' of \eqn{i}, the following columns contain the values of the agglomeration 
 #' function applied on the measure values of tracks of exactly \eqn{i} segments.
 #' @examples 
 #' require(ggplot2)
 #' dat <- aggregateSubtrackMeasures(TCells, displacement, "mean.se")
 #' ggplot(dat, aes(x=i, y=mean)) + geom_errorbar(aes(ymin=lower, ymax=upper), width=.1)
-aggregateSubtrackMeasures <- function(tracks, measure, statistic=mean, 
-                                      number.of.segments=seq(1, (maxTrackLength(tracks)-1))) {  # geht fuer einzelne tracks nicht!
-#   if(class(number.of.segments)=="numeric") {
-#     subtracks <- computeSubtracksOfISegments(track, number.of.segments) ## overlap uebergeben???
-#   } else {
-  if (max(number.of.segments) > (maxTrackLength(tracks)-1)) {
-    warning("No track is long enough!")
-  }
-  if (is.character(statistic)) {
-    if (statistic == "mean.ci.95") {
-      statistic <- function(x) {
-        ci <- tryCatch( t.test(x)$conf.int, error=function(e) rep(mean(x),2) )
-        return(c(lower=ci[1], mean=mean(x), upper=ci[2]))
-      }
-    } else if (statistic == "mean.ci.99") {
-      statistic <- function(x) {
-        ci <- tryCatch( t.test(x, conf.level=.99)$conf.int, error=function(e) rep(mean(x),2) )
-        return(c(lower=ci[1], mean=mean(x), upper=ci[2]))
-      }
-    } else if (statistic == "mean.se") {
-      statistic <- function(x) {
-        return(c(mean=mean(x), lower = mean(x) - sd(x)/sqrt(length(x)), 
-                 upper = mean(x) + sd(x)/sqrt(length(x))))
-      }
-    } else if (statistic == "mean.sd") {
-      statistic <- function(x) {
-        return(c(mean=mean(x), lower = mean(x) - sd(x), 
-                 upper = mean(x) + sd(x)))
-      }
-    } else if (statistic == "iqr") {
-      statistic <- function(x) {
-        lx <- quantile(x,probs=c(.25,.5,.75))
-        names(lx) <- c("lower","median","upper")
-        return(lx)
-      }
-    } else {
-      stop("Statistic not known")
+aggregateSubtrackMeasures <- function( tracks, measure, statistic=mean, 
+    subtrack.length=seq(1, (maxTrackLength(tracks)-1)),
+    max.overlap=max(subtrack.length) ){  # geht fuer einzelne tracks nicht!
+    if( class( tracks ) != "tracks" ){
+    	if( class( tracks ) %in% c("data.frame","matrix" ) ){
+    		tracks <- wrapTrack( tracks )
+    	} else {
+    		stop("Cannot coerce argument 'tracks' to tracks object" )
+    	}
     }
-  } else {
-    if (!is.function(statistic)) {
-       stop("statistic must be a function or a string")
-    }
-  }
-  subtracks <- list()
-  measure.values <- list()
-  for (i in number.of.segments) {
-    subtracks[[i]] <- subtracks(tracks, i)   ## overlap uebergeben???
-    subtracks[[i]] <- subtracks[[i]][sapply(subtracks[[i]], function(z) !all(is.na(z)))]     # remove NULL elements from list
-    if(class(subtracks[[i]]) == "list" ) {
-      measure.values[[i]] <- sapply(subtracks[[i]], measure)
-    } else {
-      measure.values[[i]] <- measure(subtracks[[i]])
-    }
-  }
-  measure.values <- measure.values[!sapply(measure.values, is.null)] # remove NULL elements from list
-  value <- sapply(measure.values, statistic)
-#   names(ret) <- deparse(substitute(statistic))  ##wie bekommt man bei einer eindimensionalen Fkt. die Spalte nach dem Fkt.namen benannt?
-#   stat = deparse(substitute(statistic))
-  ret <- rbind(i=number.of.segments, value)
-  ret <- t(ret)
-  return(data.frame(ret))
+    if (max(subtrack.length) > (maxTrackLength(tracks)-1)) {
+		warning("No track is long enough!")
+  	}
+  	if (is.character(statistic)) {
+		if (statistic == "mean.ci.95") {
+		  statistic <- function(x) {
+			ci <- tryCatch( t.test(x)$conf.int, error=function(e) rep(mean(x),2) )
+			return(c(lower=ci[1], mean=mean(x), upper=ci[2]))
+		  }
+		} else if (statistic == "mean.ci.99") {
+		  statistic <- function(x) {
+			ci <- tryCatch( t.test(x, conf.level=.99)$conf.int, error=function(e) rep(mean(x),2) )
+			return(c(lower=ci[1], mean=mean(x), upper=ci[2]))
+		  }
+		} else if (statistic == "mean.se") {
+		  statistic <- function(x) {
+			return(c(mean=mean(x), lower = mean(x) - sd(x)/sqrt(length(x)), 
+					 upper = mean(x) + sd(x)/sqrt(length(x))))
+		  }
+		} else if (statistic == "mean.sd") {
+		  statistic <- function(x) {
+			return(c(mean=mean(x), lower = mean(x) - sd(x), 
+					 upper = mean(x) + sd(x)))
+		  }
+		} else if (statistic == "iqr") {
+		  statistic <- function(x) {
+			lx <- quantile(x,probs=c(.25,.5,.75))
+			names(lx) <- c("lower","median","upper")
+			return(lx)
+		  }
+		} else {
+		  stop("statistic not known")
+		}
+	} else {
+		if (!is.function(statistic)) {
+		   stop("statistic must be a function or a string")
+		}
+	}
+	the.subtracks <- list()
+	measure.values <- list()
+	for (i in subtrack.length) {
+		the.subtracks[[i]] <- subtracks(tracks, i, min(max.overlap,i-1) )   ## overlap uebergeben???
+		the.subtracks[[i]] <- the.subtracks[[i]][sapply(the.subtracks[[i]], function(z) !all(is.na(z)))]     # remove NULL elements from list
+		if(class(the.subtracks[[i]]) == "list" ) {
+		  measure.values[[i]] <- sapply(the.subtracks[[i]], measure)
+		} else {
+		  measure.values[[i]] <- measure(the.subtracks[[i]])
+		}
+	}
+	measure.values <- measure.values[!sapply(measure.values, is.null)] # remove NULL elements from list
+	value <- sapply(measure.values, statistic)
+	ret <- rbind(i=subtrack.length, value)
+	ret <- t(ret)
+	return(data.frame(ret))
 }
-
-
 
 #' The Maximum Number of Points of a Track in a \emph{Tracks} Object
 #' 
@@ -924,7 +920,10 @@ plot3d <- function(tracks){
 }
 
 
-
+meanVectorOverPopulation <- function(vectors, func=mean) {
+  meanOverithVectorElements <- function(i) func(sapply(vectors,'[',i), na.rm=T)
+  sapply(1:max(sapply(vectors,length)), meanOverithVectorElements)
+} 
 
 
 

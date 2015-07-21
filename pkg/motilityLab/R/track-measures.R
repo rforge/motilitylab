@@ -8,18 +8,16 @@
 #'@details The track length is computed by summing the Euclidean distances 
 #'between consecutive positions.
 trackLength <- function(track) {
-    if (nrow(track) > 2) {   # failt sonst beim Zugriff auf [, 2:ncol(track)] 
-                      # fuer tracks mit nur einem Schritt
-    dif <- as.matrix(apply(track, 2, diff)[, 2:ncol(track)])
-    return(sum(sqrt(apply(dif^2, 1, sum))))
-  } else if (nrow(track) == 2) {
-    dif <- apply(track, 2, diff)[2:length(track)]
-    return(sqrt(sum(dif^2)))
-  } else if (nrow(track) == 1) {
-    return(0)
-  } else {
-    return(NA)
-  }
+	if (nrow(track) > 2) { 
+		dif <- apply(track[,-1], 2, diff)
+		return(sum(sqrt(apply(dif^2, 1, sum))))
+	} else if (nrow(track) == 2) {
+		return(sqrt(sum((track[2,-1] - track[1,-1])^2)))
+	} else if (nrow(track) == 1) {
+		return(0)
+	} else {
+		return(NA)
+	}
 }
 
 
@@ -66,10 +64,8 @@ duration <- function(track) {
 #' @details Computes the Euclidean distance between the track's start and end 
 #' point.
 displacement <- function(track,dim=ncol(track)-1) {
-  pos <- track[nrow(track),] - track[1,]
-  pos <- as.matrix(pos[1,-seq.int(1,length(pos),by=dim+1)]) # drop time information
-  pos <- matrix(pos,nrow=dim)
-  return(sqrt(colSums(pos^2)))
+  pos <- track[nrow(track), 2:(dim+1)] - track[1, 2:(dim+1)]
+  return(sqrt(sum(pos^2)))
 }
 
 #' The Vector between a Track's Starting and End Point
@@ -171,9 +167,9 @@ asphericity <- function(track) {
 #' \eqn{[0,1]}, or 1 if the track has length \eqn{0}.
 #' @seealso \code{\link{displacement}}, \code{\link{trackLength}}
 straightness <- function(track) {
-  trackLength <- trackLength(track)
-  if (trackLength > 0) {
-    return(displacement(track) / trackLength)
+  n <- trackLength(track)
+  if (n > 0) {
+    return(displacement(track) / n)
   } else {
     return(1)
   }

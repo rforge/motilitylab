@@ -13,27 +13,44 @@
 brownianTrack <- function(nsteps=100, dim=3) {
 	m <- cbind( 0:nsteps, replicate(dim, diffinv(rnorm(nsteps))))
 	colnames(m) <- c("t", "x", "y", "z")
-	as.data.frame(m)
+	m
 }
 
 
-sbm.tracks <- function(ncells,randlength=F,...){
-  tracks <- NULL
-  if(randlength==F){
-    for (i in 1:ncells){
-    tracks[[i]] <- brownianTrack(...)
-    }
-    names(tracks) <- as.character(seq(1:ncells))
-    return(as.tracks(tracks))
-  }else{
-    for (i in 1:ncells){
-      rnsteps <- floor(runif(n=1,min=1, max=101))
-      tracks[[i]] <- brownianTrack(nsteps=rnsteps)
-    }
-    names(tracks) <- as.character(seq(1:ncells))
-    return(as.tracks(tracks))
-  }
+sbm.tracks <- function(ncells, randlength=FALSE, ...){
+
+	tracks <- NULL
+
+	if(randlength==FALSE){
+ 
+		for (i in 1:ncells){
+			tracks[[i]] <- brownianTrack(...)
+
+		}
+
+		names(tracks) <- as.character(seq(1:ncells))
+
+		return(as.tracks(tracks))
+
+	} else {
+
+		for (i in 1:ncells){
+
+			rnsteps <- floor(runif(n=1,min=1, max=101))
+
+			tracks[[i]] <- brownianTrack(nsteps=rnsteps)
+
+		}
+ 
+		names(tracks) <- as.character(seq(1:ncells))
+ 
+		return(as.tracks(tracks))
+
+	}
+
 }
+	
+
 
 
 gbm <- function(nsteps=100,dim=3,lag=0,drift=0){
