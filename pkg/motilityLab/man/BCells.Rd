@@ -1,18 +1,18 @@
-\name{TCells}
-\alias{TCells}
+\name{BCells}
+\alias{BCells}
 \docType{data}
 \title{
-Two-Photon Data: T Cells in a Lymph Node
+Two-Photon Data: B Cells in a Lymph Node
 }
 \description{
-Labelled T cells were adoptively transfered and intravitally
+Labelled B cells were adoptively transfered and intravitally
 imaged (using two-photon microscopy) inside a peripheral lymph
-node of the recipient mouse. These data represent the characteristic
-"random-walk-like" motion pattern of T cells in lymph nodes.
+node of the recipient mouse. These data illustrate the characteristic
+"random-walk-like" motion pattern of B cells in lymph nodes.
 }
-\usage{data("TCells")}
+\usage{data("BCells")}
 \format{
-  An S3 object of class "tracks"; a list with 22 elements. Each 
+  An S3 object of class "tracks"; a list with 24 elements. Each 
   element name identifies a cell track. Each element is a matrix
   containing the following four columns.
   \describe{
@@ -29,8 +29,8 @@ Washington University in St Louis, USA.
 }
 \examples{
 ## load the tracks
-data(TCells)
+data(BCells)
 ## visualize the tracks (calls function plot.tracks)
-plot(TCells)
+plot(BCells)
 }
 \keyword{datasets}

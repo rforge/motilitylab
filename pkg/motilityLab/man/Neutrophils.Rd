@@ -1,18 +1,18 @@
-\name{TCells}
-\alias{TCells}
+\name{Neutrophils}
+\alias{Neutrophils}
 \docType{data}
 \title{
-Two-Photon Data: T Cells in a Lymph Node
+Two-Photon Data: Neutrophils homing towards an infection in the lung
 }
 \description{
-Labelled T cells were adoptively transfered and intravitally
-imaged (using two-photon microscopy) inside a peripheral lymph
-node of the recipient mouse. These data represent the characteristic
-"random-walk-like" motion pattern of T cells in lymph nodes.
+Labelled neutrophils  were adoptively transfered and intravitally
+imaged (using two-photon microscopy) inside the lung 
+of the recipient mouse. These cells show a fairly directed kind of
+motion, as they move towards infection foci.
 }
-\usage{data("TCells")}
+\usage{data("Neutrophils")}
 \format{
-  An S3 object of class "tracks"; a list with 22 elements. Each 
+  An S3 object of class "tracks"; a list with 10 elements. Each 
   element name identifies a cell track. Each element is a matrix
   containing the following four columns.
   \describe{
@@ -29,8 +29,8 @@ Washington University in St Louis, USA.
 }
 \examples{
 ## load the tracks
-data(TCells)
+data(Neutrophils)
 ## visualize the tracks (calls function plot.tracks)
-plot(TCells)
+plot(Neutrophils)
 }
 \keyword{datasets}

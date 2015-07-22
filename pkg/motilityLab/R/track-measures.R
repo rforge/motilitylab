@@ -32,10 +32,7 @@ trackLength <- function(track) {
 #' \code{\link{trackLength}} by its \code{\link{duration}}.
 #' @seealso \code{\link{trackLength}}, \code{\link{duration}}
 speed <- function(track) {
-#    print(track)
-#    print(trackLength(track)) 
-#    print(duration(track))
-  return(trackLength(track) / duration(track))
+  trackLength(track) / duration(track)
 }
 
 #' Track Duration
@@ -56,22 +53,23 @@ duration <- function(track) {
 
 #' A Track's Displacement
 #' 
-#' Computes the displacement of the track's end point from its starting point. 
+#' Computes the distance between the track's first and final positions.
 #'
 #' @param track the track whose displacement is to be computed.
-#' @param dim the track dimension
+#' @param limits Vector giving the first and last row of the track. Can be used to avoid
+#' extracting subtracks, which is exploited e.g. by 
+#' \code{\link{aggregateSubtrackMeasures}}.
+
 #' @return The track's displacement will be returned.
-#' @details Computes the Euclidean distance between the track's start and end 
-#' point.
-displacement <- function(track,dim=ncol(track)-1) {
-  pos <- track[nrow(track), 2:(dim+1)] - track[1, 2:(dim+1)]
-  return(sqrt(sum(pos^2)))
+#' @details Computes the Euclidean distance between the track's start and end points.
+#'
+displacement <- function(track, limits=c(1,nrow(track))) {
+  sqrt(sum(track[limits[2], -1] - track[limits[1], -1])^2)
 }
 
 #' The Vector between a Track's Starting and End Point
 #' 
-#' Computes the coordinates of the vector describing the translation from the 
-#' track's starting to its end point.
+#' Computes the coordinates of the vector between that tracks' start and end points.
 #' 
 #' @param track the track whose displacement vector is to be computed.
 #' 
@@ -86,39 +84,40 @@ displacementVector <- function(track) {
   return(as.vector(ret))
 }
 
-#' A Track's Maximal Displacement
+#' Maximal Displacement
 #' 
-#' Computes the maximal displacement of any point in the track from the 
-#' starting point.
+#' Computes the maximal distance of any position on the track from the 
+#' starting position.
 #' 
 #' @param track the track whose maximal displacement is to be computed.
-#' @return The track's maximal displacement will be returned.
+#' @param limits Vector giving the first and last row of the track. Can be used to avoid
+#' extracting subtracks, which is exploited e.g. by 
+#' \code{\link{aggregateSubtrackMeasures}}.
+#' @return The maximal displacement.
 #' @details Computes the maximum over all pairwise Euclidean distances between 
 #' the track's starting point and another point on the track.
-maxDisplacement <- function(track) {
-  t.norm <- normalizeTrack(track)
-  #displacement <- sqrt(t.norm$x^2 + t.norm$y^2 + t.norm$z^2)
-  displacement <- sqrt(apply((as.matrix(t.norm[, 2:ncol(t.norm)])^2), 1, sum))
-  return(max(displacement))
+maxDisplacement <- function(track, limits=c(1,nrow(track))) {
+	sqrt(max(rowSums(sweep(track[seq(limits[1],limits[2]),-1],2,track[limits[1],-1])^2)))
 }
 
-#' A Track's Square Displacement
+#' Square Displacement
 #' 
-#' Computes the  suare displacement of the track's end point from its starting 
-#' point. 
+#' Computes the squared distance between the track's first and final positions.
 #'
 #' @param track the track whose displacement is to be computed.
+#' @param limits Vector giving the first and last row of the track. Can be used to avoid
+#' extracting subtracks, which is exploited e.g. by 
+#' \code{\link{aggregateSubtrackMeasures}}.
 #' 
 #' @return The track's square displacement will be returned.
 #' 
 #' @details Computes the squared Euclidean distance between the track's start 
 #' and end point, by not extrakting the square root of the squared distances on 
 #' the single dimensions.
-squareDisplacement <- function(track) {
-  pos <- track[nrow(track), 2:ncol(track)] - track[1, 2:ncol(track)]
-  return(sum(pos^2))
+#'
+squareDisplacement <- function(track, limits=c(1,nrow(track))) {
+  sum(track[limits[2], -1] - track[limits[1], -1])^2
 }
-
 
 #' A Track's Aspericity
 #' 
@@ -229,21 +228,22 @@ outreachRatio <- function(track) {
 #' 
 #' Computes the angle between the first and the last segment of the given track.
 #' @param track the track whose overall turning angle is to be computed.
+#' @param limits Vector giving the first and last row of the track. Can be used to avoid
+#' extracting subtracks, which is exploited e.g. by 
+#' \code{\link{aggregateSubtrackMeasures}}.
 #' @details Computes the angle between the vectors representing the track's 
 #' first and last segment, respectively, i.e. the overall turning angle.
-#' Angles are metered symmetrically, thus yielding (degree) values between 
+#' Angles are measured symmetrically, thus yielding (degree) values between 
 #' 0 and 180. (Both a 90 degrees left and right turn yield the value 90.)
-#' @return The tracks overall turning angle will be returned in degrees. ######## or 0 
-overallAngle <- function(track) {    # the sum of all turning angles % 360?
-  if (nrow(track) < 3) {
+#'
+#' @return The track's overall turning angle in radians.
+overallAngle <- function(track, limits=c(1,nrow(track))) {
+  if (limits[2]-limits[1] < 2) {
     return(0)
   } else {
-    dif <- apply(as.matrix(track[, 2:ncol(track)]), 2, diff)
-    a <- dif[1, ]
-    b <- dif[nrow(dif), ]
-#     ret <- ((180/pi) * acos((a%*%t(b)) / ((sqrt(a%*%t(a))) * (sqrt(b%*%t(b))))))
-    ret <- acos(sum(a * b) / (sqrt(sum(a * a) * sum(b * b))))
-    return(ret)
+    a <- diff(track[limits[1]:(limits[1]+1),-1])
+    b <- diff(track[(limits[2]-1):limits[2],-1])
+    return( acos(sum(a * b) / (sqrt(sum(a^2) * sum(b^2)))) )
   }
 }
 
@@ -277,7 +277,9 @@ meanTurningAngle <- function(track) {
 #' is returned. If the track has an uneven number of points, the last one is 
 #' discarded, if it has less than six points, NA will be returned.
 hurstExponent <- function(track) {
-#   library(pracma)
+	if( !requireNamespace("pracma",quietly=TRUE) ){
+		stop("This function requires the 'pracma' package.")
+	}
   if (nrow(track) < 6) {
     return(NA)
   }
@@ -285,10 +287,8 @@ hurstExponent <- function(track) {
     track <- track[1:(nrow(track)-1), ]
   }
   he <- function(x) {
-#     print(x)
     pracma::hurstexp(x, display=FALSE)$Hs
   }
-  # dim <- ncol(track) - 1
   ret <- c()
   ret <- apply(as.matrix(track[,2:ncol(track)]), 2, he)
   return(ret)

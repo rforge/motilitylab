@@ -2,8 +2,8 @@ Package: MotilityLab
 Type: Package
 Title: Quantitative Motion Analysis
 Version: 1.0
-Date: 2014-11-04
-Author: Katharina Dannenberg, Johannes Textor
+Date: 2015-07-22
+Author: Katharina Dannenberg, Jeffrey Berry, Johannes Textor
 Maintainer: Johannes Textor <johannes.textor@gmx.de>
 Description: Quantitative analysis of tracks of moving
     objects like, for instance, cells, bacteria or animals.
@@ -17,4 +17,5 @@ Suggests:
     pracma,
     ggplot2,
     testthat,
-    adehabitatLT
+    adehabitatLT,
+    scatterplot3d

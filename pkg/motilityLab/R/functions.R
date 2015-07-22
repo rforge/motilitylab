@@ -5,11 +5,11 @@
 #' 
 #' @param x the  \code{tracks} object to be coerced to a data frame.
 #' 
-#' @param row.names ‘NULL’ or a character vector giving the row names for the
+#' @param row.names NULL or a character vector giving the row names for the
 #'  data frame.  Missing values are not allowed.
-#'
 #' @param optional logical. Column names are always assigned to the resulting
 #'  data frame regardless of the setting of this option.
+#' @param ... further arguments to be passed from or to other methods.
 #'
 #' @details Returns one data frame containing all indiviual 
 #' tracks from the input with a prepended column "id" containing
@@ -20,7 +20,8 @@
 #' each track's name in the list of the \emph{tracks} object.
 as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE, ...) {
 	ids <- rep(names(x), lapply(x,nrow))
-	r <- cbind(id=ids, Reduce(rbind, x))
+	r <- data.frame(id=ids,  Reduce( function(...) 
+		rbind.data.frame(...,make.row.names=FALSE), x ) )
 	if( !is.null(row.names) && length(row.names)==nrow(r) ){
 		rownames(r) <- row.names
 	}
@@ -32,6 +33,7 @@ as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE, ...) {
 #' Coerces \code{x} to a \code{tracks} object.
 #' 
 #' @param x the object to be coerced.
+#' @param ... further arguments to be passed on to the respective method.
 #'
 #' @details the S3 Method corresponding to \code{x}'s type (usually a list) is called.
 #'  
@@ -45,6 +47,7 @@ as.tracks <- function(x,...)
 #' Coerces a \code{tracks} object to a list
 #' 
 #' @param x the \code{tracks} object to be coerced to a list.
+#' @param ... further arguments to be passed from or to other methods.
 #' 
 #' @details the input \code{tracks} object is coerced to a list.
 #' 
@@ -59,6 +62,7 @@ as.list.tracks <- function(x, ...)
 #' Converts a List into a \emph{Tracks} Object
 #' 
 #' @param x the list that is to be converted into a \emph{tracks} object.
+#' @param ... further arguments to be passed from or to other methods.
 #' 
 #' @details The input list is assigned the S3 class \code{tracks}.
 #' 
@@ -100,6 +104,7 @@ getTracks <- function(tracks, ids) {
 #' @param decreasing logical.  Should the sort be increasing or decreasing? 
 #'  Provided only for consistency with the generic sort method. The positions in
 #'  each track should be sorted in increasing time order.
+#' @param ... Further arguments to be passed on to \code{order}.
 #'
 #' @details Sorts the positions of each track (represented as a data frame) in the 
 #' \emph{tracks} object by time (given in the column t). 
@@ -479,38 +484,10 @@ computeSubtracksOfISegments <- function(track, i, overlap=i-1) {
 #' of any track in the input \emph{tracks} object that consist of exactly \code{i}
 #' segments and overlap their predecessor in  \code{overlap} segments.
 subtracks <- function(tracks, i, overlap=i-1 ) {
-  Reduce(c, lapply(tracks, subtracksOfISegments(i, overlap)))
+	Reduce(c, lapply(tracks, 
+  		function(t) computeSubtracksOfISegments(t, i, overlap )))
 }
 
-# TODO remove test duplications in descr., details and return, merge information with above function
-#' Measure for Every Subtrack of a Track
-#' 
-#' Returns a function that for a given track outputs all subtracks that 
-#' constist of a certain number of segments. The overlap of subsequent 
-#' subtracks can also be given.
-#' 
-#' @param i the number of segments the outputted subtracks shall consist of.
-#' @param overlap number no segments that shall be common to subsequent 
-#' subtracks. Default is \eqn{i-1}.
-#' 
-#' @details Returns a function that for a given track outputs all subtracks that 
-#' constist of a certain number of segments. The outputted segments are sorted 
-#' by their starting point (the one starting with the input track's starting 
-#' point will be the first), and two subsequent subtracks will have 
-#' \code{overlap} segments in common, by default \eqn{i-1}, so they differ in 
-#' only one segment.
-#'  
-#' @return Returns a function that for a given track outputs all subtracks that 
-#' constist of a certain number of segments. The outputted segments are sorted 
-#' by their starting point (the one starting with the input track's starting 
-#' point will be the first), and two subsequent subtracks will have 
-#' \code{overlap} segments in common, by default \eqn{i-1}, so they differ in 
-#' only one segment.
-subtracksOfISegments <- function(i, overlap=i-1) {
-  function(track) {
-    computeSubtracksOfISegments(track, i, overlap)
-  }
-}
 
 
 #' Normalize a Measure to Track Duration
@@ -654,8 +631,7 @@ plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0},
 }
 
 
-
-  
+# TODO implement the prefixes.only argument
 #' Compute a Statistic on Measure Values of Subtracks of a Certain Length
 #' 
 #' For a given \emph{tracks} object, a given measure is applied to all the 
@@ -686,6 +662,12 @@ plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0},
 #'  25-percent-quartile as a lower and and the 75-percent-quartile as an 
 #'  upper bound}
 #' }
+#'
+#' @param prefixes.only logical. If TRUE, then only subtracks starting from a track's
+#' first position are considered. Could be relevant for tracks for which the starting
+#' position is indeed meaningful (instead of being simply the position at which observation
+#' of a longer trajectory started).
+#'
 #' @param max.overlap Determines the amount by which the subtracks that are taken into
 #' account can overlap. A maximum overlap of \code{max(subtrack.length)} will imply
 #' that all subtracks are considered. For a maximum overlap of 0, only non-overlapping
@@ -693,6 +675,8 @@ plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0},
 #' a certain distance apart are considered. In general, for non-Brownian motion there will
 #' be correlations between subsequent steps, such that a negative overlap may be necessary
 #' to get a proper error estimate.
+#' @param na.rm This is passed on to the builtin statistic functions like "mean.se" or 
+#' "mean".
 #'
 #' @details For every number of segments \eqn{i} in the set defined by 
 #' \code{subtrack.length}, all subtracks of any track in the input 
@@ -711,7 +695,8 @@ plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0},
 #' ggplot(dat, aes(x=i, y=mean)) + geom_errorbar(aes(ymin=lower, ymax=upper), width=.1)
 aggregateSubtrackMeasures <- function( tracks, measure, statistic=mean, 
     subtrack.length=seq(1, (maxTrackLength(tracks)-1)),
-    max.overlap=max(subtrack.length) ){  # geht fuer einzelne tracks nicht!
+    prefixes.only=FALSE,
+    max.overlap=max(subtrack.length), na.rm=FALSE ){  # geht fuer einzelne tracks nicht!
     if( class( tracks ) != "tracks" ){
     	if( class( tracks ) %in% c("data.frame","matrix" ) ){
     		tracks <- wrapTrack( tracks )
@@ -724,28 +709,34 @@ aggregateSubtrackMeasures <- function( tracks, measure, statistic=mean,
   	}
   	if (is.character(statistic)) {
 		if (statistic == "mean.ci.95") {
-		  statistic <- function(x) {
-			ci <- tryCatch( t.test(x)$conf.int, error=function(e) rep(mean(x),2) )
-			return(c(lower=ci[1], mean=mean(x), upper=ci[2]))
+		  the.statistic <- function(x,...) {
+		  	mx <- mean(x,na.rm=na.rm)
+			ci <- tryCatch( t.test(x)$conf.int, error=function(e) rep(NA,2) )
+			return(c(lower=ci[1], mean=mx, upper=ci[2]))
 		  }
 		} else if (statistic == "mean.ci.99") {
-		  statistic <- function(x) {
-			ci <- tryCatch( t.test(x, conf.level=.99)$conf.int, error=function(e) rep(mean(x),2) )
+		  the.statistic <- function(x,...) {
+			mx <- mean(x,na.rm=na.rm)
+			ci <- tryCatch( t.test(x, conf.level=.99)$conf.int, 
+				error=function(e) rep(NA,2) )
 			return(c(lower=ci[1], mean=mean(x), upper=ci[2]))
 		  }
 		} else if (statistic == "mean.se") {
-		  statistic <- function(x) {
-			return(c(mean=mean(x), lower = mean(x) - sd(x)/sqrt(length(x)), 
-					 upper = mean(x) + sd(x)/sqrt(length(x))))
+		  the.statistic <- function(x,...) {
+		  	mx <- mean(x,na.rm=na.rm)
+		  	sem <- sd(x,na.rm=na.rm)/sqrt(sum(!is.na(x))) 
+		  		# note that this also works is na.omit is FALSE
+			return(c(mean=mx, lower = mx - sem, upper = mx + sem))
 		  }
 		} else if (statistic == "mean.sd") {
-		  statistic <- function(x) {
-			return(c(mean=mean(x), lower = mean(x) - sd(x), 
-					 upper = mean(x) + sd(x)))
+		  the.statistic <- function(x,...) {
+		  	mx <- mean(x,na.rm=na.rm)
+		  	sem <- sd(x,na.rm=na.rm)
+			return(c(mean=mx, lower = mx - sem, upper = mx + sem))
 		  }
 		} else if (statistic == "iqr") {
-		  statistic <- function(x) {
-			lx <- quantile(x,probs=c(.25,.5,.75))
+		  the.statistic <- function(x,...) {
+			lx <- quantile(x,probs=c(.25,.5,.75),na.rm=na.rm)
 			names(lx) <- c("lower","median","upper")
 			return(lx)
 		  }
@@ -755,24 +746,28 @@ aggregateSubtrackMeasures <- function( tracks, measure, statistic=mean,
 	} else {
 		if (!is.function(statistic)) {
 		   stop("statistic must be a function or a string")
-		}
-	}
-	the.subtracks <- list()
-	measure.values <- list()
-	for (i in subtrack.length) {
-		the.subtracks[[i]] <- subtracks(tracks, i, min(max.overlap,i-1) )   ## overlap uebergeben???
-		the.subtracks[[i]] <- the.subtracks[[i]][sapply(the.subtracks[[i]], function(z) !all(is.na(z)))]     # remove NULL elements from list
-		if(class(the.subtracks[[i]]) == "list" ) {
-		  measure.values[[i]] <- sapply(the.subtracks[[i]], measure)
 		} else {
-		  measure.values[[i]] <- measure(the.subtracks[[i]])
+			the.statistic <- statistic
 		}
 	}
-	measure.values <- measure.values[!sapply(measure.values, is.null)] # remove NULL elements from list
-	value <- sapply(measure.values, statistic)
+	if( length( intersect(c("track","limits"),names(formals(measure))) ) == 2 ){
+		measure.values <- lapply( subtrack.length, 
+			function(i) .ulapply( Filter(function(t) nrow(t)>i, tracks),
+				function(t) apply( .subtrackIndices(t,i,min(max.overlap,i-1)), 
+					 1, measure, track=t ) ) )
+	} else {
+		the.subtracks <- list()
+		measure.values <- list()
+		for (i in subtrack.length) {
+			the.subtracks[[i]] <- subtracks(tracks, i, min(max.overlap,i-1) ) 
+			the.subtracks[[i]] <- Filter( function(z) !all(is.na(z)), the.subtracks[[i]] )
+			measure.values[[i]] <- sapply( the.subtracks[[i]], measure )
+		}
+	}
+	measure.values <- Filter(Negate(is.null),measure.values)
+	value <- sapply(measure.values, the.statistic)
 	ret <- rbind(i=subtrack.length, value)
-	ret <- t(ret)
-	return(data.frame(ret))
+	return(data.frame(t(ret)))
 }
 
 #' The Maximum Number of Points of a Track in a \emph{Tracks} Object
@@ -876,14 +871,11 @@ hotellingsTest <- function(tracks, dim=c("x", "y"), plot=FALSE) {
   return(DescTools::HotellingsT2Test(sx)[["p.value"]])
 }
 
-byPrefixLength <- function( tracks, f, simplify=TRUE ){
-  
-}
-
-
-
-
-# Extracts tracks based on user defined properties
+#' Extract tracks based on user defined properties
+#' 
+#' Given a tracks object, extract a subset based on upper and lower bounds of a certain
+#' measure. For instance, extract all tracks with a certain minimum length.
+#'
 #' @param tracks the tracks from which subsetting is to be done on 
 #' @param measure the track measure for which the subsetting is to be based on 
 #' @param ll specifies the lower-limit of the allowable measure
@@ -899,47 +891,28 @@ getSubsetOfTracks <- function(tracks,measure,ll,ul){
   }
 }
 
-
-
-# TODO: somehow get rid of for-loop and still have unique colors 
-#' @param tracks the tracks for which will be plotted in 3d
-plot3d <- function(tracks){
-  tracks_df <- as.data.frame.tracks(tracks)
-  xlimits <- c(min(tracks_df[,3]),max(tracks_df[,3]))
-  ylimits <- c(min(tracks_df[,4]),max(tracks_df[,4]))
-  zlimits <- c(min(tracks_df[,5]),max(tracks_df[,5]))
-  
-  i=names(tracks)[1]
-  sd3 <- scatterplot3d(x=tracks[[i]]$x,y=tracks[[i]]$y,z=tracks[[i]]$z,type="l",xlab="X Position",ylab="Y Position",zlab="Z Position",xlim=xlimits,ylim=ylimits,zlim=zlimits)
-  colnum <- 1
-  colvec <- rainbow(length(names(tracks)))
-  for(i in names(tracks)){
-    colnum <- colnum+1
-    sd3$points(x=tracks[[i]]$x,y=tracks[[i]]$y,z=tracks[[i]]$z,type="l",col=colvec[colnum])
-  }
+#' Plot tracks in 3D
+#'
+#' Takes an input tracks object and plots them in 3D using the 
+#' \link[scatterplot3d]{scatterplot3d} function.
+#'
+#' @param tracks the tracks which will be plotted in 3d
+#' @param ... further arguments to be passed on to 
+#' \link[scatterplot3d]{scatterplot3d}
+#'
+plot3d <- function(tracks,...){
+	if( !requireNamespace("scatterplot3d",quietly=TRUE) ){
+		stop("This function requires the 'scatterplot3d' package.")
+	}
+	tracks_df <- as.data.frame.tracks(
+		lapply( tracks, function(t) rbind(t,rep(NA,ncol(t)) ) ) )
+	s3d <- scatterplot3d::scatterplot3d(tracks_df[,-c(1,2)],
+		type="n",xlab="X Position",ylab="Y Position",zlab="Z Position",...)
+	colvec <- rainbow(length(names(tracks)))[tracks_df[,1]]
+	pts <- s3d$xyz.convert( tracks_df[,-c(1,2)] )
+	segments( head(pts$x,-1), head(pts$y,-1), tail(pts$x,-1), 
+		tail(pts$y,-1), col=colvec )
 }
 
-
-meanVectorOverPopulation <- function(vectors, func=mean) {
-  meanOverithVectorElements <- function(i) func(sapply(vectors,'[',i), na.rm=T)
-  sapply(1:max(sapply(vectors,length)), meanOverithVectorElements)
-} 
-
-
-
-#' This will be the start of trying to use fractal dimensions to determine which model 
-#' the set of tracks fits the best. 
-#' TODO: will be worthwile to try to create MLE functions to assign a probability 
-#' for any given model. 
-# fdsims <- NULL
-# for(i in 1:10000){
-#  BMtrack <- BM()
-#  fdout <- fd.estim.variogram(matrix(BMtrack))
-#  fdsims <- c(fdsims,fdout$fd)
-#}
-#sdfdsims <- sd(fdsims)
-#UL <- 1.5+2*sdfdsims
-#LL <- 1.5-2*sdfdsims
-#cbind(LL,UL)
 
 
