@@ -1,0 +1,619 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usetheme{Luebeck}
+\definecolor{mygreen}{HTML}{3C8200}
+\usecolortheme[named=mygreen]{structure}
+
+\author{Katharina Dannenberg}
+\title{Analyzing Cell Tracks with R}
+
+
+\usepackage{scrextend}    %to change font sizes?
+
+\usepackage{Sweave}
+
+<<echo=false,results=hide>>=
+library(MotilityLab)
+@
+
+
+
+\usepackage{tikz}
+\usetikzlibrary{angles,quotes}
+
+\newbox\mytempbox
+\newdimen\mytempdimen
+\newcommand\includegraphicscopyright[3][]{%
+	\leavevmode\vbox{%
+		\vskip3pt\raggedright\setbox\mytempbox=\hbox{\includegraphics[#1]{#2}}%
+		\mytempdimen=\wd\mytempbox\box\mytempbox\par\vskip1pt%
+		{\fontsize{5}{6}\selectfont{\color{black!75}{\vbox{\hsize=\mytempdimen#3}}}}%
+		\vskip3pt%
+	}}
+
+
+\begin{document}
+\setkeys{Gin}{width=0.35\textwidth}
+%\setkeys{Gin}{width=0.7\textwidth}
+
+
+<<echo=false>>=
+options(width=30)
+@
+
+<<echo=false>>=
+options(continue=" ")
+@
+
+%WOHIN: options(width=20)???
+%(textausgabe auf 20 col beschraenken)
+
+\DefineVerbatimEnvironment{Sinput}{Verbatim} {}
+\DefineVerbatimEnvironment{Soutput}{Verbatim}{}
+\DefineVerbatimEnvironment{Scode}{Verbatim}{}
+\fvset{listparameters={\setlength{\topsep}{0pt}}}
+\renewenvironment{Schunk}{\vspace{\topsep}}{\vspace{\topsep}}
+
+<<echo=false,results=hide>>=
+library(lattice)   # for chunk 7
+options(width=20)
+@
+
+<<echo=false>>=
+options(SweaveHooks=list(fig=function()
+par(mar=c(5.1, 4.1, 1.1, 2.1))))
+@
+
+\frame{
+ \maketitle
+}
+
+\section{Motivation}
+\subsection{Preliminaries}
+
+\begin{frame}
+	\frametitle{Cell Tracks}
+	\centering
+	%\includegraphics[width=0.7\linewidth]{../../cell_track}
+\end{frame}
+
+
+% \begin{frame}[label=test]
+% 	\frametitle{Estimating Cells Track from Movies}
+% 	\begin{columns}[t,onlytextwidth]
+% 		\column{.45\textwidth}
+% 		
+% 		\href{run:211008F.avi}{
+% 			\includegraphics[width=0.99\linewidth]{211008F.png}}
+% 		\footnotesize
+% 		T~cells in a lymph node in the absence of infection \\
+% 		A. Peixoto, Harvard Medical School
+% 		
+% 		
+% 		\column{.45\textwidth}
+% 		
+% 		\href{run:NIHMS71239-supplement-08.wmv}{
+% 		\includegraphics[width=\linewidth]{NIHMS71239-supplement-08.png}}
+% 		\footnotesize
+% 		Neutrophils in lymph nodes during infection with {\it Toxoplasma gondii}  \\
+% 		Chtanova et al., Immunity 2008
+% 		
+% 	\end{columns}
+% \end{frame}
+
+
+\begin{frame}
+	\frametitle{Classification of Cell Tracks}
+	\centering
+	\only<1>{
+		%\includegraphics[width=0.7\linewidth]{../../bunch.png}
+	}
+	\only<2>{
+		%\includegraphics[width=0.7\linewidth]{../../long_straight_black.png}
+	}
+	\only<3>{
+		%\includegraphics[width=0.7\linewidth]{../../long_straight_black_green.png}
+	}
+\end{frame}
+
+\subsection{Measures}
+\begin{frame}[label=low]
+	\frametitle{Low-Level Track Measures}
+	\begin{minipage}{.5\linewidth}
+		\begin{itemize}
+			\item {\color<2>{mygreen}{length $l$}}
+			\item {\color<3>{mygreen}{duration $t$}}
+			\item {\color<4>{mygreen}{displacement $d$}}
+			\item {\color<5>{mygreen}{square displacement $sqd$}}
+			\item {\color<6>{mygreen}{maximum displacement $d_{max}$}}
+		\end{itemize}
+	\end{minipage}
+	\hspace{1.75cm}	
+	\begin{minipage}{.1\linewidth}
+		\begin{figure}
+			\begin{tikzpicture}[scale=0.5]
+				\draw[color=lightgray, dotted, ultra thin] (0,0) grid (4,6);
+				\draw circle [radius=0.3cm];;
+				\draw (0,6) circle [radius=0.2cm];;
+				\draw (4,3) circle [radius=0.2cm];;
+				\draw [thick] (0,0)coordinate[label=left:\text{1\,}](1) -- (0,6)coordinate[label=left:2](2) -- (4,3)coordinate[label=right:3](3);
+				\only <2,3> {\draw [thick, mygreen] (0,0) -- (0,6) -- (4,3);}
+				\only <4,5> {\draw [thick, mygreen] (0,0) -- (4,3);}
+				\only <6> {\draw [thick, mygreen] (0,0) -- (0,6);}
+			\end{tikzpicture}
+		\end{figure}
+	\end{minipage}
+\end{frame}
+
+\begin{frame} [label=comp]
+	\frametitle{Composite Measures}
+	\begin{minipage}{.5\linewidth}
+		\begin{itemize}
+			\item {\color<2>{mygreen}{speed $s = l/t$}}
+			\item {\color<3>{mygreen}{straightness $st = d/l$}}
+			\item {\color<4>{mygreen}{displacement ratio $dr = d/d_{max}$}}
+			\item {\color<5>{mygreen}{outreach ratio $or = d_{max}/l$}}
+			\item {\color<6>{mygreen}{asphericity $A=\frac{(R_1^2 - R_2^2)^2}{(R_1^2 + R_2^2)^2}$}}
+			\item {\color<7>{mygreen}{turning angle $\varphi$}}
+			%			\item {\color<>{mygreen}{hurst exponent}}
+		\end{itemize}
+	\end{minipage}
+	\hspace{1.75cm}	
+	\begin{minipage}{0.3\linewidth}
+		\only<1-5,7> {
+			\begin{tikzpicture}[scale=0.5]
+			%			\draw[help lines] (0,0) grid (4,6);
+			\draw circle [radius=0.3cm];;
+			\draw (0,6) circle [radius=0.2cm];;
+			\draw (4,3) circle [radius=0.2cm];;
+			\draw [thick] (0,0)coordinate[label=left:\text{1\,}](1) -- (0,6)coordinate[label=left:2](2) -- (4,3)coordinate[label=right:3](3);
+			\only <7> {\draw [thick, dotted, ->] (0,6) -- (0,8)coordinate(4);}
+			
+			\only <3> {\draw [thick, red] (0,0) -- (0,6) -- (4,3);}
+			\only <2> {\draw [thick, brown] (0,0) -- (0,6) -- (4,3);}
+			\only <3,4> {\draw [thick, mygreen] (0,0) -- (4,3);}
+			\only <4> {\draw [thick, red] (0,0) -- (0,6);}
+			\only <5> {\draw [thick, brown] (0,0) -- (0,6);}
+			\only <5> {\draw [thick, red] (0,6) -- (4,3);}
+			\only <7> {\pic[
+				draw, thick,  % Winkel einzeichnen
+				"$\varphi$" opacity=1, % Beschriftung des Winkels
+				angle radius=.7cm]{angle=3--2--4}; }
+			\end{tikzpicture}
+		}
+		\only<6> {
+			\includegraphics[width=.6\linewidth]{asphericity_paths.png}\\
+			
+			\vspace{-0.5cm}
+			
+			\includegraphicscopyright[width=.6\linewidth]{asphericity.png}{Figure adapted from Mokhtari et al.}
+		}
+	\end{minipage}
+\end{frame}
+
+
+\section{Track Analysis}
+
+\subsection{Ways of Applying the Measures}
+\begin{frame}[label=linstag]
+	\frametitle{Overall, Linear and Staggered Measures}
+	\begin{itemize}
+	{\color<2> {mygreen} {\item overall: only for the track as a whole\\}}
+		\begin{figure}
+			\begin{tikzpicture}[scale=0.65]
+			\draw (0, 0) circle [radius=0.2cm];;
+			\draw (3, 1) circle [radius=0.1cm];;
+			\draw (6, 0) circle [radius=0.1cm];;
+			\draw (4, 1) circle [radius=0.1cm];;
+			\draw (7, 2) circle [radius=0.1cm];;
+			\draw (8, 0) circle [radius=0.1cm];;
+			\color<2> {mygreen} {\draw [thick] (7, 2) -- (8, 0);}
+			\color<2> {mygreen} {\draw [thick] (4, 1) -- (7, 2);}
+			\color<2> {mygreen} {\draw [thick] (6, 0) -- (4, 1);}
+			\color<2> {mygreen} {\draw [thick] (3, 1) -- (6, 0);}
+			\color<2> {mygreen} {\draw [thick] (0, 0) -- (3, 1);}
+			\end{tikzpicture}
+		\end{figure}
+	{\color<4-8> {mygreen} {\item linear: for every track prefix\\}}
+		\begin{figure}
+			\begin{tikzpicture}[scale=0.65]
+			\draw (0, 0) circle [radius=0.2cm];;
+			\draw (3, 1) circle [radius=0.1cm];;
+			\draw (6, 0) circle [radius=0.1cm];;
+			\draw (4, 1) circle [radius=0.1cm];;
+			\draw (7, 2) circle [radius=0.1cm];;
+			\draw (8, 0) circle [radius=0.1cm];;
+			\color<8> {mygreen} {\draw [thick] (7, 2) -- (8, 0);}
+			\color<7-8> {mygreen} {\draw [thick] (4, 1) -- (7, 2);}
+			\color<6-8> {mygreen} {\draw [thick] (6, 0) -- (4, 1);}
+			\color<5-8> {mygreen} {\draw [thick] (3, 1) -- (6, 0);}
+			\color<4-8> {mygreen} {\draw [thick] (0, 0) -- (3, 1);}
+			\end{tikzpicture}
+		\end{figure}
+	{\color<10-24> {mygreen} {\item staggered: for every subtrack\\}}
+		\begin{figure}
+			\begin{tikzpicture}[scale=0.65]
+				\draw (0, 0) circle [radius=0.2cm];;
+				\draw (3, 1) circle [radius=0.1cm];;
+				\draw (6, 0) circle [radius=0.1cm];;
+				\draw (4, 1) circle [radius=0.1cm];;
+				\draw (7, 2) circle [radius=0.1cm];;
+				\draw (8, 0) circle [radius=0.1cm];;
+				{\color<14,18,21,23,24> {mygreen} {\draw [thick] (7, 2) -- (8, 0);}}
+				{\color<13,17,18,20-24> {mygreen} {\draw [thick] (4, 1) -- (7, 2);}}
+				{\color<12,16,17,19-24> {mygreen} {\draw [thick] (6, 0) -- (4, 1);}}
+				{\color<11,15,16,19,20,22-24> {mygreen} {\draw [thick] (3, 1) -- (6, 0);}}
+				{\color<10,15,19,22,24> {mygreen} {\draw [thick] (0, 0) -- (3, 1);}}
+			\end{tikzpicture}
+		\end{figure}
+	\end{itemize}
+\end{frame}
+
+
+\subsection{Different Plots}
+\begin{frame}[fragile]
+\frametitle{Plotting Tracks}
+<<echo=false,fig=true,width=3,height=3>>=
+plot(normalizeTracks(BCells), 
+main="BCells", xlim=c(-60, 60), ylim=c(-110,110), xlab="")
+@
+<<echo=false,fig=true,width=3,height=3>>=
+plot(normalizeTracks(TCells), main="TCells", ylab="", xlim=c(-60, 60), ylim=c(-110,110))
+@
+<<echo=false,fig=true,width=3,height=3>>=
+plot(normalizeTracks(Neutrophils), main="Neutrophils", ylab="", xlab="", xlim=c(-60, 60), ylim=c(-110,110))
+@
+
+\begin{small}
+<<eval=false>>=
+plot(normalizeTracks(TCells))
+@
+\end{small}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Speed Distribution}
+<<echo=false,fig=true,width=3,height=3>>=
+hist(sapply(BCells, speed), probability=TRUE, 
+main="BCells", xlab="")
+@
+<<echo=false,fig=true,width=3,height=3>>=
+hist(sapply(TCells, speed), probability=TRUE, 
+main="TCells", xlab="Speed", ylab="")
+@
+<<echo=false,fig=true,width=3,height=3>>=
+hist(sapply(Neutrophils, speed), probability=TRUE, 
+main="Neutrophils", ylab="", xlab="")
+@
+
+\begin{small}
+<<eval=false>>=
+hist(sapply(TCells, speed), probability=TRUE)
+@
+\end{small}
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Turning Angle Distribution}
+<<echo=false,fig=true,width=3,height=3>>=
+hist(sapply(subtracks(BCells, 2), overallAngle) * (180 / pi), probability=TRUE, 
+main="BCells", xlab="")
+@
+<<echo=false,fig=true,width=3,height=3>>=
+hist(sapply(subtracks(TCells, 2), overallAngle) * (180 / pi), probability=TRUE, main="TCells", ylab="", xlab="Turning Angle in Degrees")
+@
+<<echo=false,fig=true,width=3,height=3>>=
+hist(sapply(subtracks(Neutrophils, 2), overallAngle) * (180 / pi), probability=TRUE, main="Neutrophils", ylab="", xlab="")
+@
+\begin{small}
+<<eval=false>>=
+hist(sapply(subtracks(BCells, 2), overallAngle), 
+	probability=TRUE)
+@
+\end{small}
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Mean Displacement Plot}
+<<echo=false,fig=true,width=3,height=3>>=
+with( aggregate(BCells, displacement, FUN="mean.se"), {
+	plot( mean~sqrt(i), main="B Cells" ) ; segments( sqrt(i), lower, y1=upper )
+} )
+@
+<<echo=false,fig=true,width=3,height=3>>=
+with( aggregate(TCells, displacement, FUN="mean.se"), {
+	plot( mean~sqrt(i), main="T Cells" ) ; segments( sqrt(i), lower, y1=upper )
+} )
+@
+<<echo=false,fig=true,width=3,height=3>>=
+with( aggregate(Neutrophils, displacement, FUN="mean.se"), {
+	plot( mean~sqrt(i), main="Neutrophils" ) ; segments( sqrt(i), lower, y1=upper )
+} )
+@
+
+\begin{small}
+<<fig=false>>=
+md <- aggregate(TCells, displacement,
+	FUN="mean.se")
+with( md, {
+	plot( sqrt(i), mean, main="T Cells" )
+	segments( sqrt(i), lower, y1=upper )
+} )
+@
+\end{small}
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Corrected and Uncorrected Straightness}
+<<echo=false,fig=true,width=3,height=3>>=
+cr.uncorr <- aggregate(BCells, straightness)
+cr.corr <- aggregate(BCells, 
+   function(t) straightness(t)*sqrt(nrow(t)))
+plot(cr.corr, col=1, type='l', main="BCells", 
+   xlab="", ylab="Straightness", ylim=c(0,4))
+lines(cr.uncorr, col=3)
+@
+<<echo=false,fig=true,width=3,height=3>>=
+cr.uncorr <- aggregate( TCells, straightness )
+cr.corr <- aggregate( TCells, function(t) straightness(t)*sqrt(nrow(t)))
+plot(cr.corr, col=1, type='l', main="TCells", xlab="time", ylab="", ylim=c(0,4))
+lines(cr.uncorr, col=3)
+@
+<<echo=false,fig=true,width=3,height=3>>=
+cr.uncorr <- aggregate( Neutrophils, straightness )
+cr.corr <- aggregate( Neutrophils, function(t) straightness(t)*sqrt(nrow(t)) )
+plot(cr.corr, col=1, type='l', main="Neutrophils", xlab="", ylab="", ylim=c(0,4))
+lines(cr.uncorr, col=3)
+@
+
+\begin{small}
+<<fig=false>>=
+cr.uncorr <- aggregate(TCells, straightness)
+cr.corr <- aggregate(TCells, 
+	function(t) straightness(t) * sqrt(nrow(t)))
+plot(cr.corr)
+lines(cr.uncorr, col=3)
+@
+\end{small}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\frametitle{Linear Straightness on Population Level}
+\setkeys{Gin}{width=0.5\textwidth}
+\begin{figure}
+\centering
+<<echo=false, fig=true,width=3,height=3>>=
+plot(aggregate(TCells,straightness,"prefixes"), xlab="time", 
+ylab="Straightness", xlim=c(2,40), col=2, type='l')
+lines(aggregate(BCells,straightness,"prefixes"), col=3)
+lines(aggregate(Neutrophils,straightness,"prefixes"), col=4)
+@
+\end{figure}
+\begin{small}
+<<fig=false>>=
+plot(aggregate(TCells,straightness,"prefixes"))
+@
+\end{small}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\frametitle{Staggered Straightness on Population Level}
+\setkeys{Gin}{width=0.5\textwidth}
+\begin{figure}
+\centering
+<<echo=false, fig=true,width=3,height=3>>=
+plot(aggregate(TCells,straightness), xlab="time", 
+	ylab="Straightness", col=2, type='l')
+lines(aggregate(BCells,straightness), col=3)
+lines(aggregate(Neutrophils,straightness), col=4)
+@
+\end{figure}
+\begin{small}
+<<fig=false>>=
+plot(aggregate(TCells,straightness), xlab="time", 
+	ylab="Straightness", col=2, type='l')
+@
+\end{small}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\frametitle{Linear Straightness for Example Tracks}
+\setkeys{Gin}{width=0.5\textwidth}
+\begin{figure}
+\centering
+<<echo=false, fig=true,width=3,height=3>>=
+plotTrackMeasures(forEveryPrefix(straightness, 1), 
+forEveryPrefix(duration, 1), TCells[['2']], type="l", xlab="time", 
+ylab="Straightness", col=2, ylim=c(0,1), xlim=c(0,350))
+plotTrackMeasures(forEveryPrefix(straightness, 1), forEveryPrefix(duration, 1), BCells[['7']], add=TRUE, type="l", xlab="time", ylab="Asph", col=3)
+plotTrackMeasures(forEveryPrefix(straightness, 1), forEveryPrefix(duration, 1), Neutrophils[['7']], add=TRUE, type="l", xlab="time", ylab="Asph", col=4)
+@
+\end{figure}
+\begin{small}
+<<fig=false>>=
+plotTrackMeasures(forEveryPrefix(straightness, 1), 
+	forEveryPrefix(duration, 1), TCells[['2']])
+@
+\end{small}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\frametitle{Staggered Straightness Matrices for Example Tracks}
+\centering
+\setkeys{Gin}{width=0.28\textwidth}
+<<echo=false,fig=true,width=3,height=3>>=
+levelplot(computeStaggered(BCells[['7']], straightness, 
+matrix=TRUE), col.regions = rev(rainbow(15)), xlab="", 
+ylab="n", colorkey=FALSE)  # main="BCell 7",
+@
+<<echo=false,fig=true,width=3,height=3>>=
+levelplot(computeStaggered(TCells[['2']], straightness, matrix=TRUE), col.regions = rev(rainbow(15)), 
+xlab="m", ylab="", colorkey=FALSE) # , main="TCell 2"
+@
+\setkeys{Gin}{width=0.3\textwidth}
+<<echo=false,fig=true,width=3,height=3>>=
+levelplot(computeStaggered(Neutrophils[['7']], straightness, matrix=TRUE), col.regions = rev(rainbow(15)), 
+xlab="", ylab="") # ,main="Neutrophil 7"
+@
+
+%\only<2> {
+\setkeys{Gin}{width=0.28\textwidth}
+<<echo=false,fig=true,width=3,height=3>>=
+plot(getTracks(BCells, c('7')), col=3)
+@
+<<echo=false,fig=true,width=3,height=3>>=
+plot(getTracks(TCells, c('2')), col=2)
+@
+<<echo=false,fig=true,width=3,height=3>>=
+plot(getTracks(Neutrophils, c('7')), col=4)
+@
+\begin{minipage}{0.09\linewidth}
+\end{minipage}
+%%\only<1> {
+\begin{footnotesize}
+\hspace{-.5cm}
+<<fig=false>>=
+levelplot(computeStaggered(TCells[['2']], straightness, matrix=TRUE))
+@
+\end{footnotesize}
+%}
+\end{frame}
+
+\section {Classification of Tracks} 
+\subsection{Clustering Tracks}
+
+
+\begin{frame}[fragile]
+\frametitle{Tracks in Parameter Spaces}
+\setkeys{Gin}{width=0.45\textwidth}
+<<echo=false, fig=true,width=3,height=3>>=
+plotInParameterSpace(c(TCells,BCells,Neutrophils), 
+displacement, straightness, main="Overall Measures", 
+col=rep(2:4, c(length(TCells), length(BCells), length(Neutrophils))), 
+pch=20, xlab="Displacement", ylab="Straightness")
+#plotInParameterSpace(list(Neutrophils, BCells, TCells), displacement, straightness, main="Tracks in Parameter Space of Overall Measures", col=2)
+@
+<<echo=false,fig=true,width=3,height=3>>=
+plotInParameterSpace(c(TCells,BCells,Neutrophils), 
+staggered(displacement), staggered(straightness), main="Staggered Measures", 
+col=rep(2:4, c(length(TCells), length(BCells), length(Neutrophils))), 
+pch=20, xlab="Staggered Displacement", ylab="Staggered Straightness")
+#plotInParameterSpace(list(Neutrophils, BCells, TCells), staggered(straightness), staggered(asphericity), main="Tracks in Parameter Space of Staggered Measures", col=2)
+@
+\begin{small}
+<<fig=false>>=
+plotInParameterSpace(c(TCells, BCells, Neutrophils), 
+	displacement, straightness, col=rep(2:4, 
+	c(length(Neutrophils), length(BCells), length(TCells))))
+@
+\end{small}
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Clustering by Displacement and Staggered Straightness}
+\setkeys{Gin}{width=\textwidth}
+<<echo=false, fig=true,width=12,height=4>>=
+TC <- TCells
+BC <- BCells
+N <- Neutrophils
+names(TC) <- paste0("T",names(TCells))
+names(BC) <- paste0("B",names(BCells))
+names(N) <- paste0("N", names(Neutrophils))
+plot(clusterTracks(c(TC,BC,N), c(displacement, staggered(straightness)
+)), xlab="trackID")
+@
+
+\begin{small}
+<<fig=false>>=
+plot(clusterTracks(c(TCells, BCells, Neutrophils), 
+	c(displacement, staggered(straightness))))
+@
+\end{small}
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Track Classification by Clustering}
+\begin{figure}
+\centering
+<<echo=false,fig=true,width=3,height=3>>=
+TC <- TCells
+BC <- BCells
+N <- Neutrophils
+names(TC) <- paste0("T",names(TCells))
+names(BC) <- paste0("B",names(BCells))
+names(N) <- paste0("N", names(Neutrophils))
+clusters <- cutree(clusterTracks(c(TC,BC,N), c(displacement,staggered(straightness))), k=3)
+real.clusters <- rep(c(1,2,3),c(length(TC),length(BC),length(N)))
+plotInParameterSpace(c(TC,BC,N), displacement, staggered(straightness), 
+	col=real.clusters+1, pch=16*(clusters==real.clusters)+1)
+@
+\footnotesize{
+<<fig=false>>=
+clusters <- cutree(clusterTracks(c(TCells, BCells, Neutrophils), 
+	c(displacement, staggered(straightness))), k=3)
+real.clusters <- rep(c(1, 2, 3), c(length(TCells), length(BCells),
+	length(Neutrophils)))
+plotInParameterSpace(c(TCells, BCells, Neutrophils), 
+	displacement, staggered(straightness), 
+	col=real.clusters + 1, pch=(clusters==real.clusters) + 1)
+@
+}
+\end{figure}
+\end{frame}
+
+
+
+\subsection{Outlook}
+\begin{frame}[label=info]
+	\frametitle{The Classification Quality of Different Measures}
+	\centering
+	\begin{tabular}{l|l|l}
+		measure & \multicolumn{2}{c}{information gain}  \\
+				& overall         & staggered\\
+		\hline
+		random       & \multicolumn{2}{c}{0.05} \\
+		track length & 0.4562565 & 0.4562565 \\
+		duration     & 0.2863695 & 0.2863695 \\
+		%max displacement & 0.4748801 & 0.5702439 \\
+		displacement & 0.457483 & 0.5702439  \\
+		square displacement & 0.5100233 & 0.6016630 \\
+		speed & 0.3274543 & 0.2729963 \\
+		asphericity & 0.16979242 & 0.06853583 \\
+		straightness & 0.06460089 & 0.04884162 \\
+		corrected straightness & 0.3580986 & 0.2323647 \\
+		displacement ratio & 0.05972488 & 0.09131883\\
+		outreach ratio & 0.11666125 & 0.03817852 \\
+		turning angle & 0.10483586 & 0.07419097 \\
+	\end{tabular}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Conclusion}
+\begin{itemize}
+	\item useful tool for cell migration analysis
+	\item to be released as an R package
+	\item possible application: characterization 
+			and classification of cell tracks
+	\item applicable to tracks of other moving objects
+\end{itemize}
+\end{frame}
+
+\end{document}
+
