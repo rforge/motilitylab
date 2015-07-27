@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{getSubsetOfTracks}
 \alias{getSubsetOfTracks}
-\title{Extract tracks based on user defined properties}
+\title{Extract Tracks Based on User-Defined Properties}
 \usage{
 getSubsetOfTracks(tracks, measure, ll, ul)
 }

@@ -14,8 +14,7 @@ applied to. Default is \eqn{1}.}
 }
 \value{
 A function that applies the measure to every prefix of length at
-least \code{min.length} is returned. This
-function expects a track as an input, whose prefixes are considered.
+least \code{min.length} is returned.
 }
 \description{
 Returns a function that applies the input measure to each of a tracks prefixes
@@ -24,6 +23,9 @@ of a given minimal length.
 \details{
 A function that applies the measure to every prefix of length at
 least \code{min.length} is returned. This
-function expects a track as an input, whose prefixes are considered.
+function applies the measure to every prefix of the input track, starting
+with the prefix that consists of \code{min.length} points. The resulting
+values are returned in a vector, sorted in ascending order by the
+prefix length.
 }
 

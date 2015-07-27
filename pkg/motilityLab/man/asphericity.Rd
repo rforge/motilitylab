@@ -16,7 +16,7 @@ The track's asphericity, a vaule between \eqn{0} and \eqn{1}, will
 be returned for two- or threedimensional tracks, otherwise \code{NA}.
 }
 \description{
-Computes the asphericity of the track's points scatter plot.
+Computes the asphericity of the track's points.
 }
 \details{
 Computes the asphericity of a track, i.e. the scatter plot of
@@ -28,7 +28,7 @@ defined for tracks in two or three dimensions.
 }
 \references{
 \cite{Mokhtari et al.: Automated Characterization and
-Parameter-Free Classification of Cell Tracks Based on Local Migration
-Behavior, PLoS ONE, 2013}
+Parameter--Free Classification of Cell Tracks Based on Local Migration
+Behavior, PLoS ONE 2013 Dec 6;8(12):e80808, 2013}
 }
 

@@ -25,7 +25,7 @@ track's maximal displacement and length. The value will be from the interval
 \references{
 \cite{Mokhtari et al.: Automated Characterization and
 Parameter--Free Classification of Cell Tracks Based on Local Migration
-Behavior, PLoS ONE, 2013}
+Behavior, PLoS ONE 2013 Dec 6;8(12):e80808, 2013}
 }
 \seealso{
 \code{\link{maxDisplacement}}, \code{\link{trackLength}}

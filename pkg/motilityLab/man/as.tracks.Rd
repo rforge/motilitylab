@@ -18,6 +18,7 @@ the coerced object of S3 class \code{tracks}.
 Coerces \code{x} to a \code{tracks} object.
 }
 \details{
-the S3 Method corresponding to \code{x}'s type (usually a list) is called.
+The S3 Method corresponding to the class of `x` (usually \code{list})
+is called.
 }
 

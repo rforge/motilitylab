@@ -11,7 +11,7 @@ squareDisplacement(track, limits = c(1, nrow(track)))
 
 \item{limits}{Vector giving the first and last row of the track. Can be used to avoid
 extracting subtracks, which is exploited e.g. by
-\code{\link{aggregateSubtrackMeasures}}.}
+\code{\link{aggregate.tracks}}.}
 }
 \value{
 The track's square displacement will be returned.

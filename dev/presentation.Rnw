@@ -500,14 +500,14 @@ levelplot(computeStaggered(TCells[['2']], straightness, matrix=TRUE))
 \begin{frame}[fragile]
 \frametitle{Tracks in Parameter Spaces}
 \setkeys{Gin}{width=0.45\textwidth}
-<<echo=false, fig=true,width=3,height=3>>=
+<<tracksp1,echo=false, fig=true,width=3,height=3>>=
 plotInParameterSpace(c(TCells,BCells,Neutrophils), 
 displacement, straightness, main="Overall Measures", 
 col=rep(2:4, c(length(TCells), length(BCells), length(Neutrophils))), 
 pch=20, xlab="Displacement", ylab="Straightness")
 #plotInParameterSpace(list(Neutrophils, BCells, TCells), displacement, straightness, main="Tracks in Parameter Space of Overall Measures", col=2)
 @
-<<echo=false,fig=true,width=3,height=3>>=
+<<tracksp2,echo=false,fig=true,width=3,height=3>>=
 plotInParameterSpace(c(TCells,BCells,Neutrophils), 
 staggered(displacement), staggered(straightness), main="Staggered Measures", 
 col=rep(2:4, c(length(TCells), length(BCells), length(Neutrophils))), 
@@ -515,7 +515,7 @@ pch=20, xlab="Staggered Displacement", ylab="Staggered Straightness")
 #plotInParameterSpace(list(Neutrophils, BCells, TCells), staggered(straightness), staggered(asphericity), main="Tracks in Parameter Space of Staggered Measures", col=2)
 @
 \begin{small}
-<<fig=false>>=
+<<tracksp3,fig=false>>=
 plotInParameterSpace(c(TCells, BCells, Neutrophils), 
 	displacement, straightness, col=rep(2:4, 
 	c(length(Neutrophils), length(BCells), length(TCells))))

@@ -1,5 +1,7 @@
 exportPattern("^[^\\.][[:alpha:]]+")
+importFrom("stats","aggregate")
 S3method(plot,tracks)
+S3method(aggregate,tracks)
 S3method(as.data.frame,tracks)
 S3method(as.list,tracks)
 S3method(sort,tracks)

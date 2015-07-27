@@ -12,6 +12,8 @@ Description: Quantitative analysis of tracks of moving
     asphericity and so on.
 LazyData: true
 License: GPL-2
+Depends:
+	stats
 Suggests:
     DescTools,
     pracma,

@@ -46,13 +46,13 @@
   debug.nr.tracks <- 0
   if (is.null(only.for.i)) {
     for (i in (min.segments):(nrow(track) - 1)) {
-      subtracks <- computeSubtracksOfISegments(track, i, ...)
+      subtracks <- .computeSubtracksOfISegments(track, i, ...)
       val <- sapply(subtracks, measure)
       means[i - min.segments + 1] <- mean(val)#, na.omit=TRUE)    # na.rm produces NaN if all values are NA
     }
   } else {
     if ((only.for.i >= min.segments) && (only.for.i <= (nrow(track) - 1))) {
-      subtracks <- computeSubtracksOfISegments(track, only.for.i)
+      subtracks <- .computeSubtracksOfISegments(track, only.for.i)
       val <- sapply(subtracks, measure)
       means <- mean(val)#, na.omit=TRUE)
     } else {
@@ -60,6 +60,21 @@
     }
   }
   return(means)
+}
+
+.computeSubtracksOfISegments <- function(track, i, overlap=i-1) {
+  if (nrow(track) <= i) {
+    return( NULL )
+  } 
+  if (overlap > i-1) {
+    warning("Overlap exceeds segment length")
+    overlap <- i-1
+  }
+  l <- list()
+  for (j in seq(1, (nrow(track)-i),i-overlap)) {
+    l[[as.character(j)]] <- track[j:(j+i), ,drop=FALSE]
+  }    
+  structure(l, class="tracks")
 }
 
 

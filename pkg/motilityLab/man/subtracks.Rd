@@ -2,30 +2,35 @@
 % Please edit documentation in R/functions.R
 \name{subtracks}
 \alias{subtracks}
-\title{All Subtracks with a Certain Number of Segments for a \emph{Tracks} Object}
+\title{Get Subtracks of One or More Tracks}
 \usage{
-subtracks(tracks, i, overlap = i - 1)
+subtracks(x, i, overlap = i - 1)
 }
 \arguments{
-\item{tracks}{the \emph{tracks} object whose subtracks are to be computed.}
+\item{x}{a single track or a \emph{tracks} object whose
+subtracks shall be computed.}
 
-\item{i}{the number of segments the subtracks ahll consist of.}
+\item{i}{subtrack length. A single integer, lists are not supported.}
 
 \item{overlap}{the number of segments in which each subtrack shall overlap
-its predecessor and successor. Default is \eqn{i - 1}.}
+with the previous and next subtrack. The default \code{i - 1} returns all
+subtracks. Can be negative, which means that space will be left between
+subtracks.}
 }
 \value{
 A \emph{tracks} object is returned which contains all the subtracks
-of any track in the input \emph{tracks} object that consist of exactly \code{i}
-segments and overlap their predecessor in  \code{overlap} segments.
+of any track in the input \emph{tracks} object that consist of exactly `i`
+segments and overlap adjacent subtracks in `overlap` segments.
 }
 \description{
-Computes a \emph{tracks} object of all the subtracks of the input
-\emph{tracks} object that constist of \code{i} segments.
+Creates a \emph{tracks} object consisting of all subtracks of `x`
+with `i` segments (i.e., `i`+1 positions).
 }
 \details{
-The function \code{\link{computeSubtracksOfISegments}} is applied
-on every track for the given \code{i} and \code{overlap} and the result is
-returned as a single \emph{tracks} object.
+The output is always a single \emph{tracks} object, which is
+convenient for many common analyses. If subtracks are to be considered separately
+for each track, use the function \code{\link{staggered}} together with
+\code{lapply}. Subtrack extraction always starts at the first position of the
+input track.
 }
 

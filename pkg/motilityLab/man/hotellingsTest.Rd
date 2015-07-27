@@ -4,7 +4,8 @@
 \alias{hotellingsTest}
 \title{Unbiasedness of Motion}
 \usage{
-hotellingsTest(tracks, dim = c("x", "y"), plot = FALSE)
+hotellingsTest(tracks, dim = c("x", "y"), step.spacing = 0, plot = FALSE,
+  ...)
 }
 \arguments{
 \item{tracks}{the tracks whose biasedness is to be determined.}
@@ -12,10 +13,20 @@ hotellingsTest(tracks, dim = c("x", "y"), plot = FALSE)
 \item{dim}{vector with the names of the track's
 dimensions that are to be considered. By default c("x", "y").}
 
+\item{step.spacing}{How many positions are to be left out between
+the steps that are considered for the test. For persistent motion, subsequent
+steps will be correlated, which leads to too low p-values because Hotelling's
+test assumes that the input data is independent. To avoid this, the resulting
+p-value should either be corrected for this dependence (e.g. by adjusting
+the degrees of freedom accordingly), or `step.spacing` should be set to a value
+high enough to ensure that the considered steps are approximately independent.}
+
 \item{plot}{logical indicating whether the scatter of the step's directions,
 origin of ordinates (green circle) and the mean of the data points (green
 cross) are to be plotted. (In one dimension also the bounds of the
 condfidence interval are given.) Plot works only in one or two dimensions.}
+
+\item{...}{further arguments passed on to \code{plot}.}
 }
 \description{
 Determines the p-value for the motion described by a \emph{tracks} object to
@@ -23,8 +34,12 @@ be unbiased.
 }
 \details{
 Computes the displacement vectors of all segments in the tracks
-given in \code{tracks}, and determines the p-value for this distribution
-using Hotelling's T-square Test
+given in \code{tracks}, and performs Hotelling's T-square Test on that vector.
 (see \code{\link[DescTools]{HotellingsT2Test}}).
+}
+\examples{
+## Test H_0: T-cells are migrating by random walk on x and y coordinates,
+## and report the p-value
+hotellingsTest( TCells, plot=FALSE )$p.value
 }
 

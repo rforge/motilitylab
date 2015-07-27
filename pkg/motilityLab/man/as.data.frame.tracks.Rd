@@ -2,32 +2,34 @@
 % Please edit documentation in R/functions.R
 \name{as.data.frame.tracks}
 \alias{as.data.frame.tracks}
-\title{Convert from Tracks to Data Frame}
+\title{Convert Tracks to Data Frame}
 \usage{
 \method{as.data.frame}{tracks}(x, row.names = NULL, optional = FALSE, ...)
 }
 \arguments{
-\item{x}{the  \code{tracks} object to be coerced to a data frame.}
+\item{x}{the \code{tracks} object to be coerced to a data frame.}
 
 \item{row.names}{NULL or a character vector giving the row names for the
 data frame.  Missing values are not allowed.}
 
-\item{optional}{logical. Column names are always assigned to the resulting
-data frame regardless of the setting of this option.}
+\item{optional}{logical. Required for S3 consistency, but
+has no effect: column names are always assigned to the resulting
+ data frame regardless of the setting of this option.}
 
 \item{...}{further arguments to be passed from or to other methods.}
 }
 \value{
-Returns one data frame containing all data of the indiviual
-tracks from the input with a prepended column named "id" which contains
-each track's name in the list of the \emph{tracks} object.
+A data frame containing all data of the indiviual
+tracks from the input with a prepended column named "id" containing
+each track's identifier in `x`.
 }
 \description{
 Converts a \code{tracks} object into a data frame.
 }
 \details{
-Returns one data frame containing all indiviual
-tracks from the input with a prepended column "id" containing
-each track's name in the list of the \emph{tracks} object.
+Converts tracks from the list-of-matrices format, which is good
+for efficient processing and therefore the default in this package, to a
+single dataframe which is efficient for tasks such as plotting or
+writing a dataset to a CSV file.
 }
 

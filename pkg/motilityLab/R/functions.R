@@ -1,23 +1,25 @@
 # TODO Johannes: Stimmt die Doku?
-#' Convert from Tracks to Data Frame
+#' Convert Tracks to Data Frame
 #' 
 #' Converts a \code{tracks} object into a data frame.
 #' 
-#' @param x the  \code{tracks} object to be coerced to a data frame.
+#' @param x the \code{tracks} object to be coerced to a data frame.
 #' 
 #' @param row.names NULL or a character vector giving the row names for the
 #'  data frame.  Missing values are not allowed.
-#' @param optional logical. Column names are always assigned to the resulting
+#' @param optional logical. Required for S3 consistency, but 
+#' has no effect: column names are always assigned to the resulting
 #'  data frame regardless of the setting of this option.
 #' @param ... further arguments to be passed from or to other methods.
 #'
-#' @details Returns one data frame containing all indiviual 
-#' tracks from the input with a prepended column "id" containing
-#' each track's name in the list of the \emph{tracks} object.
-#' 
-#' @return Returns one data frame containing all data of the indiviual 
-#' tracks from the input with a prepended column named "id" which contains 
-#' each track's name in the list of the \emph{tracks} object.
+#' @details Converts tracks from the list-of-matrices format, which is good
+#' for efficient processing and therefore the default in this package, to a 
+#' single dataframe which is efficient for tasks such as plotting or 
+#' writing a dataset to a CSV file. 
+#"
+#' @return A data frame containing all data of the indiviual 
+#' tracks from the input with a prepended column named "id" containing
+#' each track's identifier in `x`.
 as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE, ...) {
 	ids <- rep(names(x), lapply(x,nrow))
 	r <- data.frame(id=ids,  Reduce( function(...) 
@@ -35,7 +37,8 @@ as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE, ...) {
 #' @param x the object to be coerced.
 #' @param ... further arguments to be passed on to the respective method.
 #'
-#' @details the S3 Method corresponding to \code{x}'s type (usually a list) is called.
+#' @details The S3 Method corresponding to the class of `x` (usually \code{list})
+#' is called.
 #'  
 #' @return the coerced object of S3 class \code{tracks}.
 as.tracks <- function(x,...) 
@@ -257,32 +260,37 @@ wrapTrack <- function(track) {
   return(as.tracks(list("1" = track)))
 }
 
-# TODO handle text duplication in details and return 
 #' Staggered Version of a Function
 #' 
-#' Returns the staggered version of a track measure.
+#' Returns the "staggered" version of a track measure. That is, instead of
+#' computing the measure on the whole track, the measure is average over
+#' all subtracks (of any length) of the track.
 #' 
 #' @param measure the measure that shall be computed in a staggered fashion.
-#' @param ... further parameters for staggered computation of the measure 
-#' (see \code{\link{computeStaggered}}).
+#' @param ... further parameters passed on to \code{\link{computeStaggered}}.
 #' 
-#' @details Returns a funtion of a cell track (in a data frame) that computes
+#' @details This is a wrapper mainly designed to provide a convenient interface
+#' for track-based staggered computations with \code{lapply}, see example.
+#' 
+#' @return Returns a function that computes
 #' the given measure in a staggered fashion on that track.
 #' 
-#' @return Returns a funtion of a cell track (in a data frame) that computes
-#' the given measure in a staggered fashion on that track.
+#' @references \cite{Mokhtari et al.: Automated Characterization and 
+#' Parameter--Free Classification of Cell Tracks Based on Local Migration 
+#' Behavior, PLoS ONE 2013 Dec 6;8(12):e80808, 2013} 
+#'
+#' @examples
+#' hist( sapply( TCells, staggered( displacement ) ) )
+#'
 staggered <- function(measure, ...){
-  return(function(track) { 
-    computeStaggered(track, measure, ...) 
-  })
+  return( function(track) computeStaggered(track, measure, ...) )
 }
 
 
-# TODO make examples (last line of last param) a link?
 #' Compute a Measure on a Track in a Staggered Fashion
 #' 
-#' Computes a measure on all a track's subtracks and either returns them in a 
-#' matrix or returns their mean.
+#' Computes a measure on all subtracks of a track and return them either
+#' as a matrix or return their mean.
 #' 
 #' @param track the track for which the measure is to be computed.
 #' @param measure the measure that is to be computed.
@@ -292,15 +300,14 @@ staggered <- function(measure, ...){
 #' @param min.segments the number of segments that each regarded subtrack 
 #' should at least consist of. Typically, this value would be set to the 
 #' minimum number of segments that a (sub)track must have in order for the 
-#' measure to be decently computed. For example, for the funtion 
-#' \code{\link{overallAngle}} at least two segments are necessary. The default
-#' value is 1.     
+#' measure to be decently computed. For example, at least two segments are needed
+#' to compute the \code{\link{overallAngle}}.
 #' 
 #' @details The measure is computed for each of the input track's subtracks of 
 #' length at least \code{min.segments}, and the resulting values are either 
 #' returned in a matrix (if \code{matrix} is set), or their mean is returned. 
-#' Note that the returned matix is symmetric, because the direction in which a 
-#' track is passed is assumed not to matter, and the values at 
+#' The computed matrix is symmetric since the direction along which a 
+#' track is traversed is assumed not to matter. The values at 
 #' \code{[i, i + j]}, where j is a nonnegative integer with 
 #' \eqn{j < }\code{min.segments}, (with the default value \code{min.segments=1}
 #' this is exactly the main diagonal) are set to \code{NA}.
@@ -311,15 +318,14 @@ staggered <- function(measure, ...){
 #' \eqn{j}th point and ends at its \eqn{i}th. Thus, with increasing column number,
 #' the regarded subtrack's starting point is advanced on the original track, 
 #' and the values for increasingly long subtracks starting from this point can 
-#' be found columnwise below the main diagonal, responsively.
-#' If \code{matrix} is not set, the mean over the values of the measure for all
-#' subtracks of at least \code{min.segments} segments is retruned.
+#' be found columnwise below the main diagonal, respectively.
+#' If `matrix` is not set, the mean over the values of the measure for all
+#' subtracks of at least `min.segments` segments is retruned.
 #' 
 #' @examples 
-#' # Compute the staggered matrix for overallAngle appilied to all adecuate 
+#' # Compute the staggered matrix for overallAngle applied to all adequate 
 #' # subtracks of the first TCell track
-#' computeStaggered(getTracks(TCells, "1")$'1', overallAngle, matrix=TRUE, 
-#' min.segments = 2)
+#' computeStaggered(TCells[[1]], overallAngle, matrix=TRUE, min.segments = 2)
 computeStaggered <- function(track, measure, matrix=FALSE, min.segments=1) {
   if (matrix) {
 	mat <- matrix(nrow=nrow(track), ncol=nrow(track), 0)
@@ -341,11 +347,11 @@ computeStaggered <- function(track, measure, matrix=FALSE, min.segments=1) {
     return(ret)
   } else {
     for (i in (min.segments):(nrow(track) - 2)) {
-      subtracks <- computeSubtracksOfISegments(track, i)
+      subtracks <- subtracks(track, i)
       val <- sapply(subtracks, measure)
       diag(mat[-1:-i,]) <- val
     }
-    mat[nrow(track), 1] <- sapply(computeSubtracksOfISegments(track, (nrow(track)-1)), measure)
+    mat[nrow(track), 1] <- sapply(subtracks(track, (nrow(track)-1)), measure)
     mat <- mat + t(mat)
     return(mat)
     }                                        
@@ -364,43 +370,23 @@ computeStaggered <- function(track, measure, matrix=FALSE, min.segments=1) {
 #' 
 #' @details A function that applies the measure to every prefix of length at 
 #' least \code{min.length} is returned. This 
-#' function expects a track as an input, whose prefixes are considered.
-#' 
+#' function applies the measure to every prefix of the input track, starting
+#' with the prefix that consists of \code{min.length} points. The resulting 
+#' values are returned in a vector, sorted in ascending order by the 
+#' prefix length.
+#'
 #' @return A function that applies the measure to every prefix of length at 
-#' least \code{min.length} is returned. This 
-#' function expects a track as an input, whose prefixes are considered.
+#' least \code{min.length} is returned. 
+#'
 forEveryPrefix <- function(measure, min.length=1) {
   function(track) {
-    computeForEveryPrefix(track, measure, min.length) 
+	  res <- c()
+	  for (i in (min.length:nrow(track))) {
+		res <- c(res, measure(track[1:i,,drop=FALSE]))
+	  }
+	  return(res)
   }
 }
-
-# formerName: computeForEveryTruePrefixOfLengthAtLeast
-#' Apply a Measure to Every Prefix of a Given Track
-#' 
-#' Computes a vector in which each position represents the value of the given 
-#' measure for a prefix of certain length of the input track.
-#' 
-#' @param track the track whose prefixes are to be regarded.
-#' @param measure the measure that is to be applied.
-#' @param min.length minimal number of points in regarded prefixes. Default is 
-#' \eqn{1}.
-#' 
-#' @details The measure is applied to every prefix of the input track, starting
-#' with the prefix that consists of \code{min.length} points. The resulting 
-#' values are returned in a vector, sorted in ascending order of the 
-#' corresponding prefix's length.
-#' 
-#' @return Returns a vector with the values of the measure applied to each of 
-#' the given track's prefixes.
-computeForEveryPrefix <- function(track, measure, min.length=1) {
-  res <- c()
-  for (i in (min.length:nrow(track))) {
-    res <- c(res, measure(track[1:i,,drop=FALSE]))
-  }
-  return(res)
-}
-
 
 #' Normalize a track
 #' 
@@ -432,62 +418,60 @@ normalizeTrack <- function(track) {
 #' such that their starting point is in the origin of ordinates.
 normalizeTracks <- function(tracks) as.tracks(lapply(tracks, normalizeTrack))
 
-#' All Subtracks of a Given Length
+#' Get Subtracks of One or More Tracks
 #' 
-#' For a given integer \eqn{i} and a track, this function returns a tracks 
-#' object of all subtracks that consist of exactly \eqn{i} subsegments. 
+#' Creates a \emph{tracks} object consisting of all subtracks of `x`
+#' with `i` segments (i.e., `i`+1 positions).
 #' 
-#' @param track the track whose subtracks shall be computed.
-#' @param i integer indicating the desired subtrack length
-#' @param overlap the number of segments that shall overlap in each two 
-#' subsequent subtracks.
-#' 
-#' @details Beginning with the track's starting point, for each point on
-#' the track, this point and the subsequent \eqn{i} points are saved 
-#' in a data frame. All the data frames are returned as a list, constituting
-#' an object of class \emph{tracks}.
-#' 
-#' @return A list of data frames (a \emph{tracks} object), containing a data
-#' frame for each of the track's subtracks that constists of exactly \eqn{i} single 
-#' segments.
-computeSubtracksOfISegments <- function(track, i, overlap=i-1) {
-  if (nrow(track) <= i) {
-    return(NA)
-  } 
-  if (overlap > i-1) {
-    warning("Overlap exceeds segment length")
-    overlap <- i-1
-  }
-  l <- list()
-  for (j in seq(1, (nrow(track)-i),i-overlap)) {
-    l[[as.character(j)]] <- track[j:(j+i), ]
-  }    
-  structure(l, class="tracks")
-}
-
-
-#' All Subtracks with a Certain Number of Segments for a \emph{Tracks} Object
-#' 
-#' Computes a \emph{tracks} object of all the subtracks of the input 
-#' \emph{tracks} object that constist of \code{i} segments.
-#' 
-#' @param tracks the \emph{tracks} object whose subtracks are to be computed.
-#' @param i the number of segments the subtracks ahll consist of.
+#' @param x a single track or a \emph{tracks} object whose 
+#' subtracks shall be computed.
+#' @param i subtrack length. A single integer, lists are not supported.
 #' @param overlap the number of segments in which each subtrack shall overlap 
-#' its predecessor and successor. Default is \eqn{i - 1}.
+#' with the previous and next subtrack. The default \code{i - 1} returns all
+#' subtracks. Can be negative, which means that space will be left between
+#' subtracks. 
 #' 
-#' @details The function \code{\link{computeSubtracksOfISegments}} is applied 
-#' on every track for the given \code{i} and \code{overlap} and the result is 
-#' returned as a single \emph{tracks} object. 
+#' @details The output is always a single \emph{tracks} object, which is 
+#' convenient for many common analyses. If subtracks are to be considered separately
+#' for each track, use the function \code{\link{staggered}} together with
+#' \code{lapply}. Subtrack extraction always starts at the first position of the
+#' input track.
 #' 
 #' @return A \emph{tracks} object is returned which contains all the subtracks 
-#' of any track in the input \emph{tracks} object that consist of exactly \code{i}
-#' segments and overlap their predecessor in  \code{overlap} segments.
-subtracks <- function(tracks, i, overlap=i-1 ) {
-	Reduce(c, lapply(tracks, 
-  		function(t) computeSubtracksOfISegments(t, i, overlap )))
+#' of any track in the input \emph{tracks} object that consist of exactly `i`
+#' segments and overlap adjacent subtracks in `overlap` segments.
+subtracks <- function(x, i, overlap=i-1 ) {
+	if( class(x) != "tracks" ){
+		x <- wrapTrack( x )
+	}
+	Reduce(c, lapply(x, 
+  		function(t) .computeSubtracksOfISegments(t, i, overlap )))
 }
 
+#' Get Track Prefixes 
+#' 
+#' Creates a \emph{tracks} object consisting of all prefixes (i.e., subtracks
+#' starting with the first position of a track) of `x`
+#' with `i` segments (i.e., `i`+1 positions).
+#' 
+#' @param x a single track or a \emph{tracks} object whose 
+#' prefixes shall be computed.
+#' @param i subtrack length. A single integer, lists are not supported.
+#'
+#' @details This function behaves exactly like \code{\link{subtracks}} except
+#' that only subtracks starting from the first position are considered.
+#'
+prefixes <- function(x,i) {
+	if( class(x) != "tracks" ){
+		x <- wrapTrack( x )
+	}
+	lapply( x,
+		function(t) {
+			if( nrow(t) <= i ){ return( NULL ) }
+			t[1:(i+1), ,drop=FALSE]
+		}
+	)
+}
 
 
 #' Normalize a Measure to Track Duration
@@ -631,24 +615,34 @@ plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0},
 }
 
 
-# TODO implement the prefixes.only argument
-#' Compute a Statistic on Measure Values of Subtracks of a Certain Length
+#' Compute summary statistic of measure values over subtracks of a given track
+#' set.
 #' 
-#' For a given \emph{tracks} object, a given measure is applied to all the 
+#' This is the main workhorse function to compute many common motility measures 
+#' such as mean square displacement, turning angle, and autocorrelation functions.
+#' 
+#' For the given \emph{tracks} object, a track measure is applied to all the 
 #' tracks' subtracks of a certain number of segments \eqn{i}. 
 #' On all the values obtained for a certain value of \eqn{i}, the given 
-#' statistic is computed, and all the resulting values are returned.
+#' statistic is computed, and the resulting values are returned.
 #' 
-#' @param tracks the tracks object whose subtracks are to be considered. If a single track
-#' is given, it will be coerced to a tracks object using \code{\link{wrapTrack}}.
-#' @param subtrack.length either a numeric value \eqn{i}, indicating that only 
-#' subtracks of exactly \eqn{i} segments are to be regarded, or a vector of all
-#' the values \eqn{i} that shall be used.
+#' @param x the tracks object whose subtracks are to be considered. 
+#' If a single track is given, it will be coerced to a tracks object 
+#' using \code{\link{wrapTrack}} (but note that this requires an explicit call
+#' \code{aggregate.tracks}).
 #' @param measure the measure that is to be computed on the subtracks.
-#' @param statistic the function that is to be used to aggregate the measures 
-#' of subtracks of the same number of segments. The function may return an 
-#' arbitrary number of values.
-#' For the most common functions, a string can be given:
+#' @param by a string that indicates how grouping is performed. Currently, two
+#' kinds of grouping are supported: 
+#' \itemize{
+#'  \item{"subtracks"}{ Apply `measure` to all subtracks according to 
+#' the parameters `subtrack.length` and `max.overlap`.}
+#'  \item{"prefixes"}{ Apply `measure` to all prefixes (i.e., subtracks starting
+#'  from a track's initial position) according to the parameter `subtrack.length`.}
+#' }
+#' 
+#' @param FUN a function that is to be used to aggregate the measures 
+#' of corresponding subtracks. 
+#' If a string is given, it is first matched to the following builtin values:
 #' \itemize{
 #'  \item{"mean.sd"}{ Outputs the mean and \eqn{mean - sd} as lower and 
 #'  \eqn{mean + sd} as upper bound}
@@ -658,15 +652,17 @@ plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0},
 #'  symmetric 95 percent confidence intervall}. 
 #'  \item{"mean.ci.99"}{ Outputs the mean and upper and lower bound of the 
 #'  symmetric 95 percent confidence intervall}. 
-#'  \item{"iqr"}{ Outputs the interquartil range, that is, the median, and the 
+#'  \item{"iqr"}{ Outputs the interquartile range, that is, the median, and the 
 #'  25-percent-quartile as a lower and and the 75-percent-quartile as an 
 #'  upper bound}
 #' }
+#' If the string is not equal to any of these, it is passed on to 
+#' \code{\link{match.fun}}
 #'
-#' @param prefixes.only logical. If TRUE, then only subtracks starting from a track's
-#' first position are considered. Could be relevant for tracks for which the starting
-#' position is indeed meaningful (instead of being simply the position at which observation
-#' of a longer trajectory started).
+#' @param subtrack.length either a numeric value \eqn{i}, indicating that only 
+#' subtracks of exactly \eqn{i} segments are to be regarded, or a vector of all
+#' the values \eqn{i} that shall be used. In particular, subtrack.length=2 corresponds
+#' to a "step-based analysis".
 #'
 #' @param max.overlap Determines the amount by which the subtracks that are taken into
 #' account can overlap. A maximum overlap of \code{max(subtrack.length)} will imply
@@ -675,8 +671,9 @@ plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0},
 #' a certain distance apart are considered. In general, for non-Brownian motion there will
 #' be correlations between subsequent steps, such that a negative overlap may be necessary
 #' to get a proper error estimate.
-#' @param na.rm This is passed on to the builtin statistic functions like "mean.se" or 
+#' @param na.rm This is passed on to the builtin statistics like "mean.se" or 
 #' "mean".
+#' @param ... further arguments passed to or used by methods.
 #'
 #' @details For every number of segments \eqn{i} in the set defined by 
 #' \code{subtrack.length}, all subtracks of any track in the input 
@@ -691,80 +688,92 @@ plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0},
 #' function applied on the measure values of tracks of exactly \eqn{i} segments.
 #' @examples 
 #' require(ggplot2)
-#' dat <- aggregateSubtrackMeasures(TCells, displacement, "mean.se")
+#' dat <- aggregate(TCells, displacement, FUN="mean.se")
 #' ggplot(dat, aes(x=i, y=mean)) + geom_errorbar(aes(ymin=lower, ymax=upper), width=.1)
-aggregateSubtrackMeasures <- function( tracks, measure, statistic=mean, 
-    subtrack.length=seq(1, (maxTrackLength(tracks)-1)),
-    prefixes.only=FALSE,
-    max.overlap=max(subtrack.length), na.rm=FALSE ){  # geht fuer einzelne tracks nicht!
-    if( class( tracks ) != "tracks" ){
-    	if( class( tracks ) %in% c("data.frame","matrix" ) ){
-    		tracks <- wrapTrack( tracks )
+aggregate.tracks <- function( x, measure, by="subtracks", FUN=mean, 
+    subtrack.length=seq(1, (maxTrackLength(x)-1)),
+    max.overlap=max(subtrack.length), na.rm=FALSE, ... ){
+    if( class( x ) != "tracks" ){
+    	if( class( x ) %in% c("data.frame","matrix" ) ){
+    		tracks <- wrapTrack( x )
     	} else {
     		stop("Cannot coerce argument 'tracks' to tracks object" )
     	}
     }
-    if (max(subtrack.length) > (maxTrackLength(tracks)-1)) {
+    if (max(subtrack.length) > (maxTrackLength(x)-1)) {
 		warning("No track is long enough!")
   	}
-  	if (is.character(statistic)) {
-		if (statistic == "mean.ci.95") {
+  	if (is.character(FUN)) {
+		if (FUN == "mean.ci.95") {
 		  the.statistic <- function(x,...) {
 		  	mx <- mean(x,na.rm=na.rm)
 			ci <- tryCatch( t.test(x)$conf.int, error=function(e) rep(NA,2) )
 			return(c(lower=ci[1], mean=mx, upper=ci[2]))
 		  }
-		} else if (statistic == "mean.ci.99") {
+		} else if (FUN == "mean.ci.99") {
 		  the.statistic <- function(x,...) {
 			mx <- mean(x,na.rm=na.rm)
 			ci <- tryCatch( t.test(x, conf.level=.99)$conf.int, 
 				error=function(e) rep(NA,2) )
 			return(c(lower=ci[1], mean=mean(x), upper=ci[2]))
 		  }
-		} else if (statistic == "mean.se") {
+		} else if (FUN == "mean.se") {
 		  the.statistic <- function(x,...) {
 		  	mx <- mean(x,na.rm=na.rm)
 		  	sem <- sd(x,na.rm=na.rm)/sqrt(sum(!is.na(x))) 
 		  		# note that this also works is na.omit is FALSE
 			return(c(mean=mx, lower = mx - sem, upper = mx + sem))
 		  }
-		} else if (statistic == "mean.sd") {
+		} else if (FUN == "mean.sd") {
 		  the.statistic <- function(x,...) {
 		  	mx <- mean(x,na.rm=na.rm)
 		  	sem <- sd(x,na.rm=na.rm)
 			return(c(mean=mx, lower = mx - sem, upper = mx + sem))
 		  }
-		} else if (statistic == "iqr") {
+		} else if (FUN == "iqr") {
 		  the.statistic <- function(x,...) {
 			lx <- quantile(x,probs=c(.25,.5,.75),na.rm=na.rm)
 			names(lx) <- c("lower","median","upper")
 			return(lx)
 		  }
 		} else {
-		  stop("statistic not known")
+			the.statistic <- match.fun( FUN )
 		}
 	} else {
-		if (!is.function(statistic)) {
-		   stop("statistic must be a function or a string")
+		if ( !is.function( FUN) ) {
+		   stop("FUN must be a function or a string")
 		} else {
-			the.statistic <- statistic
+			the.statistic <- FUN
 		}
 	}
-	if( length( intersect(c("track","limits"),names(formals(measure))) ) == 2 ){
+	if( by == "subtracks" ){
+		# optimized version: avoids making copies of subtracks (relevant especially
+		# for measures like displacement, which actually only consider the track
+		# endpoints)
+		if( length( intersect(c("track","limits"),names(formals(measure))) ) == 2 ){
+			measure.values <- lapply( subtrack.length, 
+				function(i) .ulapply( Filter(function(t) nrow(t)>i, x),
+					function(t) apply( .subtrackIndices(t,i,min(max.overlap,i-1)), 
+						 1, measure, track=t ) ) )
+		} else {
+		# unoptimized version: makes copies of all subtracks.
+			the.subtracks <- list()
+			measure.values <- list()
+			for (i in subtrack.length) {
+				the.subtracks[[i]] <- subtracks(x, i, min(max.overlap,i-1) ) 
+				the.subtracks[[i]] <- Filter( Negate(is.null), the.subtracks[[i]] )
+				measure.values[[i]] <- sapply( the.subtracks[[i]], measure )
+			}
+		}
+	} else if (by == "prefixes" ) {
 		measure.values <- lapply( subtrack.length, 
-			function(i) .ulapply( Filter(function(t) nrow(t)>i, tracks),
-				function(t) apply( .subtrackIndices(t,i,min(max.overlap,i-1)), 
-					 1, measure, track=t ) ) )
+				function(i) sapply( Filter( Negate(is.null), prefixes( x, i )  ), 
+					measure ) 
+			)
 	} else {
-		the.subtracks <- list()
-		measure.values <- list()
-		for (i in subtrack.length) {
-			the.subtracks[[i]] <- subtracks(tracks, i, min(max.overlap,i-1) ) 
-			the.subtracks[[i]] <- Filter( function(z) !all(is.na(z)), the.subtracks[[i]] )
-			measure.values[[i]] <- sapply( the.subtracks[[i]], measure )
-		}
+		stop( "grouping method ", by, " not supported" )
 	}
-	measure.values <- Filter(Negate(is.null),measure.values)
+	measure.values <- Filter( Negate(is.null), measure.values)
 	value <- sapply(measure.values, the.statistic)
 	ret <- rbind(i=subtrack.length, value)
 	return(data.frame(t(ret)))
@@ -819,7 +828,8 @@ boundingBox <- function(tracks) {
   return(Reduce(.minMaxOfTwoMatrices, bounding.boxes, empty)) 
 }
 
-# TODO ellipse einzeichnen?
+# TODO include ellipse
+# TODO refer to PNAS paper
 #' Unbiasedness of Motion
 #' 
 #' Determines the p-value for the motion described by a \emph{tracks} object to 
@@ -832,30 +842,37 @@ boundingBox <- function(tracks) {
 #' origin of ordinates (green circle) and the mean of the data points (green 
 #' cross) are to be plotted. (In one dimension also the bounds of the 
 #' condfidence interval are given.) Plot works only in one or two dimensions.
+#' @param step.spacing How many positions are to be left out between 
+#' the steps that are considered for the test. For persistent motion, subsequent
+#' steps will be correlated, which leads to too low p-values because Hotelling's 
+#' test assumes that the input data is independent. To avoid this, the resulting
+#' p-value should either be corrected for this dependence (e.g. by adjusting 
+#' the degrees of freedom accordingly), or `step.spacing` should be set to a value
+#' high enough to ensure that the considered steps are approximately independent.
+#' @param ... further arguments passed on to \code{plot}.
 #' 
 #' @details Computes the displacement vectors of all segments in the tracks 
-#' given in \code{tracks}, and determines the p-value for this distribution 
-#' using Hotelling's T-square Test 
+#' given in \code{tracks}, and performs Hotelling's T-square Test on that vector.
 #' (see \code{\link[DescTools]{HotellingsT2Test}}).
 #' 
-#' 
-hotellingsTest <- function(tracks, dim=c("x", "y"), plot=FALSE) {
+#' @examples 
+#' ## Test H_0: T-cells are migrating by random walk on x and y coordinates,
+#' ## and report the p-value
+#' hotellingsTest( TCells, plot=FALSE )$p.value
+#'
+
+hotellingsTest <- function(tracks, dim=c("x", "y"), 
+	step.spacing=0, plot=FALSE, ... ) {
   stopifnot( !plot || (length(dim) %in% c(1,2) ))
   Tx <- projectDimensions(tracks, dim)
+  sx <- t(sapply( subtracks(Tx, 1, overlap=-step.spacing), displacementVector ) )
   if (length(dim) > 1) {
-    sx <- t(Reduce(cbind,(lapply(1:length(Tx), 
-                                 function(i) sapply(subtracks(Tx[i], 1),
-                                                    function(x) unlist(displacementVector(x)))))))
-    
     if (plot) {
       plot(sx)
       points(0, 0, col=3)
       points(mean(sx[, 1:ncol(sx)]), col=2, pch=4, cex=2)
     }
   } else {
-    sx <- Reduce(c,(lapply(1:length(Tx), 
-                                 function(i) sapply(subtracks(Tx[i], 1),
-                                                    function(x) unlist(displacementVector(x))))))
     if (plot) {
       mean.sx <- mean(sx)
       sd.sx <- sd(sx)
@@ -868,10 +885,10 @@ hotellingsTest <- function(tracks, dim=c("x", "y"), plot=FALSE) {
       points(mean.sx + sd.sx / sqrt(length(sx)), 0, pch=3, col=4)
     }
   }
-  return(DescTools::HotellingsT2Test(sx)[["p.value"]])
+  return(DescTools::HotellingsT2Test(sx))
 }
 
-#' Extract tracks based on user defined properties
+#' Extract Tracks Based on User-Defined Properties
 #' 
 #' Given a tracks object, extract a subset based on upper and lower bounds of a certain
 #' measure. For instance, extract all tracks with a certain minimum length.
@@ -914,5 +931,31 @@ plot3d <- function(tracks,...){
 		tail(pts$y,-1), col=colvec )
 }
 
-
+#' Compute Time Step of Tracks
+#'
+#' Applies a summary statistics on the time intervals between pairs of consecutive 
+#' positions in a track dataset. 
+#' 
+#' @param tracks the input tracks
+#' @param FUN the summary statistic to be applied.
+#'
+#' @details Most track quantification depends on the assumption that track positions are
+#' recorded equidistantly in time. If this is not the case, then most of the statistic
+#' in this (except for some very simple ones like \code{\link{duration}}) will not work.
+#' In reality, at least small fluctuations of the time steps can be expected. This
+#' function provides a means for quality control with respect to the tracking time.
+#'
+#' @return summary statistic of the time between two consecutive positions in a track 
+#' dataset. 
+#'
+#' @examples
+#' ## Show tracking time fluctuations for the T cell data
+#' d <- timeStep( TCells )
+#' plot( sapply( subtracks( TCells, 1 ) , duration ) - d, ylim=c(-d,d) ) 
+timeStep <- function(tracks, FUN=mean ){
+	if( class(FUN) == "character" ){
+		FUN=match.fun( FUN )
+	}
+	FUN( sapply( subtracks( tracks, 1 ) , duration )  )
+}
 

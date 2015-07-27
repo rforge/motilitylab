@@ -9,18 +9,27 @@ staggered(measure, ...)
 \arguments{
 \item{measure}{the measure that shall be computed in a staggered fashion.}
 
-\item{...}{further parameters for staggered computation of the measure
-(see \code{\link{computeStaggered}}).}
+\item{...}{further parameters passed on to \code{\link{computeStaggered}}.}
 }
 \value{
-Returns a funtion of a cell track (in a data frame) that computes
+Returns a function that computes
 the given measure in a staggered fashion on that track.
 }
 \description{
-Returns the staggered version of a track measure.
+Returns the "staggered" version of a track measure. That is, instead of
+computing the measure on the whole track, the measure is average over
+all subtracks (of any length) of the track.
 }
 \details{
-Returns a funtion of a cell track (in a data frame) that computes
-the given measure in a staggered fashion on that track.
+This is a wrapper mainly designed to provide a convenient interface
+for track-based staggered computations with \code{lapply}, see example.
+}
+\examples{
+hist( sapply( TCells, staggered( displacement ) ) )
+}
+\references{
+\cite{Mokhtari et al.: Automated Characterization and
+Parameter--Free Classification of Cell Tracks Based on Local Migration
+Behavior, PLoS ONE 2013 Dec 6;8(12):e80808, 2013}
 }
 

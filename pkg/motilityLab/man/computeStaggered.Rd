@@ -18,9 +18,8 @@ Otherwise only the mean is returned.}
 \item{min.segments}{the number of segments that each regarded subtrack
 should at least consist of. Typically, this value would be set to the
 minimum number of segments that a (sub)track must have in order for the
-measure to be decently computed. For example, for the funtion
-\code{\link{overallAngle}} at least two segments are necessary. The default
-value is 1.}
+measure to be decently computed. For example, at least two segments are needed
+to compute the \code{\link{overallAngle}}.}
 }
 \value{
 If \code{matrix} is set, a matrix with the values of the measure for
@@ -29,28 +28,27 @@ position \code{[i, j]} corresponds to the subtrack that starts with the input tr
 \eqn{j}th point and ends at its \eqn{i}th. Thus, with increasing column number,
 the regarded subtrack's starting point is advanced on the original track,
 and the values for increasingly long subtracks starting from this point can
-be found columnwise below the main diagonal, responsively.
-If \code{matrix} is not set, the mean over the values of the measure for all
-subtracks of at least \code{min.segments} segments is retruned.
+be found columnwise below the main diagonal, respectively.
+If `matrix` is not set, the mean over the values of the measure for all
+subtracks of at least `min.segments` segments is retruned.
 }
 \description{
-Computes a measure on all a track's subtracks and either returns them in a
-matrix or returns their mean.
+Computes a measure on all subtracks of a track and return them either
+as a matrix or return their mean.
 }
 \details{
 The measure is computed for each of the input track's subtracks of
 length at least \code{min.segments}, and the resulting values are either
 returned in a matrix (if \code{matrix} is set), or their mean is returned.
-Note that the returned matix is symmetric, because the direction in which a
-track is passed is assumed not to matter, and the values at
+The computed matrix is symmetric since the direction along which a
+track is traversed is assumed not to matter. The values at
 \code{[i, i + j]}, where j is a nonnegative integer with
 \eqn{j < }\code{min.segments}, (with the default value \code{min.segments=1}
 this is exactly the main diagonal) are set to \code{NA}.
 }
 \examples{
-# Compute the staggered matrix for overallAngle appilied to all adecuate
+# Compute the staggered matrix for overallAngle applied to all adequate
 # subtracks of the first TCell track
-computeStaggered(getTracks(TCells, "1")$'1', overallAngle, matrix=TRUE,
-min.segments = 2)
+computeStaggered(TCells[[1]], overallAngle, matrix=TRUE, min.segments = 2)
 }
 

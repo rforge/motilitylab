@@ -58,7 +58,7 @@ duration <- function(track) {
 #' @param track the track whose displacement is to be computed.
 #' @param limits Vector giving the first and last row of the track. Can be used to avoid
 #' extracting subtracks, which is exploited e.g. by 
-#' \code{\link{aggregateSubtrackMeasures}}.
+#' \code{\link{aggregate.tracks}}.
 
 #' @return The track's displacement will be returned.
 #' @details Computes the Euclidean distance between the track's start and end points.
@@ -92,7 +92,7 @@ displacementVector <- function(track) {
 #' @param track the track whose maximal displacement is to be computed.
 #' @param limits Vector giving the first and last row of the track. Can be used to avoid
 #' extracting subtracks, which is exploited e.g. by 
-#' \code{\link{aggregateSubtrackMeasures}}.
+#' \code{\link{aggregate.tracks}}.
 #' @return The maximal displacement.
 #' @details Computes the maximum over all pairwise Euclidean distances between 
 #' the track's starting point and another point on the track.
@@ -107,7 +107,7 @@ maxDisplacement <- function(track, limits=c(1,nrow(track))) {
 #' @param track the track whose displacement is to be computed.
 #' @param limits Vector giving the first and last row of the track. Can be used to avoid
 #' extracting subtracks, which is exploited e.g. by 
-#' \code{\link{aggregateSubtrackMeasures}}.
+#' \code{\link{aggregate.tracks}}.
 #' 
 #' @return The track's square displacement will be returned.
 #' 
@@ -121,7 +121,7 @@ squareDisplacement <- function(track, limits=c(1,nrow(track))) {
 
 #' A Track's Aspericity
 #' 
-#' Computes the asphericity of the track's points scatter plot.
+#' Computes the asphericity of the track's points.
 #' 
 #' @param track the track whose asphericity is to be computed. Note that the
 #' track must be in a two- or threedimensional space, thus the data frames 
@@ -135,8 +135,8 @@ squareDisplacement <- function(track, limits=c(1,nrow(track))) {
 #' measure for the track's straightness. Note that the asphericity is only 
 #' defined for tracks in two or three dimensions.
 #' @references \cite{Mokhtari et al.: Automated Characterization and 
-#' Parameter-Free Classification of Cell Tracks Based on Local Migration 
-#' Behavior, PLoS ONE, 2013}
+#' Parameter--Free Classification of Cell Tracks Based on Local Migration 
+#' Behavior, PLoS ONE 2013 Dec 6;8(12):e80808, 2013} 
 asphericity <- function(track) {
 	dim <- ncol(track) - 1
   if (dim == 1) {
@@ -190,7 +190,7 @@ straightness <- function(track) {
 #' @seealso \code{\link{displacement}}, \code{\link{maxDisplacement}}
 #' @references \cite{Mokhtari et al.: Automated Characterization and 
 #' Parameter--Free Classification of Cell Tracks Based on Local Migration 
-#' Behavior, PLoS ONE, 2013} 
+#' Behavior, PLoS ONE 2013 Dec 6;8(12):e80808, 2013} 
 displacementRatio <- function(track) {
   dmax <- maxDisplacement(track)
   if (dmax > 0) {
@@ -212,9 +212,9 @@ displacementRatio <- function(track) {
 #' track's maximal displacement and length. The value will be from the interval 
 #' \eqn{[0,1]}, or 1 if the track has length \eqn{0}.
 #' @seealso \code{\link{maxDisplacement}}, \code{\link{trackLength}}
-#'  @references \cite{Mokhtari et al.: Automated Characterization and 
+#' @references \cite{Mokhtari et al.: Automated Characterization and 
 #' Parameter--Free Classification of Cell Tracks Based on Local Migration 
-#' Behavior, PLoS ONE, 2013} 
+#' Behavior, PLoS ONE 2013 Dec 6;8(12):e80808, 2013} 
 outreachRatio <- function(track) {
   trackLength <- trackLength(track) 
   if (trackLength > 0) {
@@ -230,7 +230,7 @@ outreachRatio <- function(track) {
 #' @param track the track whose overall turning angle is to be computed.
 #' @param limits Vector giving the first and last row of the track. Can be used to avoid
 #' extracting subtracks, which is exploited e.g. by 
-#' \code{\link{aggregateSubtrackMeasures}}.
+#' \code{\link{aggregate.tracks}}.
 #' @details Computes the angle between the vectors representing the track's 
 #' first and last segment, respectively, i.e. the overall turning angle.
 #' Angles are measured symmetrically, thus yielding (degree) values between 
@@ -258,7 +258,7 @@ overallAngle <- function(track, limits=c(1,nrow(track))) {
 #' degrees left and right turn yield the value 90.)
 #' @return The tracks mean turning angle will be returned in degrees. 
 meanTurningAngle <- function(track) {
-	mean(sapply(computeSubtracksOfISegments(track, 2), overallAngle), na.rm=TRUE)
+	mean(sapply(subtracks(track, 2), overallAngle), na.rm=TRUE)
 }
 
 
