@@ -19,5 +19,4 @@ Suggests:
     pracma,
     ggplot2,
     testthat,
-    adehabitatLT,
     scatterplot3d

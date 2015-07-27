@@ -40,6 +40,9 @@ given in \code{tracks}, and performs Hotelling's T-square Test on that vector.
 \examples{
 ## Test H_0: T-cells are migrating by random walk on x and y coordinates,
 ## and report the p-value
-hotellingsTest( TCells, plot=FALSE )$p.value
+
+if( require( DescTools ) ){
+   hotellingsTest( TCells, plot=FALSE )$p.value
+}
 }
 

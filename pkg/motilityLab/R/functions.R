@@ -858,17 +858,22 @@ boundingBox <- function(tracks) {
 #' @examples 
 #' ## Test H_0: T-cells are migrating by random walk on x and y coordinates,
 #' ## and report the p-value
-#' hotellingsTest( TCells, plot=FALSE )$p.value
-#'
+#' 
+#' if( require( DescTools ) ){
+#'    hotellingsTest( TCells, plot=FALSE )$p.value
+#' }
 
 hotellingsTest <- function(tracks, dim=c("x", "y"), 
 	step.spacing=0, plot=FALSE, ... ) {
+  if( !requireNamespace("DescTools",quietly=TRUE) ){
+    stop("This function requires the 'DescTools' package.")
+  }
   stopifnot( !plot || (length(dim) %in% c(1,2) ))
   Tx <- projectDimensions(tracks, dim)
   sx <- t(sapply( subtracks(Tx, 1, overlap=-step.spacing), displacementVector ) )
   if (length(dim) > 1) {
     if (plot) {
-      plot(sx)
+      plot(sx,...)
       points(0, 0, col=3)
       points(mean(sx[, 1:ncol(sx)]), col=2, pch=4, cex=2)
     }
@@ -876,7 +881,7 @@ hotellingsTest <- function(tracks, dim=c("x", "y"),
     if (plot) {
       mean.sx <- mean(sx)
       sd.sx <- sd(sx)
-      plot(0, 0, col=3, xlab = dim[1])
+      plot(0, 0, col=3, xlab = dim[1],...)
       stripchart(sx, add=TRUE, at=0, pch=1)
       points(mean.sx, 0, col=2, pch=4, cex=2)
       points(0, 0, col=3)
