@@ -293,20 +293,3 @@ hurstExponent <- function(track) {
   ret <- apply(as.matrix(track[,2:ncol(track)]), 2, he)
   return(ret)
 }
-
-#' A tracks fractal dimension
-#' TODO: allow for different fractaldim estimators inside the fractaldim package
-#' Computes the fractal dimension of a track using all three dimensions by the box-count method
-#' @param track the track for which the fractal dimension is to be calculated
-#' @details The fractal dimension is found using the function from \code{\link[fractaldim]{fd.estim.boxcount}} from the 
-#' \code{fractaldim} package. While the hurst exponent takes a global approach to the tracks properties, fractal dimension
-#' is a local approach to the tracks properties. These two are generally considered to be independent of one another.
-#' @return the number indicating the tracks fractal dimension 
-fractalDimension <- function(track){
-  if( !requireNamespace("fractaldim",quietly=TRUE) ){
-    stop("This function requires the 'fractaldim' package.")
-  }
-  fd_full <- fractaldim::fd.estim.boxcount(track[,2:ncol(track)])
-  fd_out <- fd_full$fd
-  return(fd_out)
-}
