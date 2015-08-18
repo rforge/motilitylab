@@ -5,7 +5,6 @@
   z <- sqrt(sum(x^2))
   out <- x/z
   return(out)
-  
 }
 
 #' Helper function of beauWalker() and is not directly called by user
@@ -229,18 +228,17 @@ beauWalker <- function(n.steps = 25,delta.t=1,p.persist=0.5,p.bias=0.9,taxis.mod
 
 
 #' A tracks fractal dimension
-#' TODO: allow for different fractaldim estimators inside the fractaldim package
-#' Computes the fractal dimension of a track using all three dimensions by the box-count method
-#' @param track the track for which the fractal dimension is to be calculated
+#' Computes the fractal dimension of a track using all track dimensions by the box-count method.
+#' @param track the track for which the fractal dimension is to be calculated.
 #' @details The fractal dimension is found using the function from \code{\link[fractaldim]{fd.estim.boxcount}} from the 
-#' \code{fractaldim} package. While the hurst exponent takes a global approach to the tracks properties, fractal dimension
-#' is a local approach to the tracks properties. These two are generally considered to be independent of one another.
-#' @return the number indicating the tracks fractal dimension 
-fractalDimension <- function(track){
+#' \code{fractaldim} package. While the hurst exponent takes a global approach to the track's properties, fractal dimension
+#' is a local approach to the track's properties. These two are generally considered to be independent of one another.
+#' @return the number indicating the track's fractal dimension.
+fractalDimension <- function(track, method="", ...){
   if( !requireNamespace("fractaldim",quietly=TRUE) ){
     stop("This function requires the 'fractaldim' package.")
   }
-  fd_full <- fractaldim::fd.estim.boxcount(track[,2:ncol(track)])
-  fd_out <- fd_full$fd
-  return(fd_out)
+    fd_full <- fractaldim::fd.estim.boxcount(track[,2:ncol(track)])
+    fd_out <- fd_full$fd
+    return(fd_out)
 }
