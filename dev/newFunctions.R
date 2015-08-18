@@ -234,11 +234,11 @@ beauWalker <- function(n.steps = 25,delta.t=1,p.persist=0.5,p.bias=0.9,taxis.mod
 #' \code{fractaldim} package. While the hurst exponent takes a global approach to the track's properties, fractal dimension
 #' is a local approach to the track's properties. These two are generally considered to be independent of one another.
 #' @return the number indicating the track's fractal dimension.
-fractalDimension <- function(track, method="", ...){
+fractalDimension <- function(track){
   if( !requireNamespace("fractaldim",quietly=TRUE) ){
     stop("This function requires the 'fractaldim' package.")
   }
-    fd_full <- fractaldim::fd.estim.boxcount(track[,2:ncol(track)])
-    fd_out <- fd_full$fd
-    return(fd_out)
+    fd.full <- fractaldim::fd.estim.boxcount(track[,2:ncol(track)])
+    fd.out <- fd.full$fd
+    return(fd.out)
 }
