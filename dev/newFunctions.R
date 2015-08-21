@@ -27,7 +27,7 @@
 
 #' Helper function of beauWalker() and is not directly called by user
 #' returns a direction for the cell to travel based on model parameters specified in beauWalker()
-.pickNewDirection <- function(p.bias,taxis.mode,t.free,v.free,t.free.rest){
+.pickNewDirection <- function(p.bias,bias.dir,taxis.mode,t.free,v.free,t.free.rest){
   d <- .sphereSampler()
   
   if(taxis.mode == 2){
@@ -39,18 +39,18 @@
       d[1] <- circ[1]*circle.scale
       d[2] <- circ[2]*circle.scale
     }
-    d <- c(d*v.free,0)
+    d <- c(d*v.free*(1+p.bias*sum(d*bias.dir)),999)
   }
   else if(taxis.mode == 3){
     if(p.bias > 0){
       # klinotaxis
-      t.free.rest = t.free.rest + sum(t.free * p.bias * d);
+      t.free.rest <- t.free*(1+p.bias*sum(d*bias.dir));
     }
     d <- c(d*v.free,t.free.rest)  
   }
   else{
     # orthotaxis
-    d <- c(d*v.free*(1+p.bias*d),0)
+    d <- c(d*v.free*(1+p.bias*sum(d*bias.dir)), 999)
   }
   return(d)
 }
@@ -58,19 +58,19 @@
 
 #' Helper function of beauWalker() and is not directly called by user
 #' Returns the next step in the beauWalker() if the cell is paused
-.pausedStep <- function(d,delta.t,t.free.rest,t.pause,p.bias,taxis.mode,t.free,v.free,pos,i,p.persist){
+.pausedStep <- function(d,delta.t,t.free.rest,t.pause,p.bias,taxis.mode,t.free,v.free,pos,i,p.persist,bias.dir){
   if(-t.free.rest+delta.t < t.pause ){
-    t.free.rest = t.free.rest-delta.t
+    t.free.rest <- t.free.rest-delta.t
     new.pos <- c(i, pos)
     return(c(t.free.rest,1,new.pos))
   }
   else{
-    delta.t.rest= delta.t - t.pause - t.free.rest
-    t.free.rest = t.free
+    delta.t.rest <- delta.t - t.pause - t.free.rest
+    t.free.rest <- t.free
     
     if (runif(1) < 1-p.persist){
-      d <- .pickNewDirection(t.free.rest=t.free.rest,p.bias=p.bias,taxis.mode=taxis.mode,t.free=t.free,v.free=v.free)
-      if(d[4]==0){
+      d <- .pickNewDirection(bias.dir=bias.dir,t.free.rest=t.free.rest,p.bias=p.bias,taxis.mode=taxis.mode,t.free=t.free,v.free=v.free)
+      if(d[4]==999){
         d <- d[1:3]
       }
       else{
@@ -88,11 +88,11 @@
 .movingStep <- function(delta.t,t.free.rest,d,pos,i){
   if( delta.t < t.free.rest ){
     new.pos <- c(i,pos + d*delta.t)
-    t.free.rest = t.free.rest-delta.t
+    t.free.rest <- t.free.rest-delta.t
     return(c(t.free.rest,1,new.pos))
   }
   else{
-    delta.t.rest = delta.t - t.free.rest
+    delta.t.rest <- delta.t - t.free.rest
     new.pos <- c(i,pos + d*t.free.rest)
     return(c(delta.t.rest,2,new.pos))
   }
@@ -104,13 +104,12 @@
 #' @param delta.t Change in time between each timepoint.
 #' @param p.persist Indicates how probable a change in direction is. p.persist = 1 indicates there is never a 
 #' change in direction between steps and p.persist = 0 indicates there is always a change in direction between steps.
-#' @param p.bias Strength of movement in a given direction. Equates to the radius of sphere by which a new direction
-#' is sampled. A p.bias = 1 indicates sampling from unit sphere. 
+#' @param p.bias Strength of movement in the direction of \code{bias.dir}.
 #' @param taxis.mode Specified mode of movement. 1 := orthotaxis, 2 := topotaxis, 3 := klinotaxis.
 #' @param t.free Time interval for how long the cell is allowed to move between steps.
-#' @param v.free Speed of cell .
+#' @param v.free Speed of cell.
 #' @param t.pause Time for how long the cell takes to adjust movement to new direction.
-#' 
+#' @param bias.dir The three dimensional vector c(x,y,z) indicating the direction for which there is a preference for movement.
 #' @details The default parameters are those found by mean-square displacement plots created by Beauchemin et al.
 #' @return A matrix of size \code{n.steps}x5. Each row represents the three dimensional coordinates of the cell
 #' at the given timepoint.
@@ -119,7 +118,17 @@
 #' out <- beauWalker(n.steps=20,p.persist = 0.3,taxis.mode = 1)
 #' ## Plot X-Y projection
 #' plot(y~x,data=out,type='b',main="Planar projection over z-axis")
-beauWalker <- function(n.steps = 25,delta.t=1,p.persist=0.5,p.bias=0.9,taxis.mode=1,t.free=2,v.free=18.8,t.pause=0.5){  
+#' 
+#' ## Create list of 20 tracks and plot all 
+#' blist <- list()
+#' for(i in 1:20){
+#'  blist[[i]]<-beauWalker(bias.dir=c(-1,1,0),p.bias=10,taxis.mode = 1,p.persist = 0.1,n.steps = 10,delta.t = 1)
+#" }
+#' plot(x=NULL,xlim=c(-700,100),ylim=c(-100,700),type='b')
+#" lapply(blist, function(i) points(y~x,data=i,type='b'))
+
+
+beauWalker <- function(n.steps = 10,delta.t=1,p.persist=0.5,p.bias=0.9,bias.dir=c(0,0,0),taxis.mode=1,t.free=2,v.free=18.8,t.pause=0.5){  
   #' Parameter checks
   if(p.persist < 0 || p.persist > 1){
     stop("p.persist must be a value between 0 and 1")
@@ -128,31 +137,32 @@ beauWalker <- function(n.steps = 25,delta.t=1,p.persist=0.5,p.bias=0.9,taxis.mod
     stop("taxis.mode can either be 1, 2, or 3. See documentation for details on which model you would like to use.")
   }
   if(p.bias < 0){
-    stop("p.bias must be greater than or equal to 0")
+    stop("p.bias must be a value greater than or equal to 0")
   }
   if(n.steps <= 0){
-    stop("n.steps must be larger than 0")
+    stop("n.steps must be a value larger than 0")
   }
   if(delta.t <= 0){
-    stop("delta.t must be larger than 0")
+    stop("delta.t must be a value larger than 0")
   }
-  if(t.pause < 0){
-    stop("t.pause must be 0 or larger")
+  if(t.pause <= 0){
+    stop("t.pause must be a value larger than 0")
   }
   if(t.free <= 0){
-    stop("t.free must be larger than 0")
+    stop("t.free must be a value larger than 0")
   }
   if(v.free <= 0){
-    stop("v.free must be larger than 0")
+    stop("v.free must be a value larger than 0")
   }
+  bias.dir <- bias.dir/sqrt(sum(bias.dir^2))
   
   #' Initializing parameters 
   pos <- matrix(c(0,0,0,0),1,4)
-  t.free.rest = t.free
-  paused = t.free.rest < 0.0
+  t.free.rest <- t.free
+  paused <- t.free.rest < 0.0
   delta.t.rest <- delta.t - t.pause - t.free.rest
-  d <- .pickNewDirection(t.free.rest=t.free.rest,p.bias=p.bias,taxis.mode=taxis.mode,t.free=t.free,v.free=v.free)
-  if(d[4]==0){
+  d <- .pickNewDirection(t.free.rest=t.free.rest,p.bias=p.bias,taxis.mode=taxis.mode,t.free=t.free,v.free=v.free,bias.dir=bias.dir)
+  if(d[4]==999){
     d <- d[1:3]
   }
   else{
@@ -164,7 +174,7 @@ beauWalker <- function(n.steps = 25,delta.t=1,p.persist=0.5,p.bias=0.9,taxis.mod
   #' This is the primary loop that creates the 3d track
   repeat{
     if(paused==TRUE){
-      catch <- .pausedStep(d=d,p.persist=p.persist,i=i,delta.t=delta.t,t.free.rest=t.free.rest,t.pause=t.pause,p.bias=p.bias,taxis.mode=taxis.mode,t.free=t.free,v.free=v.free,pos=pos[length(pos[,1]),2:4])
+      catch <- .pausedStep(d=d,p.persist=p.persist,i=i,delta.t=delta.t,t.free.rest=t.free.rest,t.pause=t.pause,p.bias=p.bias,taxis.mode=taxis.mode,t.free=t.free,v.free=v.free,pos=pos[length(pos[,1]),2:4],bias.dir=bias.dir)
       if(catch[2]==1){
         pos <- rbind(pos,catch[3:6])
         i <- i+1
@@ -174,7 +184,7 @@ beauWalker <- function(n.steps = 25,delta.t=1,p.persist=0.5,p.bias=0.9,taxis.mod
         delta.t.rest <- catch[1]
         d <- catch[3:5]
         t.free.rest<-catch[6]
-        paused = FALSE
+        paused <- FALSE
       }
       if( delta.t.rest > 0 ){
         catch <- .movingStep(i=i,delta.t=delta.t.rest,pos=pos[length(pos[,1]),2:4],t.free.rest=t.free.rest,d=d)
@@ -206,7 +216,7 @@ beauWalker <- function(n.steps = 25,delta.t=1,p.persist=0.5,p.bias=0.9,taxis.mod
         paused <- TRUE
       }
       if( delta.t.rest > 0 ){
-        catch <- .pausedStep(d=d,p.persist=p.persist,i=i,delta.t=delta.t.rest,t.free.rest=t.free.rest,t.pause=t.pause,p.bias=p.bias,taxis.mode=taxis.mode,t.free=t.free,v.free=v.free,pos=pos[length(pos[,1]),2:4])
+        catch <- .pausedStep(d=d,p.persist=p.persist,i=i,delta.t=delta.t.rest,t.free.rest=t.free.rest,t.pause=t.pause,p.bias=p.bias,taxis.mode=taxis.mode,t.free=t.free,v.free=v.free,pos=pos[length(pos[,1]),2:4],bias.dir=bias.dir)
         if(catch[2]==1){
           t.free.rest <- catch[1]
           pos <- rbind(pos,catch[3:6])
@@ -217,12 +227,12 @@ beauWalker <- function(n.steps = 25,delta.t=1,p.persist=0.5,p.bias=0.9,taxis.mod
         }
       }
     }
-    if(i >=n.steps+1){
+    if(i >= n.steps+1){
       break
     }
   }
   colnames(pos) <- c("t","x","y","z")
-  pos[,2:4]<- round(pos[,2:4],digits = 3)
+  pos[,2:4]<- signif(pos[,2:4],digits = 3)
   return(pos)
 }
 
@@ -238,7 +248,7 @@ fractalDimension <- function(track){
   if( !requireNamespace("fractaldim",quietly=TRUE) ){
     stop("This function requires the 'fractaldim' package.")
   }
-    fd.full <- fractaldim::fd.estim.boxcount(track[,2:ncol(track)])
-    fd.out <- fd.full$fd
-    return(fd.out)
+  fd.full <- fractaldim::fd.estim.boxcount(track[,2:ncol(track)])
+  fd.out <- fd.full$fd
+  return(fd.out)
 }
