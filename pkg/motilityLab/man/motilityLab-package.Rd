@@ -6,11 +6,7 @@
 MotilityLab: Quantitative Motion Analysis
 }
 \description{
-Quantitative analysis of tracks of moving
-objects like, for instance, cells, bacteria or animals.
-Compute various flavours of common measures like mean
-square displacement, confinement ratio, autocorrelation,
-asphericity and so on.
+Quantitative analysis of tracks of moving objects like, for instance, cells, bacteria or animals. Compute various flavours of common measures like mean square displacement, confinement ratio, autocorrelation, asphericity and so on.
 }
 \details{
 \tabular{ll}{
@@ -24,7 +20,7 @@ License: \tab GPL-2\cr
 ~~ functions ~~
 }
 \author{
-Katharina Dannenberg, Johannes Textor
+Katharina Dannenberg, Jeffrey Berry, Johannes Textor
 
 Maintainer: Johannes Textor <johannes.textor@gmx.de>
 }

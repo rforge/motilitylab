@@ -128,22 +128,22 @@ beauWalker <- function(n.steps = 25,delta.t=1,p.persist=0.5,p.bias=0.9,taxis.mod
     stop("taxis.mode can either be 1, 2, or 3. See documentation for details on which model you would like to use.")
   }
   if(p.bias < 0){
-    stop("p.bias must be a value greater than or equal to 0")
+    stop("p.bias must be greater than or equal to 0")
   }
   if(n.steps <= 0){
-    stop("n.steps must be a value larger than 0")
+    stop("n.steps must be larger than 0")
   }
   if(delta.t <= 0){
-    stop("delta.t must be a value larger than 0")
+    stop("delta.t must be larger than 0")
   }
-  if(t.pause <= 0){
-    stop("t.pause must be a value larger than 0")
+  if(t.pause < 0){
+    stop("t.pause must be 0 or larger")
   }
   if(t.free <= 0){
-    stop("t.free must be a value larger than 0")
+    stop("t.free must be larger than 0")
   }
   if(v.free <= 0){
-    stop("v.free must be a value larger than 0")
+    stop("v.free must be larger than 0")
   }
   
   #' Initializing parameters 

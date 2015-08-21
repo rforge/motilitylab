@@ -868,6 +868,9 @@ hotellingsTest <- function(tracks, dim=c("x", "y"),
   if( !requireNamespace("DescTools",quietly=TRUE) ){
     stop("This function requires the 'DescTools' package.")
   }
+  if( !requireNamespace("DescTools",quietly=TRUE) ){
+    stop("This function requires the package 'DescTools'.")
+  }
   stopifnot( !plot || (length(dim) %in% c(1,2) ))
   Tx <- projectDimensions(tracks, dim)
   sx <- t(sapply( subtracks(Tx, 1, overlap=-step.spacing), displacementVector ) )
@@ -924,7 +927,7 @@ getSubsetOfTracks <- function(tracks,measure,ll,ul){
 #'
 plot3d <- function(tracks,...){
 	if( !requireNamespace("scatterplot3d",quietly=TRUE) ){
-		stop("This function requires the 'scatterplot3d' package.")
+		stop("This function requires the package 'scatterplot3d'.")
 	}
 	tracks_df <- as.data.frame.tracks(
 		lapply( tracks, function(t) rbind(t,rep(NA,ncol(t)) ) ) )
