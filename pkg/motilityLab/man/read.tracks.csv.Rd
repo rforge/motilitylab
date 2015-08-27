@@ -2,28 +2,52 @@
 % Please edit documentation in R/functions.R
 \name{read.tracks.csv}
 \alias{read.tracks.csv}
-\title{Data Input form a CSV File}
+\title{Read Tracks from CSV File}
 \usage{
-read.tracks.csv(file, ...)
+read.tracks.csv(file, id.column = 1, time.column = 2, pos.columns = c(3,
+  4, 5), scale.t = 1, scale.pos = 1, ...)
 }
 \arguments{
 \item{file}{the name of the file which the data are to be read from, a
 readable text-mode connection or a complete URL
 (see \code{\link[utils]{read.table}}).}
 
-\item{...}{Further arguments to be passed to \code{read.csv}.}
+\item{id.column}{index or name of the column that contains the track ID.}
+
+\item{time.column}{index or name of the column that contains elapsed time.}
+
+\item{pos.columns}{vector containing indices or names of the columns that contain
+the spatial coordinates.}
+
+\item{scale.t}{a value by which to multiply each time point. Useful for changing units,
+or for specifying the time between positions if this is not contained in the file
+itself.}
+
+\item{scale.pos}{a value, or a vector of values, by which to multiply each spatial
+position. Useful for changing units.}
+
+\item{...}{Further arguments to be passed to \code{read.csv}, for instance
+\code{sep="\t"} can be useful for tab-separated files.}
 }
 \value{
 An object of class \emph{tracks} is returned, which is a list of
-data frames, each containing the information on one track. The data frames
+matrices, each containing the positions of one track. The matrices
 have a column \eqn{t}, followed by one column for each of the input track's
 coordinates.
 }
 \description{
-Reads cell tracks from a CSV file. which contains a number of tracks, each
-with a distinct value in the first field 'id', and with at least 3 points
-per track, represented by their pos (?), time stamp \eqn{t} and
-coordinate(s), \eqn{x}, \eqn{x} and \eqn{y} or \eqn{x}, \eqn{y} and \eqn{z}.
+Reads cell tracks from a CSV file. Data are expected to be organized as follows.
+One column contains a track identifier, which can be numeric or a string, and
+determines which points belong to the same track.
+Another column is expected to contain a time index or a time period (e.g. number of
+seconds elapsed since the beginning of the track, or since the beginning of the
+experiment). Input of dates is not (yet) supported, as absolute time information is
+frequently not available.
+One to three further columns contain the spatial coordinates
+(depending on whether the tracks are 1D, 2D or 3D).
+The names or indices of these columns in the CSV files are given using the
+corresponding parameters (see below). Names and indices can be mixed, e.g. you can
+specify \code{id.column="Parent"} and \code{pos.columns=1:3}
 }
 \details{
 The input file's first four fields are interpreted as \eqn{id},

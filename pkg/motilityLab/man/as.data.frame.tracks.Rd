@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{the \code{tracks} object to be coerced to a data frame.}
 
-\item{row.names}{NULL or a character vector giving the row names for the
+\item{row.names}{NULL or a character vector giving row names for the
 data frame.  Missing values are not allowed.}
 
 \item{optional}{logical. Required for S3 consistency, but
@@ -19,9 +19,8 @@ has no effect: column names are always assigned to the resulting
 \item{...}{further arguments to be passed from or to other methods.}
 }
 \value{
-A data frame containing all data of the indiviual
-tracks from the input with a prepended column named "id" containing
-each track's identifier in `x`.
+a single data frame containing all individual tracks from the input with a
+prepended column named "id" containing each track's identifier in `x`.
 }
 \description{
 Converts a \code{tracks} object into a data frame.

@@ -2,24 +2,20 @@
 % Please edit documentation in R/track-set-transformations.R
 \name{projectDimensions}
 \alias{projectDimensions}
-\title{Project Tracks onto given Dimensions}
+\title{Extract Subset of Dimensions}
 \usage{
 projectDimensions(tracks, dims = c("x", "y"))
 }
 \arguments{
 \item{tracks}{the \emph{tracks} onject whose tracks are to be projected.}
 
-\item{dims}{a vector of characters giving the dimensions onto which the
-tracks are to be projected.}
+\item{dims}{a character vector giving the dimensions to extract from each track.}
 }
 \value{
-A tracks object is retruned which contains only those dimensions
+A tracks object is returned that contains only those dimensions
 of the input \code{tracks} that are given in \code{dims}.
 }
 \description{
 Projects tracks in a \emph{tracks} object onto the given dimensions.
-}
-\details{
-Returns only the given dimensions of the input tracks.
 }
 

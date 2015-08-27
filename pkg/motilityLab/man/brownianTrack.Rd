@@ -4,12 +4,17 @@
 \alias{brownianTrack}
 \title{Simulate \code{nsteps} Steps of a Random Walk in \code{dim} Dimensions}
 \usage{
-brownianTrack(nsteps = 100, dim = 3)
+brownianTrack(nsteps = 100, dim = 3, mean = 0, sd = 1)
 }
 \arguments{
 \item{nsteps}{number of steps the track shall consist of.}
 
 \item{dim}{the number of dimensions the track shall have.}
+
+\item{mean}{stepwise mean drift per dimension; use 0 for an
+unbiased Brownian motion and other values for Brownian motion with drift}
+
+\item{sd}{stepwise standard deviation per dimension}
 }
 \value{
 A data frame  containing in cell track with \code{nsteps} steps in
@@ -20,6 +25,7 @@ Generates a random track with \code{nsteps} steps in \code{dim} dimensions.
 }
 \details{
 In in every step an for each dimension, a normally distributed
-value is added to the previous cell position.
+value with mean \code{mean} and standard deviation \code{sd} is
+added to the previous cell position.
 }
 

@@ -1,11 +1,10 @@
-# TODO Johannes: Stimmt die Doku?
 #' Convert Tracks to Data Frame
 #' 
 #' Converts a \code{tracks} object into a data frame.
 #' 
 #' @param x the \code{tracks} object to be coerced to a data frame.
 #' 
-#' @param row.names NULL or a character vector giving the row names for the
+#' @param row.names NULL or a character vector giving row names for the
 #'  data frame.  Missing values are not allowed.
 #' @param optional logical. Required for S3 consistency, but 
 #' has no effect: column names are always assigned to the resulting
@@ -17,9 +16,8 @@
 #' single dataframe which is efficient for tasks such as plotting or 
 #' writing a dataset to a CSV file. 
 #"
-#' @return A data frame containing all data of the indiviual 
-#' tracks from the input with a prepended column named "id" containing
-#' each track's identifier in `x`.
+#' @return a single data frame containing all individual tracks from the input with a 
+#' prepended column named "id" containing each track's identifier in `x`.
 as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE, ...) {
 	ids <- rep(names(x), lapply(x,nrow))
 	r <- data.frame(id=ids,  Reduce( function(...) 
@@ -75,28 +73,50 @@ as.tracks.list <- function(x,...)
   structure(x, class="tracks")
 
 
-## TODO remove for loop
 #' Get a Subset of Tracks
 #' 
-#' Returns a \emph{tracks} object containing only the specified elements of a given
-#' \emph{tracks} object.
+#' Returns a \code{tracks} object containing only the specified elements of a given
+#' \code{tracks} object.
 #' 
-#' @param tracks the tracks object from which certain tracks are to be chosen.
+#' @param x the input tracks object.
 #' @param ids a vector containing the ids of the tracks that shall be chosen.
 #' 
-#' @details The elements given in \code{ids} are chosen from the list that represents
-#' the \emph{tracks} object and returned, likewise as a \emph{tracks} object.
+#' @details the elements given in \code{ids} are chosen from the list that represents
+#' the \code{tracks} object and returned, likewise as a \code{tracks} object.
 #' 
-#' @return A \emph{tracks} object containing just the elements from the given 
-#' \emph{tracks} object which are specified in \code{ids}.
-getTracks <- function(tracks, ids) {
-	r <- list()
-	for (i in ids) {
-		r[[i]] <- tracks[[i]]
-	}
-	structure(r, class="tracks")
+#' @return the modified \code{tracks} object.
+getTracks <- function(x, ids) {
+	structure(x[ids], class="tracks")
 }
 
+#' Remove Tracks from Tracks Object
+#' 
+#' Returns a \emph{tracks} object from the tracks with the given IDs are removed.
+#'
+#' @param x the input tracks object.
+#' @param ids a vector containing the ids of the tracks that shall be removed.
+#'
+#' @return the modified \code{tracks} object.
+removeTracks <- function(x,ids) {
+	structure(x[!(names(x) %in% ids)], class="tracks")
+}
+
+#' Filter Tracks 
+#'
+#' Extracts subtracks based on a given function.
+#'
+#' @param f a function that accepts a single track as its first argument and returns a 
+#' logical value (or a value that can be coerced to a locical).
+#' @param x a tracks object.
+#' @param ... further arguments to be passed on to \code{f}.
+#' @return a \code{tracks} object containing only those tracks from \code{x} for which
+#' \code{f} evaluates to \code{TRUE}.
+#' @examples
+#' ## Remove short tracks from the T cells data
+#' plot( filterTracks( function(t) nrow(t)>10, TCells ) )
+filterTracks <- function(f,x,...){
+	structure(x[as.logical(sapply(x,function(x) f(x,...) ))], class="tracks")
+}
 
 #' Sort each Track's Positions by Time
 #' 
@@ -107,7 +127,7 @@ getTracks <- function(tracks, ids) {
 #' @param decreasing logical.  Should the sort be increasing or decreasing? 
 #'  Provided only for consistency with the generic sort method. The positions in
 #'  each track should be sorted in increasing time order.
-#' @param ... Further arguments to be passed on to \code{order}.
+#' @param ... further arguments to be passed on to \code{order}.
 #'
 #' @details Sorts the positions of each track (represented as a data frame) in the 
 #' \emph{tracks} object by time (given in the column t). 
@@ -138,22 +158,44 @@ c.tracks <- function(...) {
 }
 
 
-# TODO: What is pos?
-#' Data Input form a CSV File
+#' Read Tracks from CSV File
 #' 
-#' Reads cell tracks from a CSV file. which contains a number of tracks, each 
-#' with a distinct value in the first field 'id', and with at least 3 points 
-#' per track, represented by their pos (?), time stamp \eqn{t} and 
-#' coordinate(s), \eqn{x}, \eqn{x} and \eqn{y} or \eqn{x}, \eqn{y} and \eqn{z}.
+#' Reads cell tracks from a CSV file. Data are expected to be organized as follows.
+#' One column contains a track identifier, which can be numeric or a string, and 
+#' determines which points belong to the same track. 
+#' Another column is expected to contain a time index or a time period (e.g. number of
+#' seconds elapsed since the beginning of the track, or since the beginning of the 
+#' experiment). Input of dates is not (yet) supported, as absolute time information is
+#' frequently not available. 
+#' One to three further columns contain the spatial coordinates 
+#' (depending on whether the tracks are 1D, 2D or 3D). 
+#' The names or indices of these columns in the CSV files are given using the 
+#' corresponding parameters (see below). Names and indices can be mixed, e.g. you can
+#' specify \code{id.column="Parent"} and \code{pos.columns=1:3}
 #' 
 #' @param file the name of the file which the data are to be read from, a 
 #' readable text-mode connection or a complete URL
 #' (see \code{\link[utils]{read.table}}).
+#'
+#' @param id.column index or name of the column that contains the track ID.
+#'
+#' @param time.column index or name of the column that contains elapsed time.
+#'
+#' @param pos.columns vector containing indices or names of the columns that contain
+#' the spatial coordinates.
+#'
+#' @param scale.t a value by which to multiply each time point. Useful for changing units,
+#' or for specifying the time between positions if this is not contained in the file
+#' itself.
+#'
+#' @param scale.pos a value, or a vector of values, by which to multiply each spatial 
+#' position. Useful for changing units.
 #' 
-#' @param ... Further arguments to be passed to \code{read.csv}.
+#' @param ... Further arguments to be passed to \code{read.csv}, for instance 
+#' \code{sep="\t"} can be useful for tab-separated files.
 #' 
 #' @return An object of class \emph{tracks} is returned, which is a list of 
-#' data frames, each containing the information on one track. The data frames 
+#' matrices, each containing the positions of one track. The matrices 
 #' have a column \eqn{t}, followed by one column for each of the input track's 
 #' coordinates.
 #' 
@@ -164,19 +206,39 @@ c.tracks <- function(...) {
 #' tracks and having columns \eqn{t} and \eqn{x}, plus \eqn{y} and \eqn{z}, if
 #' necessary. The tracks' ids are retained in their position in the list, while
 #' the field \eqn{pos} will be unmaintained.
-read.tracks.csv <- function(file, ...) {
+read.tracks.csv <- function(file, id.column=1, time.column=2, 
+	pos.columns=c(3,4,5), scale.t=1, scale.pos=1, ...) {
 	data.raw <- read.csv(file, ...)
-	if (ncol(data.raw) == 4) {
-		colnames(data.raw) <- c("id", "pos", "t", "x")
+	if( ncol(data.raw) < length(pos.columns)+2 ){
+		stop("CSV file does not contain enough columns! (Perhaps you need to specify 'sep')")
 	}
-	if (ncol(data.raw) == 5) {
-		colnames(data.raw) <- c("id", "pos", "t", "x", "y")
+	if( length(pos.columns) < 1 ){
+		stop("At least one position column needs to be specified!")
 	}
-	if (ncol(data.raw) == 6) {
-		colnames(data.raw) <- c("id", "pos", "t", "x", "y", "z")
+	cx <- as.character(c(id.column,time.column,pos.columns))
+	cxc <- match( cx, colnames(data.raw) )
+	cxi <- match( cx, seq_len(ncol(data.raw)) )
+
+	cxi[is.na(cxi)] <- cxc[is.na(cxi)]
+
+	if( any(is.na(cxi)) ){
+		stop("Column(s) not found: ",
+			paste(cx[is.na(cxi)],collapse=","))
+	}
+	r <- data.raw[,as.integer(cxi)]
+	if( ncol(r) <= 5 ){
+		colnames(r) <- c("id","t",c("x","y","z")[seq_along(pos.columns)])
+	} else {
+		colnames(r) <- c("id","t",paste0("x",seq_along(pos.columns)))
+	}
+	if( scale.t != 1 ){
+		r[,"t"] <- scale.t*r[,"t"]
+	}
+	if( any( scale.pos != 1 ) ){
+		r[,-c(1,2)] <- scale.t*r[,-c(1,2)]
 	}
 	sort.tracks(structure( 
-		split.data.frame( as.matrix(data.raw[,3:ncol(data.raw)]), data.raw$id ),
+		split.data.frame( as.matrix(r[,2:ncol(r)]), r[,1] ),
 		class="tracks"))
 }
 
@@ -388,7 +450,7 @@ forEveryPrefix <- function(measure, min.length=1) {
   }
 }
 
-#' Normalize a track
+#' Normalize a Track
 #' 
 #' Translates a track such that its starting point is in the origin of ordinates.
 #' 
@@ -553,6 +615,8 @@ plotTrackMeasures <- function(measurex, measurey, x, add=FALSE,
 #' using the function \code{\link[base]{scale}} before the clustering. Default 
 #' is TRUE.
 #' @param ... additional parameters to be passed to \code{\link[stats]{hclust}}.
+#'
+#' @return An object of class *hclust*, see \code{\link[stats]{hclust}}.
 #' 
 #' @details The measures are applied to each of the tracks in the given
 #' \emph{tracks} object and according to the resulting values the tracks are 

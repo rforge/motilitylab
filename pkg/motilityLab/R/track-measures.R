@@ -224,28 +224,57 @@ outreachRatio <- function(track) {
   }
 }
 
-#' A Track's Overall Turning Angle
+#' Angle Between Steps At Track Endpoints
 #' 
 #' Computes the angle between the first and the last segment of the given track.
-#' @param track the track whose overall turning angle is to be computed.
-#' @param limits Vector giving the first and last row of the track. Can be used to avoid
+#' @param x the track whose overall turning angle is to be computed.
+#' @param limits vector giving the first and last row of the track. Can be used to avoid
 #' extracting subtracks, which is exploited e.g. by 
 #' \code{\link{aggregate.tracks}}.
 #' @details Computes the angle between the vectors representing the track's 
 #' first and last segment, respectively, i.e. the overall turning angle.
-#' Angles are measured symmetrically, thus yielding (degree) values between 
-#' 0 and 180. (Both a 90 degrees left and right turn yield the value 90.)
+#' Angles are measured symmetrically, thus the return values range from 0 to 180 degrees.
+#' For instance, both a 90 degrees left and right turn yield the value 90.
 #'
 #' @return The track's overall turning angle in radians.
-overallAngle <- function(track, limits=c(1,nrow(track))) {
+#' @examples
+#' ## show a turning angle plot with error bars for the T cell data.
+#' with( (aggregate(BCells,overallDot,FUN="mean.se",na.rm=TRUE)),{
+#'   lines( mean ~ i, xlab="time step", 
+#'   ylab="turning angle (rad)", type="l", col=3 )
+#'   segments( i, lower, y1=upper, col=3 )
+#' } )
+overallAngle <- function(x, limits=c(1,nrow(x))) {
   if (limits[2]-limits[1] < 2) {
     return(0)
   } else {
-    a <- diff(track[limits[1]:(limits[1]+1),-1])
-    b <- diff(track[(limits[2]-1):limits[2],-1])
+    a <- diff(x[limits[1]:(limits[1]+1),-1])
+    b <- diff(x[(limits[2]-1):limits[2],-1])
     return( acos(sum(a * b) / (sqrt(sum(a^2) * sum(b^2)))) )
   }
 }
+
+#' Dot Product Between Steps At Track Endpoints
+#'
+#' Computes the dot product between the first and last steps of the given track.
+#' @param x the input track.
+#' @param limits vector giving the first and last row of the track. Can be used to avoid
+#' extracting subtracks, which is exploited e.g. by 
+#' \code{\link{aggregate.tracks}}.
+#' @return the dot product. 
+#' @examples
+#' ## compute and plot the autocovariance function for the T cell data (assuming isotropy)
+#' with( (aggregate(BCells,overallDot,FUN="mean.se",na.rm=TRUE)),{
+#'   lines( cos(mean) ~ i, xlab="time", 
+#'   ylab="correlation of orientation", type="l", col=3 )
+#'   segments( i, cos(lower), y1=cos(upper), col=3 )
+#' } )
+overallDot <- function(x, limits=c(1,nrow(x))) {
+  a <- diff(x[limits[1]:(limits[1]+1),-1])
+  b <- diff(x[(limits[2]-1):limits[2],-1])
+  return( sum(a * b) )
+}
+
 
 #' A Track's Mean Turning Angle
 #' 

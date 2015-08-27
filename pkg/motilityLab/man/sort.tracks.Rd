@@ -13,7 +13,7 @@
 Provided only for consistency with the generic sort method. The positions in
 each track should be sorted in increasing time order.}
 
-\item{...}{Further arguments to be passed on to \code{order}.}
+\item{...}{further arguments to be passed on to \code{order}.}
 }
 \value{
 A \emph{tracks object} that contains the tracks from the input object

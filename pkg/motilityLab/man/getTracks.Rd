@@ -4,23 +4,22 @@
 \alias{getTracks}
 \title{Get a Subset of Tracks}
 \usage{
-getTracks(tracks, ids)
+getTracks(x, ids)
 }
 \arguments{
-\item{tracks}{the tracks object from which certain tracks are to be chosen.}
+\item{x}{the input tracks object.}
 
 \item{ids}{a vector containing the ids of the tracks that shall be chosen.}
 }
 \value{
-A \emph{tracks} object containing just the elements from the given
-\emph{tracks} object which are specified in \code{ids}.
+the modified \code{tracks} object.
 }
 \description{
-Returns a \emph{tracks} object containing only the specified elements of a given
-\emph{tracks} object.
+Returns a \code{tracks} object containing only the specified elements of a given
+\code{tracks} object.
 }
 \details{
-The elements given in \code{ids} are chosen from the list that represents
-the \emph{tracks} object and returned, likewise as a \emph{tracks} object.
+the elements given in \code{ids} are chosen from the list that represents
+the \code{tracks} object and returned, likewise as a \code{tracks} object.
 }
 

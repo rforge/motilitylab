@@ -18,6 +18,9 @@ is TRUE.}
 
 \item{...}{additional parameters to be passed to \code{\link[stats]{hclust}}.}
 }
+\value{
+An object of class *hclust*, see \code{\link[stats]{hclust}}.
+}
 \description{
 Clusters the tracks in a given \emph{tracks} object according to given
 measures.

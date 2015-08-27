@@ -14,7 +14,7 @@
 #' 
 #' @return A data frame  containing in cell track with \code{nsteps} steps in 
 #' \code{dim} dimensions is returned.
-brownianTrack <- function(nsteps=100, dim=3, mean=0, sd=1, ...) {
+brownianTrack <- function(nsteps=100, dim=3, mean=0, sd=1) {
 	m <- cbind( 0:nsteps, replicate(dim, diffinv(rnorm(nsteps,mean=mean,sd=sd))))
 	colnames(m) <- c("t", "x", "y", "z")
 	m
@@ -31,7 +31,7 @@ brownianTrack <- function(nsteps=100, dim=3, mean=0, sd=1, ...) {
 #'
 #' @return a \code{tracks} object containing \code{n} tracks.
 #'
-#' @example
+#' @examples
 #' ## Generate 10 tracks, 100 steps each, from a random walk with standard normally
 #' ## distributed increments and plot them
 #' plot( simulateTracks( 10, brownianTrack(100,3) ) )

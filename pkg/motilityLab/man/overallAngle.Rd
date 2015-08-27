@@ -2,14 +2,14 @@
 % Please edit documentation in R/track-measures.R
 \name{overallAngle}
 \alias{overallAngle}
-\title{A Track's Overall Turning Angle}
+\title{Angle Between Steps At Track Endpoints}
 \usage{
-overallAngle(track, limits = c(1, nrow(track)))
+overallAngle(x, limits = c(1, nrow(x)))
 }
 \arguments{
-\item{track}{the track whose overall turning angle is to be computed.}
+\item{x}{the track whose overall turning angle is to be computed.}
 
-\item{limits}{Vector giving the first and last row of the track. Can be used to avoid
+\item{limits}{vector giving the first and last row of the track. Can be used to avoid
 extracting subtracks, which is exploited e.g. by
 \code{\link{aggregate.tracks}}.}
 }
@@ -22,7 +22,15 @@ Computes the angle between the first and the last segment of the given track.
 \details{
 Computes the angle between the vectors representing the track's
 first and last segment, respectively, i.e. the overall turning angle.
-Angles are measured symmetrically, thus yielding (degree) values between
-0 and 180. (Both a 90 degrees left and right turn yield the value 90.)
+Angles are measured symmetrically, thus the return values range from 0 to 180 degrees.
+For instance, both a 90 degrees left and right turn yield the value 90.
+}
+\examples{
+## show a turning angle plot with error bars for the T cell data.
+with( (aggregate(BCells,overallDot,FUN="mean.se",na.rm=TRUE)),{
+  lines( mean ~ i, xlab="time step",
+  ylab="turning angle (rad)", type="l", col=3 )
+  segments( i, lower, y1=upper, col=3 )
+} )
 }
 

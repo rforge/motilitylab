@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{normalizeTrack}
 \alias{normalizeTrack}
-\title{Normalize a track}
+\title{Normalize a Track}
 \usage{
 normalizeTrack(track)
 }
