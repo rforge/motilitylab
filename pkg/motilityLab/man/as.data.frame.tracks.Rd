@@ -31,4 +31,8 @@ for efficient processing and therefore the default in this package, to a
 single dataframe which is efficient for tasks such as plotting or
 writing a dataset to a CSV file.
 }
+\examples{
+## Display overall average position of the T cell data
+colMeans( as.data.frame( TCells )[-c(1,2)] )
+}
 

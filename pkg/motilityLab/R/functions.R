@@ -14,16 +14,22 @@
 #' @details Converts tracks from the list-of-matrices format, which is good
 #' for efficient processing and therefore the default in this package, to a 
 #' single dataframe which is efficient for tasks such as plotting or 
-#' writing a dataset to a CSV file. 
-#"
+#' writing a dataset to a CSV file.
+#'
 #' @return a single data frame containing all individual tracks from the input with a 
 #' prepended column named "id" containing each track's identifier in `x`.
+#'
+#' @examples
+#' ## Display overall average position of the T cell data
+#' colMeans( as.data.frame( TCells )[-c(1,2)] )
 as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE, ...) {
 	ids <- rep(names(x), lapply(x,nrow))
-	r <- data.frame(id=ids,  Reduce( function(...) 
-		rbind.data.frame(...,make.row.names=FALSE), x ) )
+	r <- data.frame(id=ids,  Reduce( 
+		rbind.data.frame, x ) )
 	if( !is.null(row.names) && length(row.names)==nrow(r) ){
 		rownames(r) <- row.names
+	} else {
+		rownames(r) <- NULL
 	}
 	return(r)
 }
