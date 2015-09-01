@@ -233,7 +233,6 @@ beauWalker <- function(sim.time=10,delta.t=1,p.persist=0.5,p.bias=0.9,bias.dir=c
       }
     }
     if((i+1)*delta.t > sim.time){
-      print(c(i*delta.t,sim.time))
       break
     }
   }
