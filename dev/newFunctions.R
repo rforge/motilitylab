@@ -39,18 +39,18 @@
       d[1] <- circ[1]*circle.scale
       d[2] <- circ[2]*circle.scale
     }
-    d <- c(d*v.free*(1+p.bias*sum(d*bias.dir)),999)
+    d <- c(d*v.free*(1+p.bias*acos(sum(d*bias.dir))/pi),999)
   }
   else if(taxis.mode == 3){
     if(p.bias > 0){
       # klinotaxis
-      t.free.rest <- t.free*(1+p.bias*sum(d*bias.dir));
+      t.free.rest <- t.free*(1+p.bias*acos(sum(d*bias.dir))/pi);
     }
     d <- c(d*v.free,t.free.rest)  
   }
   else{
     # orthotaxis
-    d <- c(d*v.free*(1+p.bias*sum(d*bias.dir)), 999)
+    d <- c(d*v.free*(1+p.bias*acos(sum(d*bias.dir))/pi), 999)
   }
   return(d)
 }
@@ -141,9 +141,6 @@ beauWalker <- function(sim.time=10,delta.t=1,p.persist=0.5,p.bias=0.9,bias.dir=c
   if(p.bias < 0){
     stop("p.bias must be a value greater than or equal to 0")
   }
-  if(n.steps <= 0){
-    stop("n.steps must be a value larger than 0")
-  }
   if(delta.t <= 0){
     stop("delta.t must be a value larger than 0")
   }
@@ -159,7 +156,7 @@ beauWalker <- function(sim.time=10,delta.t=1,p.persist=0.5,p.bias=0.9,bias.dir=c
 
   
   #' Initializing parameters 
-  if(!all.equal(bias.dir,c(0,0,0))){
+  if(sum(bias.dir == c(0,0,0))!=3){
     bias.dir <- bias.dir/sqrt(sum(bias.dir^2))
   }
   pos <- matrix(c(0,0,0,0),1,4)
