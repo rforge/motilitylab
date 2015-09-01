@@ -44,7 +44,7 @@
   else if(taxis.mode == 3){
     if(p.bias > 0){
       # klinotaxis
-      t.free.rest <- t.free*(1+p.bias*(1-acos(sum(d*bias.dir))/pi)/pi);
+      t.free.rest <- t.free*(1+p.bias*(1-acos(sum(d*bias.dir))/pi));
     }
     d <- c(d*v.free,t.free.rest)  
   }
