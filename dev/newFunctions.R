@@ -39,18 +39,18 @@
       d[1] <- circ[1]*circle.scale
       d[2] <- circ[2]*circle.scale
     }
-    d <- c(d*v.free*(1+p.bias*acos(sum(d*bias.dir))/pi),999)
+    d <- c(d*v.free*(1+p.bias*(1-acos(sum(d*bias.dir))/pi)),999)
   }
   else if(taxis.mode == 3){
     if(p.bias > 0){
       # klinotaxis
-      t.free.rest <- t.free*(1+p.bias*acos(sum(d*bias.dir))/pi);
+      t.free.rest <- t.free*(1+p.bias*(1-acos(sum(d*bias.dir))/pi)/pi);
     }
     d <- c(d*v.free,t.free.rest)  
   }
   else{
     # orthotaxis
-    d <- c(d*v.free*(1+p.bias*acos(sum(d*bias.dir))/pi), 999)
+    d <- c(d*v.free*(1+p.bias*(1-acos(sum(d*bias.dir))/pi)), 999)
   }
   return(d)
 }
