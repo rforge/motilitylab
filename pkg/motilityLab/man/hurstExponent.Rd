@@ -7,7 +7,7 @@
 hurstExponent(track)
 }
 \arguments{
-\item{track}{the track whose hurst exponent is to be computed.}
+\item{track}{the track whose Hurst exponent is to be computed.}
 }
 \value{
 A vector with the Hurst exponent for each of the tracks dimension

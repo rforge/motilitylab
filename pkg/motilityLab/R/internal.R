@@ -84,5 +84,68 @@
   })
 }
 
+# Helper function of beauWalker() and is not directly called by user
+# This function samples uniformly from unit sphere
+.beaucheminSphereSampler <- function(d=3){
+  x <- rnorm(d)
+  return(x/sqrt(sum(x^2)))
+}
+
+# Helper function of beauWalker() and is not directly called by user
+# This function samples from the trianglular distribution
+.beaucheminTriangularSampler <- function() sqrt(4*runif(1))-1
+
+# Creates a matrix that will rotate unit vector a onto unit vector b
+.beaucheminRotationMatrix <- function(a,b){
+		# handle undefined cases
+	    theta <- acos( sum(a*b) )
+    	R <- diag(rep(1,3))
+		if( theta < 0.001 ){
+			return(R)
+		}
+		if( pi-theta < 0.001 ){
+			return(-R)
+		}
+		# compute normalized cross product of a and b
+		x <- c(a[2]*b[3]-a[3]*b[2],
+			a[3]*b[1]-a[1]*b[3],a[1]*b[2]-a[2]*b[1])
+		x <- x / sqrt(sum(x^2))
+		A <- rbind( c(0,-x[3],x[2]),c(x[3],0,-x[1]),c(-x[2],x[1],0) )
+		R <- R + sin(theta)*A + (1-cos(theta))* (A%*%A)
+    	return(R)
+}
+
+# Helper function of beauWalker() and is not directly called by user
+# returns a direction for the cell to travel based on model parameters specified in beauWalker()
+.beaucheminPickNewDirection <- function(
+	old.direction,
+	p.bias,p.persist,bias.dir,taxis.mode,
+	t.free,v.free,rot.mat){
+	if( runif(1) < p.persist ){
+		return(c(old.direction, t.free))
+	}
+	d <- .beaucheminSphereSampler(3)
+	if( taxis.mode == 0 ){
+		return(c(d,t.free))
+	} else if(taxis.mode==1){
+		# orthotaxis
+		return(c(v.free * d*(1+p.bias*sum(d*bias.dir)),t.free))
+	} else if(taxis.mode == 2){
+		# topotaxis	
+		if( runif(1) < p.bias ){
+			# Approach: generate new direction as if the bias direction were (1,0,0).
+			# Then rotate the resulting direction by the angles between (1,0,0) and the true
+			# bias direction. 
+			d[1] <- .beaucheminTriangularSampler()
+			circ <- .beaucheminSphereSampler(2)
+			circle.scale <- sqrt(1-d[1]^2)
+			d[2:3] <- circ[1:2]*circle.scale
+			return(c( v.free * rot.mat%*%d, t.free))
+		}
+	} else if(taxis.mode == 3){
+	 	 # klinotaxis
+		return(c(d*v.free,t.free*(1+p.bias*sum(d*bias.dir))))
+	}
+}
 
 

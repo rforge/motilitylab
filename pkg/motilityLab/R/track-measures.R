@@ -295,7 +295,7 @@ meanTurningAngle <- function(track) {
 #'
 #' Computes the Hurst exponent of each of the track's dimensions.
 #' 
-#' @param track the track whose hurst exponent is to be computed.
+#' @param track the track whose Hurst exponent is to be computed.
 #' @details If the track includes at least six and an even number of points,
 #' for each of the track's dimensions, the empirical Hurst exponent is 
 #' determined using the function \code{\link[pracma]{hurstexp}} from the 
@@ -321,4 +321,34 @@ hurstExponent <- function(track) {
   ret <- c()
   ret <- apply(as.matrix(track[,2:ncol(track)]), 2, he)
   return(ret)
+}
+
+
+#' A Track's Fractal Dimension
+#'
+#' Computes the fractal dimension of a track using all track dimensions by the 
+#' box-count method.
+#'
+#' @param track the track for which the fractal dimension is to be calculated.
+#' @details The fractal dimension is estimated using the function from
+#' \code{\link[fractaldim]{fd.estim.boxcount}} from the 
+#' \code{fractaldim} package. For Brownian motion, fractal dimension and Hurst exponent
+#' (see \link{hurstExponent}) 
+#' are related by the formula H=2-D. For non-Brownian motion, however, this relationship
+#' need not hold. While the hurst exponent takes a global approach to the 
+#' track's properties, fractal dimension is a local approach to the track's properties
+#' (Gneiting and Schlather, 2004).
+#'
+#' @return the number indicating the track's fractal dimension.
+#'
+#' @references 
+#' Tillmann Gneiting and Martin Schlather (2004), Stochastic Models That Separate Fractal
+#' Dimension and the Hurst Effect. _SIAM Review_ *46*(2), 269-282. 
+#' doi:10.1137/S0036144501394387
+#'
+fractalDimension <- function(track){
+  if( !requireNamespace("fractaldim",quietly=TRUE) ){
+    stop("This function requires the 'fractaldim' package.")
+  }
+  return(fractaldim::fd.estim.boxcount(track[,-1])$fd)
 }
