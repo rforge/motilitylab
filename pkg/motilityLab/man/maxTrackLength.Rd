@@ -2,23 +2,17 @@
 % Please edit documentation in R/functions.R
 \name{maxTrackLength}
 \alias{maxTrackLength}
-\title{The Maximum Number of Points of a Track in a \emph{Tracks} Object}
+\title{Length of Longest Track}
 \usage{
-maxTrackLength(tracks)
+maxTrackLength(x)
 }
 \arguments{
-\item{tracks}{the \emph{tracks} object the tracks in which are to be considered.}
+\item{x}{the \emph{tracks} object the tracks in which are to be considered.}
 }
 \value{
-Returns the maximum number of rows of a track in the given
-\emph{tracks} object.
+the maximum number of rows of a track in \code{x}
 }
 \description{
-Determines the maximum number of points that one of the tracks in the given
-\emph{tracks} object constists of.
-}
-\details{
-The maximum number of rows of a track in the \emph{tracks} object
-is determined.
+Determines the maximum number of positions over the tracks in \code{x}.
 }
 

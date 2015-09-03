@@ -2,7 +2,7 @@
 % Please edit documentation in R/track-measures.R
 \name{straightness}
 \alias{straightness}
-\title{A Track's Straightness}
+\title{Track Straightness}
 \usage{
 straightness(track)
 }
@@ -14,7 +14,7 @@ The track's straightness, a value between \eqn{0} and \eqn{1}, will
 be returned. If the track has length \eqn{0}, then NaN is returned.
 }
 \description{
-Computes a track's straightness, i.d. the track's displacement divided by
+Computes a track's straightness, i.e., the track's displacement divided by
 its length.
 }
 \details{

@@ -2,7 +2,7 @@
 % Please edit documentation in R/track-measures.R
 \name{meanTurningAngle}
 \alias{meanTurningAngle}
-\title{A Track's Mean Turning Angle}
+\title{Track Mean Turning Angle}
 \usage{
 meanTurningAngle(track)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/simulate-tracks.R
 \name{brownianTrack}
 \alias{brownianTrack}
-\title{Simulate \code{nsteps} Steps of a Random Walk in \code{dim} Dimensions}
+\title{Simulate an Uncorrelated Random Walk}
 \usage{
 brownianTrack(nsteps = 100, dim = 3, mean = 0, sd = 1)
 }

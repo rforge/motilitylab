@@ -2,8 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{aggregate.tracks}
 \alias{aggregate.tracks}
-\title{Compute summary statistic of measure values over subtracks of a given track
-set.}
+\title{Compute Summary Statistics of Subtracks}
 \usage{
 \method{aggregate}{tracks}(x, measure, by = "subtracks", FUN = mean,
   subtrack.length = seq(1, (maxTrackLength(x) - 1)),
@@ -20,10 +19,10 @@ using \code{\link{wrapTrack}} (but note that this requires an explicit call
 \item{by}{a string that indicates how grouping is performed. Currently, two
 kinds of grouping are supported:
 \itemize{
- \item{"subtracks"}{ Apply `measure` to all subtracks according to
-the parameters `subtrack.length` and `max.overlap`.}
- \item{"prefixes"}{ Apply `measure` to all prefixes (i.e., subtracks starting
- from a track's initial position) according to the parameter `subtrack.length`.}
+ \item{\code{"subtracks"}}{ Apply \code{measure} to all subtracks according to
+the parameters \code{subtrack.length} and \code{max.overlap}.}
+ \item{\code{"prefixes"}}{ Apply \code{measure} to all prefixes (i.e., subtracks starting
+ from a track's initial position) according to the parameter \code{subtrack.length}.}
 }}
 
 \item{FUN}{a function that is to be used to aggregate the measures
@@ -47,8 +46,8 @@ If the string is not equal to any of these, it is passed on to
 
 \item{subtrack.length}{either a numeric value \eqn{i}, indicating that only
 subtracks of exactly \eqn{i} segments are to be regarded, or a vector of all
-the values \eqn{i} that shall be used. In particular, subtrack.length=2 corresponds
-to a "step-based analysis".}
+the values \eqn{i} that shall be used. In particular, \code{subtrack.length=2}
+corresponds to a "step-based analysis" (Beltman et al, 2009).}
 
 \item{max.overlap}{Determines the amount by which the subtracks that are taken into
 account can overlap. A maximum overlap of \code{max(subtrack.length)} will imply
@@ -64,10 +63,10 @@ to get a proper error estimate.}
 \item{...}{further arguments passed to or used by methods.}
 }
 \value{
-Returns a data frame with one line for every \eqn{i} in the set
+a data frame with one row for every \eqn{i} in the set
 specified by \code{subtrack.length}. The first column contains the values
-of \eqn{i}, the following columns contain the values of the agglomeration
-function applied on the measure values of tracks of exactly \eqn{i} segments.
+of \eqn{i} and the remaining columns contain the values of the summary statistic
+of the measure values of tracks having exactly \eqn{i} segments.
 }
 \description{
 This is the main workhorse function to compute many common motility measures
@@ -82,14 +81,22 @@ statistic is computed, and the resulting values are returned.
 For every number of segments \eqn{i} in the set defined by
 \code{subtrack.length}, all subtracks of any track in the input
 \emph{\code{tracks}} object, that consist of exactly \eqn{i} segments are
-regarded. The input \code{measure} is applied to the subtracks individually,
-and the \code{statistic} is used to agglomerate the obtained values.
-The return values of the agglomeration function are returned for each value
-of \eqn{i} in a data frame.
+considered. The input \code{measure} is applied to the subtracks individually,
+and the \code{statistic} is applied to the resulting values.
+The summary statistics are returned for each value of \eqn{i} in a data frame.
 }
 \examples{
-require(ggplot2)
-dat <- aggregate(TCells, displacement, FUN="mean.se")
-ggplot(dat, aes(x=i, y=mean)) + geom_errorbar(aes(ymin=lower, ymax=upper), width=.1)
+## A mean square displacement plot with error bars.
+dat <- aggregate(TCells, squareDisplacement, FUN="mean.se")
+with( dat ,{
+  plot( mean ~ i, xlab="time step",
+  	ylab="mean square displacement", type="l" )
+  segments( i, lower, y1=upper )
+} )
+}
+\references{
+Joost B. Beltman, Athanasius F.M. Maree and Rob. J. de Boer (2009).
+Analysing immune cell migration. \emph{Nature Reviews Immunology} \bold{9},
+789--798. doi:10.1038/nri2638
 }
 

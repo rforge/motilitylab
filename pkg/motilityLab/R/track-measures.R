@@ -3,10 +3,10 @@
 #' Estimates the length of the track as the sum of the lengths of its
 #' linear segments. (Note that this is an underestimation).
 #'
-#'@param track The track whose length is to be computed.
-#'@return The length.
-#'@details The track length is computed by summing the Euclidean distances 
-#'between consecutive positions.
+#' @param track The track whose length is to be computed.
+#' @return The length.
+#' @details The track length is computed by summing the Euclidean distances 
+#' between consecutive positions.
 trackLength <- function(track) {
 	if (nrow(track) > 2) { 
 		dif <- apply(track[,-1], 2, diff)
@@ -51,7 +51,7 @@ duration <- function(track) {
   return(dur)
 }
 
-#' A Track's Displacement
+#' Track Displacement
 #' 
 #' Computes the distance between the track's first and final positions.
 #'
@@ -67,7 +67,7 @@ displacement <- function(track, limits=c(1,nrow(track))) {
   sqrt(sum(track[limits[2], -1] - track[limits[1], -1])^2)
 }
 
-#' The Vector between a Track's Starting and End Point
+#' Vector Between Track Endpoints
 #' 
 #' Computes the coordinates of the vector between that tracks' start and end points.
 #' 
@@ -119,7 +119,7 @@ squareDisplacement <- function(track, limits=c(1,nrow(track))) {
   sum(track[limits[2], -1] - track[limits[1], -1])^2
 }
 
-#' A Track's Aspericity
+#' Track Aspericity
 #' 
 #' Computes the asphericity of the track's points.
 #' 
@@ -134,9 +134,11 @@ squareDisplacement <- function(track, limits=c(1,nrow(track))) {
 #' with high values indicating track straightness. The asphericity is a 
 #' measure for the track's straightness. Note that the asphericity is only 
 #' defined for tracks in two or three dimensions.
-#' @references \cite{Mokhtari et al.: Automated Characterization and 
+#' @references
+#' Zeinab Mokhtari, Franziska Mech, Carolin Zitzmann, Mike Hasenberg, Matthias Gunzer
+#' and Marc Thilo Figge (2013), Automated Characterization and 
 #' Parameter--Free Classification of Cell Tracks Based on Local Migration 
-#' Behavior, PLoS ONE 2013 Dec 6;8(12):e80808, 2013} 
+#' Behavior. \emph{PLoS ONE} \bold{8}(12), e80808. doi:10.1371/journal.pone.0080808
 asphericity <- function(track) {
 	dim <- ncol(track) - 1
   if (dim == 1) {
@@ -153,9 +155,9 @@ asphericity <- function(track) {
 }
 
 
-#' A Track's Straightness
+#' Track Straightness
 #' 
-#' Computes a track's straightness, i.d. the track's displacement divided by 
+#' Computes a track's straightness, i.e., the track's displacement divided by 
 #' its length.
 #'
 #' @param track the track whose straightness is to be computed.
@@ -174,7 +176,7 @@ straightness <- function(track) {
   }
 }
 
-#' A Track's Displacement Ratio
+#' Track Displacement Ratio
 #' 
 #' Computes a track's displacement ratio, i.d. the track's (current) 
 #' displacement divided by its maximal displacement.
@@ -188,9 +190,11 @@ straightness <- function(track) {
 #' be from the interval \eqn{[0,1]}, or 1 if the track has a maximal 
 #' displacement of 0.
 #' @seealso \code{\link{displacement}}, \code{\link{maxDisplacement}}
-#' @references \cite{Mokhtari et al.: Automated Characterization and 
+#' @references
+#' Zeinab Mokhtari, Franziska Mech, Carolin Zitzmann, Mike Hasenberg, Matthias Gunzer
+#' and Marc Thilo Figge (2013), Automated Characterization and 
 #' Parameter--Free Classification of Cell Tracks Based on Local Migration 
-#' Behavior, PLoS ONE 2013 Dec 6;8(12):e80808, 2013} 
+#' Behavior. \emph{PLoS ONE} \bold{8}(12), e80808. doi:10.1371/journal.pone.0080808
 displacementRatio <- function(track) {
   dmax <- maxDisplacement(track)
   if (dmax > 0) {
@@ -200,21 +204,22 @@ displacementRatio <- function(track) {
   }
 }
 
-#' A Track's Outreach Ratio
+#' Track Outreach Ratio
 #' 
-#' Computes a track's outreach ratio, i.d. the track's maximal 
-#' displacement divided by its length.
+#' Computes a track's maximal displacement divided by its length.
 #'
 #' @param track the track whose outreach ratio is to be computed.
-#' @return The track's outreach ratio, a vaule between \eqn{0} and \eqn{1}, 
+#' @return The track's outreach ratio, a value between \eqn{0} and \eqn{1}, 
 #' will be returned. If the track has length \eqn{0}, then NaN is returned.
 #' @details Computes the outreach ratio of a track, i.e. the ratio of the 
 #' track's maximal displacement and length. The value will be from the interval 
 #' \eqn{[0,1]}, or 1 if the track has length \eqn{0}.
 #' @seealso \code{\link{maxDisplacement}}, \code{\link{trackLength}}
-#' @references \cite{Mokhtari et al.: Automated Characterization and 
+#' @references
+#' Zeinab Mokhtari, Franziska Mech, Carolin Zitzmann, Mike Hasenberg, Matthias Gunzer
+#' and Marc Thilo Figge (2013), Automated Characterization and 
 #' Parameter--Free Classification of Cell Tracks Based on Local Migration 
-#' Behavior, PLoS ONE 2013 Dec 6;8(12):e80808, 2013} 
+#' Behavior. \emph{PLoS ONE} \bold{8}(12), e80808. doi:10.1371/journal.pone.0080808
 outreachRatio <- function(track) {
   trackLength <- trackLength(track) 
   if (trackLength > 0) {
@@ -240,9 +245,9 @@ outreachRatio <- function(track) {
 #' @examples
 #' ## show a turning angle plot with error bars for the T cell data.
 #' with( (aggregate(BCells,overallDot,FUN="mean.se",na.rm=TRUE)),{
-#'   lines( mean ~ i, xlab="time step", 
-#'   ylab="turning angle (rad)", type="l", col=3 )
-#'   segments( i, lower, y1=upper, col=3 )
+#'   plot( mean ~ i, xlab="time step", 
+#'   	ylab="turning angle (rad)", type="l" )
+#'   segments( i, lower, y1=upper )
 #' } )
 overallAngle <- function(x, limits=c(1,nrow(x))) {
   if (limits[2]-limits[1] < 2) {
@@ -265,9 +270,9 @@ overallAngle <- function(x, limits=c(1,nrow(x))) {
 #' @examples
 #' ## compute and plot the autocovariance function for the T cell data (assuming isotropy)
 #' with( (aggregate(BCells,overallDot,FUN="mean.se",na.rm=TRUE)),{
-#'   lines( cos(mean) ~ i, xlab="time", 
-#'   ylab="correlation of orientation", type="l", col=3 )
-#'   segments( i, cos(lower), y1=cos(upper), col=3 )
+#'   plot( cos(mean) ~ i, xlab="time", 
+#'   ylab="correlation of orientation", type="l" )
+#'   segments( i, cos(lower), y1=cos(upper) )
 #' } )
 overallDot <- function(x, limits=c(1,nrow(x))) {
   a <- diff(x[limits[1]:(limits[1]+1),-1])
@@ -276,7 +281,7 @@ overallDot <- function(x, limits=c(1,nrow(x))) {
 }
 
 
-#' A Track's Mean Turning Angle
+#' Track Mean Turning Angle
 #' 
 #' Computes the mean of all angles between two subsequent segments of the given 
 #' track.
@@ -291,7 +296,7 @@ meanTurningAngle <- function(track) {
 }
 
 
-#' A Track's Hurst Exponent
+#' Track Hurst Exponents
 #'
 #' Computes the Hurst exponent of each of the track's dimensions.
 #' 
@@ -305,6 +310,9 @@ meanTurningAngle <- function(track) {
 #' @return A vector with the Hurst exponent for each of the tracks dimension 
 #' is returned. If the track has an uneven number of points, the last one is 
 #' discarded, if it has less than six points, NA will be returned.
+#'
+#' @seealso \code{\link{fractalDimension}}
+#'
 hurstExponent <- function(track) {
 	if( !requireNamespace("pracma",quietly=TRUE) ){
 		stop("This function requires the 'pracma' package.")
@@ -324,7 +332,7 @@ hurstExponent <- function(track) {
 }
 
 
-#' A Track's Fractal Dimension
+#' Track Fractal Dimension
 #'
 #' Computes the fractal dimension of a track using all track dimensions by the 
 #' box-count method.
@@ -341,9 +349,11 @@ hurstExponent <- function(track) {
 #'
 #' @return the number indicating the track's fractal dimension.
 #'
+#' @seealso \code{\link{hurstExponent}}
+#'
 #' @references 
 #' Tillmann Gneiting and Martin Schlather (2004), Stochastic Models That Separate Fractal
-#' Dimension and the Hurst Effect. _SIAM Review_ *46*(2), 269-282. 
+#' Dimension and the Hurst Effect. \emph{SIAM Review} \bold{46}(2), 269--282. 
 #' doi:10.1137/S0036144501394387
 #'
 fractalDimension <- function(track){

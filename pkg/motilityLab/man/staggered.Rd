@@ -28,8 +28,9 @@ for track-based staggered computations with \code{lapply}, see example.
 hist( sapply( TCells, staggered( displacement ) ) )
 }
 \references{
-\cite{Mokhtari et al.: Automated Characterization and
+Zeinab Mokhtari, Franziska Mech, Carolin Zitzmann, Mike Hasenberg, Matthias Gunzer
+and Marc Thilo Figge (2013), Automated Characterization and
 Parameter--Free Classification of Cell Tracks Based on Local Migration
-Behavior, PLoS ONE 2013 Dec 6;8(12):e80808, 2013}
+Behavior. \emph{PLoS ONE} \bold{8}(12), e80808. doi:10.1371/journal.pone.0080808
 }
 

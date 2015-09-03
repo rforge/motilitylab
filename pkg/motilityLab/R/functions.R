@@ -34,7 +34,7 @@ as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE, ...) {
 	return(r)
 }
 
-#' Convert to tracks
+#' Convert to Tracks
 #' 
 #' Coerces \code{x} to a \code{tracks} object.
 #' 
@@ -124,7 +124,7 @@ filterTracks <- function(f,x,...){
 	structure(x[as.logical(sapply(x,function(x) f(x,...) ))], class="tracks")
 }
 
-#' Sort each Track's Positions by Time
+#' Sort Track Positions by Time
 #' 
 #' Sorts the positions in each track in a \emph{tracks} object by time.
 #' 
@@ -250,7 +250,7 @@ read.tracks.csv <- function(file, id.column=1, time.column=2,
 
 
 
-#' Plot in 2D Space
+#' Plot Tracks in 2D Space
 #' 
 #' Plots tracks contained in a "tracks" object into a twodimensional space
 #' pallelel to the data's axes.
@@ -275,6 +275,7 @@ read.tracks.csv <- function(file, id.column=1, time.column=2,
 #' of \code{xlab} and \code{ylab}. The color can be set through \code{col}.
 #' If the tracks should be added to an existing plot, \code{add} is to be set 
 #' to \code{TRUE}.
+#' @seealso \code{\link{plot3d}}
 plot.tracks <- function(x, dims=c('x','y'), add=F,
 		col=order(names(x)), xlab="X position", ylab="Y position", ... ) {
 	args <- list(...)
@@ -343,9 +344,11 @@ wrapTrack <- function(track) {
 #' @return Returns a function that computes
 #' the given measure in a staggered fashion on that track.
 #' 
-#' @references \cite{Mokhtari et al.: Automated Characterization and 
+#' @references 
+#' Zeinab Mokhtari, Franziska Mech, Carolin Zitzmann, Mike Hasenberg, Matthias Gunzer
+#' and Marc Thilo Figge (2013), Automated Characterization and 
 #' Parameter--Free Classification of Cell Tracks Based on Local Migration 
-#' Behavior, PLoS ONE 2013 Dec 6;8(12):e80808, 2013} 
+#' Behavior. \emph{PLoS ONE} \bold{8}(12), e80808. doi:10.1371/journal.pone.0080808
 #'
 #' @examples
 #' hist( sapply( TCells, staggered( displacement ) ) )
@@ -426,25 +429,20 @@ computeStaggered <- function(track, measure, matrix=FALSE, min.segments=1) {
 }
 
 
-# TODO handle text duplication in details and return
 #' Measure for Every Prefix of a Track
-#' 
-#' Returns a function that applies the input measure to each of a tracks prefixes 
-#' of a given minimal length.
 #' 
 #' @param measure the measure that is to be computed.
 #' @param min.length minimal number of points in a prefix the measure is to be 
 #' applied to. Default is \eqn{1}.
 #' 
-#' @details A function that applies the measure to every prefix of length at 
-#' least \code{min.length} is returned. This 
-#' function applies the measure to every prefix of the input track, starting
-#' with the prefix that consists of \code{min.length} points. The resulting 
+#' @details The resulting 
+#' function applies \code{measure} to every prefix of the input track, starting
+#' with the prefix that consists of \code{min.length} positions. The resulting 
 #' values are returned in a vector, sorted in ascending order by the 
 #' prefix length.
 #'
-#' @return A function that applies the measure to every prefix of length at 
-#' least \code{min.length} is returned. 
+#' @return a function that applies the measure to every prefix of length at 
+#' least \code{min.length}.
 #'
 forEveryPrefix <- function(measure, min.length=1) {
   function(track) {
@@ -486,7 +484,7 @@ normalizeTrack <- function(track) {
 #' such that their starting point is in the origin of ordinates.
 normalizeTracks <- function(tracks) as.tracks(lapply(tracks, normalizeTrack))
 
-#' Get Subtracks of One or More Tracks
+#' Decompose Track(s) into Subtracks
 #' 
 #' Creates a \emph{tracks} object consisting of all subtracks of `x`
 #' with `i` segments (i.e., `i`+1 positions).
@@ -549,15 +547,13 @@ prefixes <- function(x,i) {
 #' 
 #' @param measure the measure that should be nomalized.
 #' 
-#' @details A function is retruned that computes the input measure for a given 
-#' track an divides the result by the track's duration.
-#' 
-#' @return Retruns a function that computes the input measure for a given track
+#' @return a function that computes the input measure for a given track
 #' and returns the result divided by the track's duration.
 #' 
-#' @examples # normalizeToDuration(displacement) can be used as an indicator 
-#' # for the motions efficiency
-#' lapply(TCells, normalizeToDuration(displacement))
+#' @examples 
+#' ## normalizeToDuration(displacement) can be used as an indicator 
+#' ## for the motion's efficiency
+#' sapply(TCells, normalizeToDuration(displacement))
 normalizeToDuration <- function(measure) {
   function(track) {
     measure(track) / duration(track)
@@ -566,7 +562,7 @@ normalizeToDuration <- function(measure) {
 
 
 
-#' Bivariate Scatterplot of 2 Given Track Measures
+#' Bivariate Scatterplot of Two Given Track Measures
 #' 
 #' Plots the values of two measures applied on given tracks against each 
 #' other.
@@ -589,47 +585,68 @@ normalizeToDuration <- function(measure) {
 #' respectively.
 #' 
 #' @details Plots the value of \code{measurey} applied to \code{x} against the
-#' value of  \code{measurey} applied to \code{y}.
-plotTrackMeasures <- function(measurex, measurey, x, add=FALSE, 
+#' value of  \code{measurey} applied to \code{y}. This is useful for "FACS-like"
+#' motility analysis, where clusters of cell tracks are identified based on their
+#' motility parameters (Moreau et al, 2012; Textor et al, 2014).
+#'
+#' @references
+#' Moreau, H. D., Lemaitre, F., Terriac, E., Azar, G., Piel, M., Lennon-Dumenil, A. M. 
+#' and Bousso, P. (2012), Dynamic In Situ Cytometry Uncovers 
+#' T Cell Receptor Signaling during Immunological Synapses and Kinapses In Vivo.
+#' \emph{Immunity} \bold{37}(2), 351--363. doi:10.1016/j.immuni.2012.05.014
+#'
+#' Johannes Textor, Sarah E. Henrickson, Judith N. Mandl, Ulrich H. von Andrian,
+#' J\"urgen Westermann, Rob J. de Boer and Joost B. Beltman (2014),
+#' Random Migration and Signal Integration Promote Rapid and Robust T Cell Recruitment.
+#' \emph{PLoS Computational Biology} \bold{10}(8), e1003752.
+#' doi:10.1371/journal.pcbi.1003752
+#'
+plotTrackMeasures <- function(x, measurex, measurey, add=FALSE, 
                               xlab=deparse(substitute(measurex)), 
                               ylab=deparse(substitute(measurey)), ...) {
-  if(class(x)=="tracks") {
+	if( class(x)!="tracks" ){
+		x <- wrapTrack( x )
+	}
     if(add) {
-      points(sapply(x,measurex) ~ sapply(x,measurey), ...)
+      points(sapply(y,measurey) ~ sapply(x,measurey), ...)
     } else {
-      plot(sapply(x,measurex) ~ sapply(x,measurey), xlab=xlab, ylab=ylab, ...)
+      plot(sapply(y,measurey) ~ sapply(x,measurey), xlab=xlab, ylab=ylab, ...)
     }
-  } else {
-    if(add) {
-      points(measurex(x) ~ measurey(x), ...)
-    } else {
-      plot(measurex(x) ~ measurey(x), xlab=xlab, ylab=ylab, ...)
-    }
-  }
 }
   
 
 #' Cluster Tracks
 #' 
-#' Clusters the tracks in a given \emph{tracks} object according to given 
-#' measures.
+#' Perform a hierarchical clustering of a set of tracks according to a given vector
+#' of track measures.
 #' 
 #' @param tracks the tracks that are to be clustered.
-#' @param measures the measures according to which the tracks are to be 
-#' clustered.
+#' @param measures a function, or a vector of functions. Each function is expected to 
+#' return a single number given a single track.
 #' @param scale logical indicating whether the measures values shall be scaled
-#' using the function \code{\link[base]{scale}} before the clustering. Default 
-#' is TRUE.
+#' using the function \code{\link[base]{scale}} before the clustering. 
 #' @param ... additional parameters to be passed to \code{\link[stats]{hclust}}.
 #'
 #' @return An object of class *hclust*, see \code{\link[stats]{hclust}}.
 #' 
 #' @details The measures are applied to each of the tracks in the given
-#' \emph{tracks} object and according to the resulting values the tracks are 
+#' \emph{tracks} object. According to the resulting values, the tracks are 
 #' clustered using a hierarchical clustering (see \code{\link[stats]{hclust}}).
-#' If \code{scale} is set to true, the values that have been determined by 
-#' applying the input measures to the input tracks are scaled to mean value 
+#' If \code{scale} is \code{TRUE}, the measure values are scaled to mean value 
 #' \eqn{0} and standard deviation \eqn{1} (per measure) before the clustering.
+#'
+#' @examples 
+#' ## Cluster tracks according to the mean of their Hust exponents along X and Y
+#'
+#' cells <- c(TCells,Neutrophils)
+#' real.celltype <- rep(c("T","N"),c(length(TCells),length(Neutrophils)))
+#' ## Prefix each track ID with its cell class to evaluate the clustering visually
+#' names(cells) <- paste0(real.celltype,seq_along(cells))
+#' clust <- clusterTracks( cells, function(t) mean(hurstExponent(t)[1:2]) )
+#' plot( clust )
+#' ## How many cells are "correctly" clustered?
+#' sum( real.celltype == c("T","N")[cutree(clust,2)] )
+#' 
 clusterTracks <- function(tracks, measures, scale=TRUE, ...) { 
 	values <- matrix(nrow=length(tracks))
 	if (is.function(measures)) {
@@ -643,50 +660,7 @@ clusterTracks <- function(tracks, measures, scale=TRUE, ...) {
 }
 
 
-# TODO: Warum wird die Null im defaultwert fuer measurey so nach hinten verschoben? (schon im Rd-file)
-#list version bringt wegen skalierung der Achsen nichts 
-#' Plot Tracks in a 1D or 2D Parameter Space
-#' 
-#' Plots the tracks in a \emph{tracks} object into the parameter space of one 
-#' or two given measures.
-#' 
-#' @param tracks a \emph{tracks} object containing the tracks that are to be 
-#' plotted
-#' @param measurex the measure which constitutes the x-dimension of the 
-#' parameter space
-#' @param measurey the measure which constitutes the y-dimension of the 
-#' parameter space. By default constant \eqn{0}.
-#' @param add a logical indicating whether the tracks are to be added to an 
-#' existing plot via \code{\link[graphics]{points}}.
-#' @param xlab label of the x-axis. By default the name of the input function 
-#' \code{measurex}.
-#' @param ylab label of the y-axis. By default the name of the input function 
-#' \code{measurey}.
-#' @param col the color(s) that are to be used, by default color 1 (black), 
-#' see \code{\link[graphics]{par}}
-#' @param ... additional parameters to be passed to \code{\link[graphics]{plot}} 
-#' (in case add=False) or \code{\link[graphics]{points}} (in case add=True), 
-#' respectively.
-#' 
-#' 
-#' @details Plots the tracks in the given \emph{tracks} object into the 
-#' parameter space of \code{measurex} and \code{measurey}, or of 
-#' \code{measurex} and \eqn{0}, if \code{measurey} is not given. 
-#' 
-plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0}, 
-                                 add=FALSE, xlab=deparse(substitute(measurex)),
-                                 ylab=deparse(substitute(measurey)), col=1, ...) {
-    if (add) {
-      points(unlist(lapply(tracks, measurey)) ~ unlist(lapply(tracks, measurex)),  col=col, ...)
-    } else {
-      plot(unlist(lapply(tracks, measurey)) ~ unlist(lapply(tracks, measurex)), 
-           xlab=xlab, ylab=ylab, col=col, ...)
-    }
-}
-
-
-#' Compute summary statistic of measure values over subtracks of a given track
-#' set.
+#' Compute Summary Statistics of Subtracks
 #' 
 #' This is the main workhorse function to compute many common motility measures 
 #' such as mean square displacement, turning angle, and autocorrelation functions.
@@ -704,10 +678,10 @@ plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0},
 #' @param by a string that indicates how grouping is performed. Currently, two
 #' kinds of grouping are supported: 
 #' \itemize{
-#'  \item{"subtracks"}{ Apply `measure` to all subtracks according to 
-#' the parameters `subtrack.length` and `max.overlap`.}
-#'  \item{"prefixes"}{ Apply `measure` to all prefixes (i.e., subtracks starting
-#'  from a track's initial position) according to the parameter `subtrack.length`.}
+#'  \item{\code{"subtracks"}}{ Apply \code{measure} to all subtracks according to 
+#' the parameters \code{subtrack.length} and \code{max.overlap}.}
+#'  \item{\code{"prefixes"}}{ Apply \code{measure} to all prefixes (i.e., subtracks starting
+#'  from a track's initial position) according to the parameter \code{subtrack.length}.}
 #' }
 #' 
 #' @param FUN a function that is to be used to aggregate the measures 
@@ -731,8 +705,8 @@ plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0},
 #'
 #' @param subtrack.length either a numeric value \eqn{i}, indicating that only 
 #' subtracks of exactly \eqn{i} segments are to be regarded, or a vector of all
-#' the values \eqn{i} that shall be used. In particular, subtrack.length=2 corresponds
-#' to a "step-based analysis".
+#' the values \eqn{i} that shall be used. In particular, \code{subtrack.length=2} 
+#' corresponds to a "step-based analysis" (Beltman et al, 2009).
 #'
 #' @param max.overlap Determines the amount by which the subtracks that are taken into
 #' account can overlap. A maximum overlap of \code{max(subtrack.length)} will imply
@@ -748,18 +722,26 @@ plotInParameterSpace <- function(tracks, measurex, measurey=function(x) {0},
 #' @details For every number of segments \eqn{i} in the set defined by 
 #' \code{subtrack.length}, all subtracks of any track in the input 
 #' \emph{\code{tracks}} object, that consist of exactly \eqn{i} segments are 
-#' regarded. The input \code{measure} is applied to the subtracks individually, 
-#' and the \code{statistic} is used to agglomerate the obtained values. 
-#' The return values of the agglomeration function are returned for each value 
-#' of \eqn{i} in a data frame.
-#' @return Returns a data frame with one line for every \eqn{i} in the set 
+#' considered. The input \code{measure} is applied to the subtracks individually, 
+#' and the \code{statistic} is applied to the resulting values. 
+#' The summary statistics are returned for each value of \eqn{i} in a data frame.
+#' @return a data frame with one row for every \eqn{i} in the set 
 #' specified by \code{subtrack.length}. The first column contains the values 
-#' of \eqn{i}, the following columns contain the values of the agglomeration 
-#' function applied on the measure values of tracks of exactly \eqn{i} segments.
+#' of \eqn{i} and the remaining columns contain the values of the summary statistic
+#' of the measure values of tracks having exactly \eqn{i} segments.
 #' @examples 
-#' require(ggplot2)
-#' dat <- aggregate(TCells, displacement, FUN="mean.se")
-#' ggplot(dat, aes(x=i, y=mean)) + geom_errorbar(aes(ymin=lower, ymax=upper), width=.1)
+#' ## A mean square displacement plot with error bars.
+#' dat <- aggregate(TCells, squareDisplacement, FUN="mean.se")
+#' with( dat ,{
+#'   plot( mean ~ i, xlab="time step", 
+#'   	ylab="mean square displacement", type="l" )
+#'   segments( i, lower, y1=upper )
+#' } )
+#'
+#' @references
+#' Joost B. Beltman, Athanasius F.M. Maree and Rob. J. de Boer (2009).
+#' Analysing immune cell migration. \emph{Nature Reviews Immunology} \bold{9},
+#' 789--798. doi:10.1038/nri2638
 aggregate.tracks <- function( x, measure, by="subtracks", FUN=mean, 
     subtrack.length=seq(1, (maxTrackLength(x)-1)),
     max.overlap=max(subtrack.length), na.rm=FALSE, ... ){
@@ -849,30 +831,24 @@ aggregate.tracks <- function( x, measure, by="subtracks", FUN=mean,
 	return(data.frame(t(ret)))
 }
 
-#' The Maximum Number of Points of a Track in a \emph{Tracks} Object
+#' Length of Longest Track
 #' 
-#' Determines the maximum number of points that one of the tracks in the given
-#' \emph{tracks} object constists of.
+#' Determines the maximum number of positions over the tracks in \code{x}.
 #' 
-#' @param tracks the \emph{tracks} object the tracks in which are to be considered.
+#' @param x the \emph{tracks} object the tracks in which are to be considered.
 #' 
-#' @details The maximum number of rows of a track in the \emph{tracks} object 
-#' is determined.
-#' 
-#' @return Returns the maximum number of rows of a track in the given 
-#' \emph{tracks} object.
-maxTrackLength <- function(tracks) {
-  return(max(sapply(tracks, nrow)))
+#' @return the maximum number of rows of a track in \code{x}
+maxTrackLength <- function(x) {
+  return(max(sapply(x, nrow)))
 }
 
 
-
-# TODO remove for-loop
-#' The Bounding Box of a \emph{Tracks} Object
+#' Bounding Box of a Tracks Object
 #' 
-#' Computes minimum and maximum value that a track has in each dimension
+#' Computes the minimum and maximum coordinates per dimension for all positions in a
+#' given list of tracks.
 #' 
-#' @param tracks the \emph{tracks} object whose bounding box is to be computed
+#' @param tracks the \emph{tracks} object whose bounding box is to be computed.
 #' 
 #' @details In each of the tracks' dimensions the minimum and maximum value 
 #' that any track from the input has is computed and returned. It is assumed 
@@ -886,24 +862,21 @@ boundingBox <- function(tracks) {
   if( class(tracks) != "tracks" ){
     tracks <- as.tracks( list(T1=tracks) ) 
   }
-  bounding.boxes <- lapply(tracks, .boundingBoxTrack)
-#   print(bounding.boxes)
- 
+  bounding.boxes <- lapply(tracks, .boundingBoxTrack) 
   empty <- mat.or.vec(nrow(bounding.boxes[[1]]), ncol(bounding.boxes[[1]]))
   colnames(empty) <- colnames(bounding.boxes[[1]])
   rownames(empty) <- rownames(bounding.boxes[[1]])
   empty[1,] <- Inf
   empty[2,] <- -Inf
-#   print(empty)
   return(Reduce(.minMaxOfTwoMatrices, bounding.boxes, empty)) 
 }
 
 # TODO include ellipse
-# TODO refer to PNAS paper
-#' Unbiasedness of Motion
+#' Test Unbiasedness of Motion
 #' 
-#' Determines the p-value for the motion described by a \emph{tracks} object to 
-#' be unbiased.
+#' Test the null hypothesis that a given set of tracks originates from an unbiased 
+#' type of motion (e.g., a random walk without drift). This is done by testing whether
+#' the mean step vector is equal to the null vector. 
 #' 
 #' @param tracks the tracks whose biasedness is to be determined.
 #' @param dim vector with the names of the track's 
@@ -921,6 +894,8 @@ boundingBox <- function(tracks) {
 #' high enough to ensure that the considered steps are approximately independent.
 #' @param ... further arguments passed on to \code{plot}.
 #' 
+#' @return a list with class \code{htest}, see \code{\link[DescTools]{HotellingsT2Test}}.
+#' 
 #' @details Computes the displacement vectors of all segments in the tracks 
 #' given in \code{tracks}, and performs Hotelling's T-square Test on that vector.
 #' (see \code{\link[DescTools]{HotellingsT2Test}}).
@@ -932,12 +907,15 @@ boundingBox <- function(tracks) {
 #' if( require( DescTools ) ){
 #'    hotellingsTest( TCells, plot=FALSE )$p.value
 #' }
+#'
+#' @references
+#' Johannes Textor, Antonio Peixoto, Sarah E. Henrickson, Mathieu
+#'  Sinn, Ulrich H. von Andrian and Juergen Westermann (2011),
+#'	Defining the Quantitative Limits of Intravital Two-Photon Lymphocyte Tracking.
+#' \emph{PNAS} \bold{108}(30):12401--12406. doi:10.1073/pnas.1102288108
 
 hotellingsTest <- function(tracks, dim=c("x", "y"), 
 	step.spacing=0, plot=FALSE, ... ) {
-  if( !requireNamespace("DescTools",quietly=TRUE) ){
-    stop("This function requires the 'DescTools' package.")
-  }
   if( !requireNamespace("DescTools",quietly=TRUE) ){
     stop("This function requires the package 'DescTools'.")
   }
@@ -986,24 +964,28 @@ getSubsetOfTracks <- function(tracks,measure,ll,ul){
   }
 }
 
-#' Plot tracks in 3D
+#' Plot Tracks in 3D
 #'
 #' Takes an input tracks object and plots them in 3D using the 
 #' \link[scatterplot3d]{scatterplot3d} function.
 #'
-#' @param tracks the tracks which will be plotted in 3d
+#' @param x the tracks which will be plotted in 3d
 #' @param ... further arguments to be passed on to 
 #' \link[scatterplot3d]{scatterplot3d}
 #'
-plot3d <- function(tracks,...){
+#' @examples
+#' if( require("scatterplot3d",quietly=TRUE) ){
+#'   plot3d( TCells )
+#' }
+plot3d <- function(x,...){
 	if( !requireNamespace("scatterplot3d",quietly=TRUE) ){
 		stop("This function requires the package 'scatterplot3d'.")
 	}
 	tracks_df <- as.data.frame.tracks(
-		lapply( tracks, function(t) rbind(t,rep(NA,ncol(t)) ) ) )
+		lapply( x, function(t) rbind(t,rep(NA,ncol(t)) ) ) )
 	s3d <- scatterplot3d::scatterplot3d(tracks_df[,-c(1,2)],
 		type="n",xlab="X Position",ylab="Y Position",zlab="Z Position",...)
-	colvec <- rainbow(length(names(tracks)))[tracks_df[,1]]
+	colvec <- rainbow(length(names(x)))[tracks_df[,1]]
 	pts <- s3d$xyz.convert( tracks_df[,-c(1,2)] )
 	segments( head(pts$x,-1), head(pts$y,-1), tail(pts$x,-1), 
 		tail(pts$y,-1), col=colvec )
@@ -1034,6 +1016,6 @@ timeStep <- function(tracks, FUN=mean ){
 	if( class(FUN) == "character" ){
 		FUN=match.fun( FUN )
 	}
-	FUN( sapply( subtracks( tracks, 1 ) , duration )  )
+	return( FUN( sapply( subtracks( tracks, 1 ) , duration )  ) )
 }
 

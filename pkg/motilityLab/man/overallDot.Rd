@@ -22,9 +22,9 @@ Computes the dot product between the first and last steps of the given track.
 \examples{
 ## compute and plot the autocovariance function for the T cell data (assuming isotropy)
 with( (aggregate(BCells,overallDot,FUN="mean.se",na.rm=TRUE)),{
-  lines( cos(mean) ~ i, xlab="time",
-  ylab="correlation of orientation", type="l", col=3 )
-  segments( i, cos(lower), y1=cos(upper), col=3 )
+  plot( cos(mean) ~ i, xlab="time",
+  ylab="correlation of orientation", type="l" )
+  segments( i, cos(lower), y1=cos(upper) )
 } )
 }
 

@@ -9,12 +9,11 @@ clusterTracks(tracks, measures, scale = TRUE, ...)
 \arguments{
 \item{tracks}{the tracks that are to be clustered.}
 
-\item{measures}{the measures according to which the tracks are to be
-clustered.}
+\item{measures}{a function, or a vector of functions. Each function is expected to
+return a single number given a single track.}
 
 \item{scale}{logical indicating whether the measures values shall be scaled
-using the function \code{\link[base]{scale}} before the clustering. Default
-is TRUE.}
+using the function \code{\link[base]{scale}} before the clustering.}
 
 \item{...}{additional parameters to be passed to \code{\link[stats]{hclust}}.}
 }
@@ -22,15 +21,26 @@ is TRUE.}
 An object of class *hclust*, see \code{\link[stats]{hclust}}.
 }
 \description{
-Clusters the tracks in a given \emph{tracks} object according to given
-measures.
+Perform a hierarchical clustering of a set of tracks according to a given vector
+of track measures.
 }
 \details{
 The measures are applied to each of the tracks in the given
-\emph{tracks} object and according to the resulting values the tracks are
+\emph{tracks} object. According to the resulting values, the tracks are
 clustered using a hierarchical clustering (see \code{\link[stats]{hclust}}).
-If \code{scale} is set to true, the values that have been determined by
-applying the input measures to the input tracks are scaled to mean value
+If \code{scale} is \code{TRUE}, the measure values are scaled to mean value
 \eqn{0} and standard deviation \eqn{1} (per measure) before the clustering.
+}
+\examples{
+## Cluster tracks according to the mean of their Hust exponents along X and Y
+
+cells <- c(TCells,Neutrophils)
+real.celltype <- rep(c("T","N"),c(length(TCells),length(Neutrophils)))
+## Prefix each track ID with its cell class to evaluate the clustering visually
+names(cells) <- paste0(real.celltype,seq_along(cells))
+clust <- clusterTracks( cells, function(t) mean(hurstExponent(t)[1:2]) )
+plot( clust )
+## How many cells are "correctly" clustered?
+sum( real.celltype == c("T","N")[cutree(clust,2)] )
 }
 

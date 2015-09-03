@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{subtracks}
 \alias{subtracks}
-\title{Get Subtracks of One or More Tracks}
+\title{Decompose Track(s) into Subtracks}
 \usage{
 subtracks(x, i, overlap = i - 1)
 }

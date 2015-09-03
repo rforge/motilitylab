@@ -43,7 +43,7 @@ node in the absence of antigen, which is similar to a random walk (Beauchemin et
 In the Beauchemin model, cells move into a fixed direction for a fixed time \code{t.free}
 at a fixed speed \code{v.free}. They then switch to a different direction, which is
 sampled at uniform from a sphere. The change of direction takes a fixed time \code{t.pause},
-during which the cell does not move. Thus,t he Beauchemin model is identical to the
+during which the cell does not move. Thus, the Beauchemin model is identical to the
 freely jointed chain model of polymer physics, except for the explicit "pause phase"
 between subsequent steps.
 
@@ -67,12 +67,12 @@ out <- simulateTracks( 20, beaucheminTrack(sim.time=10,
 plot( out )
 }
 \references{
-Catherine Beauchemin and Narendra M. Dixit and Alan S. Perelson (2007), Characterizing
-T cell movement within lymph nodes in the absence of antigen. _Journal of Immunology_
-*178*(9), 5505-5512. doi:10.4049/jimmunol.178.9.5505
+Catherine Beauchemin, Narendra M. Dixit and Alan S. Perelson (2007), Characterizing
+T cell movement within lymph nodes in the absence of antigen. \emph{Journal of Immunology}
+\bold{178}(9), 5505-5512. doi:10.4049/jimmunol.178.9.5505
 
-Johannes Textor and Mathieu Sinn and Rob J. de Boer (2013), Analytical results on the
-Beauchemin model of lymphocyte migration. _BMC Bioinformatics_ *14*(Suppl 6), S10.
+Johannes Textor, Mathieu Sinn and Rob J. de Boer (2013), Analytical results on the
+Beauchemin model of lymphocyte migration. \emph{BMC Bioinformatics} \bold{14}(Suppl 6), S10.
 doi:10.1186/1471-2105-14-S6-S10
 }
 

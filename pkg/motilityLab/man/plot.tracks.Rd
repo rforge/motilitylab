@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{plot.tracks}
 \alias{plot.tracks}
-\title{Plot in 2D Space}
+\title{Plot Tracks in 2D Space}
 \usage{
 \method{plot}{tracks}(x, dims = c("x", "y"), add = F,
   col = order(names(x)), xlab = "X position", ylab = "Y position", ...)
@@ -40,5 +40,8 @@ parameter \code{dims} and the axes can be labeled accordingly with the aid
 of \code{xlab} and \code{ylab}. The color can be set through \code{col}.
 If the tracks should be added to an existing plot, \code{add} is to be set
 to \code{TRUE}.
+}
+\seealso{
+\code{\link{plot3d}}
 }
 

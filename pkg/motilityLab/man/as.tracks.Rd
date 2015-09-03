@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{as.tracks}
 \alias{as.tracks}
-\title{Convert to tracks}
+\title{Convert to Tracks}
 \usage{
 as.tracks(x, ...)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/track-measures.R
 \name{displacementVector}
 \alias{displacementVector}
-\title{The Vector between a Track's Starting and End Point}
+\title{Vector Between Track Endpoints}
 \usage{
 displacementVector(track)
 }

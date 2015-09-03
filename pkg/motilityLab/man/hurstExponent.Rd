@@ -2,7 +2,7 @@
 % Please edit documentation in R/track-measures.R
 \name{hurstExponent}
 \alias{hurstExponent}
-\title{A Track's Hurst Exponent}
+\title{Track Hurst Exponents}
 \usage{
 hurstExponent(track)
 }
@@ -24,5 +24,8 @@ determined using the function \code{\link[pracma]{hurstexp}} from the
 \code{pracma} package and returned as part of a vector.
 If the track consists of less than six points, NA is returned, if it
 comprises an uneven number of points, the last one is discarded.
+}
+\seealso{
+\code{\link{fractalDimension}}
 }
 

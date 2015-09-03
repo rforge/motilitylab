@@ -2,7 +2,7 @@
 % Please edit documentation in R/track-measures.R
 \name{fractalDimension}
 \alias{fractalDimension}
-\title{A Track's Fractal Dimension}
+\title{Track Fractal Dimension}
 \usage{
 fractalDimension(track)
 }
@@ -28,7 +28,10 @@ track's properties, fractal dimension is a local approach to the track's propert
 }
 \references{
 Tillmann Gneiting and Martin Schlather (2004), Stochastic Models That Separate Fractal
-Dimension and the Hurst Effect. _SIAM Review_ *46*(2), 269-282.
+Dimension and the Hurst Effect. \emph{SIAM Review} \bold{46}(2), 269--282.
 doi:10.1137/S0036144501394387
+}
+\seealso{
+\code{\link{hurstExponent}}
 }
 

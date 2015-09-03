@@ -10,20 +10,16 @@ normalizeToDuration(measure)
 \item{measure}{the measure that should be nomalized.}
 }
 \value{
-Retruns a function that computes the input measure for a given track
+a function that computes the input measure for a given track
 and returns the result divided by the track's duration.
 }
 \description{
 Returns a measure that divides the input measure by the duration of its
 input track.
 }
-\details{
-A function is retruned that computes the input measure for a given
-track an divides the result by the track's duration.
-}
 \examples{
-# normalizeToDuration(displacement) can be used as an indicator
-# for the motions efficiency
-lapply(TCells, normalizeToDuration(displacement))
+## normalizeToDuration(displacement) can be used as an indicator
+## for the motion's efficiency
+sapply(TCells, normalizeToDuration(displacement))
 }
 

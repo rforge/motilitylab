@@ -2,22 +2,22 @@
 % Please edit documentation in R/functions.R
 \name{plotTrackMeasures}
 \alias{plotTrackMeasures}
-\title{Bivariate Scatterplot of 2 Given Track Measures}
+\title{Bivariate Scatterplot of Two Given Track Measures}
 \usage{
-plotTrackMeasures(measurex, measurey, x, add = FALSE,
+plotTrackMeasures(x, measurex, measurey, add = FALSE,
   xlab = deparse(substitute(measurex)),
   ylab = deparse(substitute(measurey)), ...)
 }
 \arguments{
-\item{measurex}{the measure to be shown on the X axis.}
-
-\item{measurey}{the measure to be shown on the Y axis.}
-
 \item{x}{the argument which the measures shall be applied to. Either this
 must be of a type which \code{measurex} and \code{measurey} can directly
 be applied to, or, if measurex and measurey are applicable to single tracks,
 the argument can be a \emph{tracks} object, which the measures will be
 applied to using sapply before plotting the result.}
+
+\item{measurex}{the measure to be shown on the X axis.}
+
+\item{measurey}{the measure to be shown on the Y axis.}
 
 \item{add}{a logical indicating whether the tracks are to be added to an
 existing plot via \code{\link[graphics]{points}}.}
@@ -38,6 +38,20 @@ other.
 }
 \details{
 Plots the value of \code{measurey} applied to \code{x} against the
-value of  \code{measurey} applied to \code{y}.
+value of  \code{measurey} applied to \code{y}. This is useful for "FACS-like"
+motility analysis, where clusters of cell tracks are identified based on their
+motility parameters (Moreau et al, 2012; Textor et al, 2014).
+}
+\references{
+Moreau, H. D., Lemaitre, F., Terriac, E., Azar, G., Piel, M., Lennon-Dumenil, A. M.
+and Bousso, P. (2012), Dynamic In Situ Cytometry Uncovers
+T Cell Receptor Signaling during Immunological Synapses and Kinapses In Vivo.
+\emph{Immunity} \bold{37}(2), 351--363. doi:10.1016/j.immuni.2012.05.014
+
+Johannes Textor, Sarah E. Henrickson, Judith N. Mandl, Ulrich H. von Andrian,
+J\"urgen Westermann, Rob J. de Boer and Joost B. Beltman (2014),
+Random Migration and Signal Integration Promote Rapid and Robust T Cell Recruitment.
+\emph{PLoS Computational Biology} \bold{10}(8), e1003752.
+doi:10.1371/journal.pcbi.1003752
 }
 

@@ -2,12 +2,12 @@
 % Please edit documentation in R/functions.R
 \name{plot3d}
 \alias{plot3d}
-\title{Plot tracks in 3D}
+\title{Plot Tracks in 3D}
 \usage{
-plot3d(tracks, ...)
+plot3d(x, ...)
 }
 \arguments{
-\item{tracks}{the tracks which will be plotted in 3d}
+\item{x}{the tracks which will be plotted in 3d}
 
 \item{...}{further arguments to be passed on to
 \link[scatterplot3d]{scatterplot3d}}
@@ -15,5 +15,10 @@ plot3d(tracks, ...)
 \description{
 Takes an input tracks object and plots them in 3D using the
 \link[scatterplot3d]{scatterplot3d} function.
+}
+\examples{
+if( require("scatterplot3d",quietly=TRUE) ){
+  plot3d( TCells )
+}
 }
 

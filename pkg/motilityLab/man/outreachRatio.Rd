@@ -2,7 +2,7 @@
 % Please edit documentation in R/track-measures.R
 \name{outreachRatio}
 \alias{outreachRatio}
-\title{A Track's Outreach Ratio}
+\title{Track Outreach Ratio}
 \usage{
 outreachRatio(track)
 }
@@ -10,12 +10,11 @@ outreachRatio(track)
 \item{track}{the track whose outreach ratio is to be computed.}
 }
 \value{
-The track's outreach ratio, a vaule between \eqn{0} and \eqn{1},
+The track's outreach ratio, a value between \eqn{0} and \eqn{1},
 will be returned. If the track has length \eqn{0}, then NaN is returned.
 }
 \description{
-Computes a track's outreach ratio, i.d. the track's maximal
-displacement divided by its length.
+Computes a track's maximal displacement divided by its length.
 }
 \details{
 Computes the outreach ratio of a track, i.e. the ratio of the
@@ -23,9 +22,10 @@ track's maximal displacement and length. The value will be from the interval
 \eqn{[0,1]}, or 1 if the track has length \eqn{0}.
 }
 \references{
-\cite{Mokhtari et al.: Automated Characterization and
+Zeinab Mokhtari, Franziska Mech, Carolin Zitzmann, Mike Hasenberg, Matthias Gunzer
+and Marc Thilo Figge (2013), Automated Characterization and
 Parameter--Free Classification of Cell Tracks Based on Local Migration
-Behavior, PLoS ONE 2013 Dec 6;8(12):e80808, 2013}
+Behavior. \emph{PLoS ONE} \bold{8}(12), e80808. doi:10.1371/journal.pone.0080808
 }
 \seealso{
 \code{\link{maxDisplacement}}, \code{\link{trackLength}}

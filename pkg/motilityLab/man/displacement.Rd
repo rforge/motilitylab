@@ -2,7 +2,7 @@
 % Please edit documentation in R/track-measures.R
 \name{displacement}
 \alias{displacement}
-\title{A Track's Displacement}
+\title{Track Displacement}
 \usage{
 displacement(track, limits = c(1, nrow(track)))
 }

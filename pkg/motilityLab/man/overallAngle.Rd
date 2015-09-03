@@ -28,9 +28,9 @@ For instance, both a 90 degrees left and right turn yield the value 90.
 \examples{
 ## show a turning angle plot with error bars for the T cell data.
 with( (aggregate(BCells,overallDot,FUN="mean.se",na.rm=TRUE)),{
-  lines( mean ~ i, xlab="time step",
-  ylab="turning angle (rad)", type="l", col=3 )
-  segments( i, lower, y1=upper, col=3 )
+  plot( mean ~ i, xlab="time step",
+  	ylab="turning angle (rad)", type="l" )
+  segments( i, lower, y1=upper )
 } )
 }
 

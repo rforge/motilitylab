@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{sort.tracks}
 \alias{sort.tracks}
-\title{Sort each Track's Positions by Time}
+\title{Sort Track Positions by Time}
 \usage{
 \method{sort}{tracks}(x, decreasing = FALSE, ...)
 }

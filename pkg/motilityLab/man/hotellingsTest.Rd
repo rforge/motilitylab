@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{hotellingsTest}
 \alias{hotellingsTest}
-\title{Unbiasedness of Motion}
+\title{Test Unbiasedness of Motion}
 \usage{
 hotellingsTest(tracks, dim = c("x", "y"), step.spacing = 0, plot = FALSE,
   ...)
@@ -28,9 +28,13 @@ condfidence interval are given.) Plot works only in one or two dimensions.}
 
 \item{...}{further arguments passed on to \code{plot}.}
 }
+\value{
+a list with class \code{htest}, see \code{\link[DescTools]{HotellingsT2Test}}.
+}
 \description{
-Determines the p-value for the motion described by a \emph{tracks} object to
-be unbiased.
+Test the null hypothesis that a given set of tracks originates from an unbiased
+type of motion (e.g., a random walk without drift). This is done by testing whether
+the mean step vector is equal to the null vector.
 }
 \details{
 Computes the displacement vectors of all segments in the tracks
@@ -44,5 +48,11 @@ given in \code{tracks}, and performs Hotelling's T-square Test on that vector.
 if( require( DescTools ) ){
    hotellingsTest( TCells, plot=FALSE )$p.value
 }
+}
+\references{
+Johannes Textor, Antonio Peixoto, Sarah E. Henrickson, Mathieu
+ Sinn, Ulrich H. von Andrian and Juergen Westermann (2011),
+	Defining the Quantitative Limits of Intravital Two-Photon Lymphocyte Tracking.
+\emph{PNAS} \bold{108}(30):12401--12406. doi:10.1073/pnas.1102288108
 }
 

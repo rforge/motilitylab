@@ -2,12 +2,12 @@
 % Please edit documentation in R/functions.R
 \name{boundingBox}
 \alias{boundingBox}
-\title{The Bounding Box of a \emph{Tracks} Object}
+\title{Bounding Box of a Tracks Object}
 \usage{
 boundingBox(tracks)
 }
 \arguments{
-\item{tracks}{the \emph{tracks} object whose bounding box is to be computed}
+\item{tracks}{the \emph{tracks} object whose bounding box is to be computed.}
 }
 \value{
 Returns a matrix with two rows and \eqn{d} columns, where \eqn{d} is
@@ -16,7 +16,8 @@ and the second row the maximum value of any track in the dimension given by
 the column.
 }
 \description{
-Computes minimum and maximum value that a track has in each dimension
+Computes the minimum and maximum coordinates per dimension for all positions in a
+given list of tracks.
 }
 \details{
 In each of the tracks' dimensions the minimum and maximum value
