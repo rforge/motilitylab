@@ -1,101 +1,65 @@
 #' Helper function of beauWalker() and is not directly called by user
 #' This function samples uniformly from unit sphere
-.sphereSampler <- function(){
-  x <- rnorm(3)
-  z <- sqrt(sum(x^2))
-  out <- x/z
-  return(out)
-}
-
-#' Helper function of beauWalker() and is not directly called by user
-#' This function samples uniformly from unit circle
-.circleSampler <- function(){
-  x <- rnorm(2)
-  z <- sqrt(sum(x^2))
-  out <- x/z
-  return(out)
+.beaucheminSphereSampler <- function(d=3){
+  x <- rnorm(d)
+  return(x/sqrt(sum(x^2)))
 }
 
 #' Helper function of beauWalker() and is not directly called by user
 #' This function samples from the trianglular distribution
-.triangularSampler <- function(){
-  x <- runif(1)
-  out <- -1+sqrt(4*x)
-  return(out)
-}
+.beaucheminTriangularSampler <- function() sqrt(4*runif(1))-1
 
+# Creates a matrix that will rotate unit vector a onto unit vector b
+.beaucheminRotationMatrix <- function(a,b){
+		# handle undefined cases
+	    theta <- acos( sum(a*b) )
+    	R <- diag(rep(1,3))
+		if( theta < 0.001 ){
+			return(R)
+		}
+		if( pi-theta < 0.001 ){
+			return(-R)
+		}
+		# compute normalized cross product of a and b
+		x <- c(a[2]*b[3]-a[3]*b[2],
+			a[3]*b[1]-a[1]*b[3],a[1]*b[2]-a[2]*b[1])
+		x <- x / sqrt(sum(x^2))
+		A <- rbind( c(0,-x[3],x[2]),c(x[3],0,-x[1]),c(-x[2],x[1],0) )
+		R <- R + sin(theta)*A + (1-cos(theta))* (A%*%A)
+    	return(R)
+}
 
 #' Helper function of beauWalker() and is not directly called by user
 #' returns a direction for the cell to travel based on model parameters specified in beauWalker()
-.pickNewDirection <- function(p.bias,bias.dir,taxis.mode,t.free,v.free,t.free.rest){
-  d <- .sphereSampler()
-  
-  if(taxis.mode == 2){
-    if(runif(1) < p.bias){
-      # topotaxis
-      d[3] <- .triangularSampler()
-      circ <- .circleSampler()
-      circle.scale <- sqrt(1-d[3]^2)
-      d[1] <- circ[1]*circle.scale
-      d[2] <- circ[2]*circle.scale
-    }
-    d <- c(d*v.free*(1+p.bias*(1-acos(sum(d*bias.dir))/pi)),999)
-  }
-  else if(taxis.mode == 3){
-    if(p.bias > 0){
-      # klinotaxis
-      t.free.rest <- t.free*(1+p.bias*(1-acos(sum(d*bias.dir))/pi));
-    }
-    d <- c(d*v.free,t.free.rest)  
-  }
-  else{
-    # orthotaxis
-    d <- c(d*v.free*(1+p.bias*(1-acos(sum(d*bias.dir))/pi)), 999)
-  }
-  return(d)
-}
-
-
-#' Helper function of beauWalker() and is not directly called by user
-#' Returns the next step in the beauWalker() if the cell is paused
-.pausedStep <- function(d,delta.t,t.free.rest,t.pause,p.bias,taxis.mode,t.free,v.free,pos,i,p.persist,bias.dir){
-  if(-t.free.rest+delta.t < t.pause ){
-    t.free.rest <- t.free.rest-delta.t
-    new.pos <- c(i, pos)
-    return(c(t.free.rest,1,new.pos))
-  }
-  else{
-    delta.t.rest <- delta.t - t.pause - t.free.rest
-    t.free.rest <- t.free
-    
-    if (runif(1) < 1-p.persist){
-      d <- .pickNewDirection(bias.dir=bias.dir,t.free.rest=t.free.rest,p.bias=p.bias,taxis.mode=taxis.mode,t.free=t.free,v.free=v.free)
-      if(d[4]==999){
-        d <- d[1:3]
-      }
-      else{
-        t.free.rest <- d[4]
-        d <- d[1:3]
-      }
-    }
-    return(c(delta.t.rest,2,d,t.free.rest))
-  }
-}
-
-
-#' Helper function of beauWalker() and is not directly called by user
-#' Returns the next step in the beauWalker() if the cell is moving
-.movingStep <- function(delta.t,t.free.rest,d,pos,i){
-  if( delta.t < t.free.rest ){
-    new.pos <- c(i,pos + d*delta.t)
-    t.free.rest <- t.free.rest-delta.t
-    return(c(t.free.rest,1,new.pos))
-  }
-  else{
-    delta.t.rest <- delta.t - t.free.rest
-    new.pos <- c(i,pos + d*t.free.rest)
-    return(c(delta.t.rest,2,new.pos))
-  }
+.beaucheminPickNewDirection <- function(
+	old.direction,
+	p.bias,p.persist,bias.dir,taxis.mode,
+	t.free,v.free,rot.mat){
+	if( runif(1) < p.persist ){
+		return(c(old.direction, t.free))
+	}
+	d <- .beaucheminSphereSampler(3)
+	if( taxis.mode == 0 ){
+		return(c(d,t.free))
+	} else if(taxis.mode==1){
+		# orthotaxis
+		return(c(v.free * d*(1+p.bias*sum(d*bias.dir)),t.free))
+	} else if(taxis.mode == 2){
+		# topotaxis	
+		if( runif(1) < p.bias ){
+			# Approach: generate new direction as if the bias direction were (1,0,0).
+			# Then rotate the resulting direction by the angles between (1,0,0) and the true
+			# bias direction. 
+			d[1] <- .beaucheminTriangularSampler()
+			circ <- .beaucheminSphereSampler(2)
+			circle.scale <- sqrt(1-d[1]^2)
+			d[2:3] <- circ[1:2]*circle.scale
+			return(c( v.free * rot.mat%*%d, t.free))
+		}
+	} else if(taxis.mode == 3){
+	 	 # klinotaxis
+		return(c(d*v.free,t.free*(1+p.bias*sum(d*bias.dir))))
+	}
 }
 
 #' Simulates a single cell track based on updated Beauchemin model written by J. Textor, M. Sinn, and R. Boer. 
@@ -130,13 +94,14 @@
 #" lapply(blist, function(i) points(y~x,data=i,type='b'))
 
 
-beauWalker <- function(sim.time=10,delta.t=1,p.persist=0.5,p.bias=0.9,bias.dir=c(0,0,0),taxis.mode=1,t.free=2,v.free=18.8,t.pause=0.5){  
-  #' Parameter checks
+beaucheminTrack <- function(sim.time=10,delta.t=1,p.persist=0.5,p.bias=0.9,bias.dir=c(0,0,0),taxis.mode=1,t.free=2,v.free=18.8,t.pause=0.5){  
+  # Parameter checks
   if(p.persist < 0 || p.persist > 1){
     stop("p.persist must be a value between 0 and 1")
   }
-  if(sum(taxis.mode == c(1,2,3))==0){
-    stop("taxis.mode can either be 1, 2, or 3. See documentation for details on which model you would like to use.")
+  if(!(taxis.mode %in% 0:4)){
+    stop("taxis.mode can either be 1, 2, 3, or 0 for no taxis. ",
+    	"See documentation for details on which model you would like to use.")
   }
   if(p.bias < 0){
     stop("p.bias must be a value greater than or equal to 0")
@@ -154,90 +119,42 @@ beauWalker <- function(sim.time=10,delta.t=1,p.persist=0.5,p.bias=0.9,bias.dir=c
     stop("v.free must be a value larger than 0")
   }
 
+  # Initializing parameters 
+  if(any(bias.dir != 0)){
+	bias.dir <- bias.dir/sqrt(sum(bias.dir^2))
+  }
   
-  #' Initializing parameters 
-  if(sum(bias.dir == c(0,0,0))!=3){
-    bias.dir <- bias.dir/sqrt(sum(bias.dir^2))
+  rot.mat <- NULL
+  if(taxis.mode==2){
+  	# cache rotation matrix for topotaxis to avoid recomputing it frequently
+  	rot.mat <- .beaucheminRotationMatrix( c(1,0,0), bias.dir )
   }
-  pos <- matrix(c(0,0,0,0),1,4)
-  t.free.rest <- t.free
-  paused <- t.free.rest < 0.0
-  delta.t.rest <- delta.t - t.pause - t.free.rest
-  d <- .pickNewDirection(t.free.rest=t.free.rest,p.bias=p.bias,taxis.mode=taxis.mode,t.free=t.free,v.free=v.free,bias.dir=bias.dir)
-  if(d[4]==999){
-    d <- d[1:3]
-  }
-  else{
-    t.free.rest <- d[4]
-    d <- d[1:3]
-  }
-  i <- 1
+  pos <- matrix(rep(0,4),1,4)
+  
+  n.steps <- ceiling( sim.time / (t.free+t.pause) ) + 1
 
-  #' This is the primary loop that creates the 3d track
-  repeat{
-    if(paused==TRUE){
-      catch <- .pausedStep(d=d,p.persist=p.persist,i=i,delta.t=delta.t,t.free.rest=t.free.rest,t.pause=t.pause,p.bias=p.bias,taxis.mode=taxis.mode,t.free=t.free,v.free=v.free,pos=pos[length(pos[,1]),2:4],bias.dir=bias.dir)
-      if(catch[2]==1){
-        pos <- rbind(pos,catch[3:6])
-        i <- i+1
-        t.free.rest <- catch[1]
-      }
-      else{
-        delta.t.rest <- catch[1]
-        d <- catch[3:5]
-        t.free.rest<-catch[6]
-        paused <- FALSE
-      }
-      if( delta.t.rest > 0 ){
-        catch <- .movingStep(i=i,delta.t=delta.t.rest,pos=pos[length(pos[,1]),2:4],t.free.rest=t.free.rest,d=d)
-        if(catch[2]==1){
-          t.free.rest <- catch[1]
-          pos <- rbind(pos,catch[3:6])
-          i <- i+1
-        }
-        else{
-          t.free.rest <- 0.0
-          delta.t.rest <- catch[1]
-          pos <- rbind(pos,catch[3:6])
-          i <- i+1
-        }
-      }
-    }
-    else{
-      catch <- .movingStep(i=i,delta.t=delta.t,pos=pos[length(pos[,1]),2:4],t.free.rest=t.free.rest,d=d)
-      if(catch[2]==1){
-        t.free.rest <- catch[1]
-        pos <- rbind(pos,catch[3:6])
-        i <- i+1
-      }
-      else{
-        t.free.rest <- 0.0
-        delta.t.rest <- catch[1]
-        pos <- rbind(pos,catch[3:6])
-        i <- i+1
-        paused <- TRUE
-      }
-      if( delta.t.rest > 0 ){
-        catch <- .pausedStep(d=d,p.persist=p.persist,i=i,delta.t=delta.t.rest,t.free.rest=t.free.rest,t.pause=t.pause,p.bias=p.bias,taxis.mode=taxis.mode,t.free=t.free,v.free=v.free,pos=pos[length(pos[,1]),2:4],bias.dir=bias.dir)
-        if(catch[2]==1){
-          t.free.rest <- catch[1]
-          pos <- rbind(pos,catch[3:6])
-          i <- i+1
-        }
-        else{
-          delta.t.rest <- catch[1]
-        }
-      }
-    }
-    if((i+1)*delta.t > sim.time){
-      break
-    }
+  d <- .beaucheminPickNewDirection( NULL,p.bias,0,bias.dir,taxis.mode,
+			t.free,v.free,rot.mat )
+  p <- c(0,0,0)
+  t <- t.pause
+  for( i in seq_len(n.steps) ){
+	pnew <- p+d[4]*d[-4]
+	tnew <- t+d[4]
+	pos <- rbind( pos, c(t,p), c(tnew,pnew) )
+	t <- tnew + t.pause
+	p <- pnew
+	d <- .beaucheminPickNewDirection( d,p.bias,0,bias.dir,taxis.mode,
+				t.free,v.free,rot.mat )
   }
+  
+  # interpolate track observations according to delta.t
+  t <- seq(0,sim.time,by=delta.t)+runif(1,max=t.free+t.pause)
+  pos.interpolated <- apply(pos[,-1],2,function(x) approx(pos[,1], x, xout=t)$y) 
+  pos <- cbind( t, pos.interpolated )
   colnames(pos) <- c("t","x","y","z")
-  pos[,2:4]<- signif(pos[,2:4],digits = 3)
-  return(pos)
-}
 
+  return(normalizeTrack(pos))
+}
 
 #' A tracks fractal dimension
 #' Computes the fractal dimension of a track using all track dimensions by the box-count method.
