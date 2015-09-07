@@ -17,7 +17,7 @@ the given measure in a staggered fashion on that track.
 }
 \description{
 Returns the "staggered" version of a track measure. That is, instead of
-computing the measure on the whole track, the measure is average over
+computing the measure on the whole track, the measure is averaged over
 all subtracks (of any length) of the track.
 }
 \details{

@@ -34,7 +34,7 @@ brownianTrack <- function(nsteps=100, dim=3, mean=0, sd=1) {
 #' between subsequent steps. 
 #' 
 #' This function implements an extended version of the Beauchemin model, which can also 
-#' simulated directionally biased motion. For details, see Textor et al (2013).
+#' simulate directionally biased motion. For details, see Textor et al (2013).
 #'
 #' @param sim.time specifies the duration of the track to be generated
 #' @param delta.t change in time between each timepoint.

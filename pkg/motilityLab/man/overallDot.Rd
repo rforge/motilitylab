@@ -2,7 +2,7 @@
 % Please edit documentation in R/track-measures.R
 \name{overallDot}
 \alias{overallDot}
-\title{Dot Product Between Steps At Track Endpoints}
+\title{Dot Product Between Steps at Track Endpoints}
 \usage{
 overallDot(x, limits = c(1, nrow(x)))
 }

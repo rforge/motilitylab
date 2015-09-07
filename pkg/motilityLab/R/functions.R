@@ -66,12 +66,11 @@ as.list.tracks <- function(x, ...)
 
 #' Convert from List to Tracks
 #' 
-#' Converts a List into a \emph{Tracks} Object
+#' "Converts" a list into a \code{tracks} object by settings its 
+#' S3 class to \code{tracks}.
 #' 
 #' @param x the list that is to be converted into a \emph{tracks} object.
 #' @param ... further arguments to be passed from or to other methods.
-#' 
-#' @details The input list is assigned the S3 class \code{tracks}.
 #' 
 #' @return the coerced object of S3 class \code{tracks} (i.e., a list 
 #'  containing a data frame for each track)
@@ -145,7 +144,7 @@ sort.tracks <- function(x, decreasing=FALSE, ...) {
 }
 
 
-#' Concatenate \emph{Tracks} Objects
+#' Join Track Datasets
 #' 
 #' Concatenates several \emph{tracks} objects.
 #' 
@@ -313,26 +312,22 @@ plot.tracks <- function(x, dims=c('x','y'), add=F,
 	segments(x0, y0, x1, y1, col=lcol)
 }
 
-#' Wrap a Single Track into a \emph{Tracks} Object
+#' Create Track Dataset from Single Track
 #' 
-#' Makes a \emph{tracks} object out of a single track.
+#' Makes a \code{tracks} object containing the given track.
 #' 
-#' @param track the track that is to be wrapped.
+#' @param x the track that is to be wrapped.
 #' 
-#' @details A list containing only the input \code{track} is returned. It is 
-#' assigned the name "1". This list is returned as a \emph{tracks} 
-#' object.
-#'
-#' @return Retruns a \emph{tracks} object containing the input \code{track}
-#' named "1".
-wrapTrack <- function(track) {
-  return(as.tracks(list("1" = track)))
+#' @return a list of class \code{tracks} containing only the input track \code{x}, which
+#' is assigned the name "1". 
+wrapTrack <- function(x) {
+  return(as.tracks(list("1" = x)))
 }
 
 #' Staggered Version of a Function
 #' 
 #' Returns the "staggered" version of a track measure. That is, instead of
-#' computing the measure on the whole track, the measure is average over
+#' computing the measure on the whole track, the measure is averaged over
 #' all subtracks (of any length) of the track.
 #' 
 #' @param measure the measure that shall be computed in a staggered fashion.
@@ -394,8 +389,8 @@ staggered <- function(measure, ...){
 #' subtracks of at least `min.segments` segments is retruned.
 #' 
 #' @examples 
-#' # Compute the staggered matrix for overallAngle applied to all adequate 
-#' # subtracks of the first TCell track
+#' ## Compute the staggered matrix for overallAngle applied to all long enough 
+#' ## subtracks of the first T cell track
 #' computeStaggered(TCells[[1]], overallAngle, matrix=TRUE, min.segments = 2)
 computeStaggered <- function(track, measure, matrix=FALSE, min.segments=1) {
   if (matrix) {
@@ -590,8 +585,8 @@ normalizeToDuration <- function(measure) {
 #' motility parameters (Moreau et al, 2012; Textor et al, 2014).
 #'
 #' @references
-#' Moreau, H. D., Lemaitre, F., Terriac, E., Azar, G., Piel, M., Lennon-Dumenil, A. M. 
-#' and Bousso, P. (2012), Dynamic In Situ Cytometry Uncovers 
+#' Moreau HD, Lemaitre F, Terriac E, Azar G, Piel M, Lennon-Dumenil AM,
+#' Bousso P (2012), Dynamic In Situ Cytometry Uncovers 
 #' T Cell Receptor Signaling during Immunological Synapses and Kinapses In Vivo.
 #' \emph{Immunity} \bold{37}(2), 351--363. doi:10.1016/j.immuni.2012.05.014
 #'
@@ -721,7 +716,7 @@ clusterTracks <- function(tracks, measures, scale=TRUE, ...) {
 #'
 #' @details For every number of segments \eqn{i} in the set defined by 
 #' \code{subtrack.length}, all subtracks of any track in the input 
-#' \emph{\code{tracks}} object, that consist of exactly \eqn{i} segments are 
+#' \code{tracks} object, that consist of exactly \eqn{i} segments are 
 #' considered. The input \code{measure} is applied to the subtracks individually, 
 #' and the \code{statistic} is applied to the resulting values. 
 #' The summary statistics are returned for each value of \eqn{i} in a data frame.
@@ -835,7 +830,7 @@ aggregate.tracks <- function( x, measure, by="subtracks", FUN=mean,
 #' 
 #' Determines the maximum number of positions over the tracks in \code{x}.
 #' 
-#' @param x the \emph{tracks} object the tracks in which are to be considered.
+#' @param x the \code{tracks} object the tracks in which are to be considered.
 #' 
 #' @return the maximum number of rows of a track in \code{x}
 maxTrackLength <- function(x) {
@@ -848,7 +843,7 @@ maxTrackLength <- function(x) {
 #' Computes the minimum and maximum coordinates per dimension for all positions in a
 #' given list of tracks.
 #' 
-#' @param tracks the \emph{tracks} object whose bounding box is to be computed.
+#' @param tracks the \code{tracks} object whose bounding box is to be computed.
 #' 
 #' @details In each of the tracks' dimensions the minimum and maximum value 
 #' that any track from the input has is computed and returned. It is assumed 

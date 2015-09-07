@@ -2,23 +2,18 @@
 % Please edit documentation in R/functions.R
 \name{wrapTrack}
 \alias{wrapTrack}
-\title{Wrap a Single Track into a \emph{Tracks} Object}
+\title{Create Track Dataset from Single Track}
 \usage{
-wrapTrack(track)
+wrapTrack(x)
 }
 \arguments{
-\item{track}{the track that is to be wrapped.}
+\item{x}{the track that is to be wrapped.}
 }
 \value{
-Retruns a \emph{tracks} object containing the input \code{track}
-named "1".
+a list of class \code{tracks} containing only the input track \code{x}, which
+is assigned the name "1".
 }
 \description{
-Makes a \emph{tracks} object out of a single track.
-}
-\details{
-A list containing only the input \code{track} is returned. It is
-assigned the name "1". This list is returned as a \emph{tracks}
-object.
+Makes a \code{tracks} object containing the given track.
 }
 

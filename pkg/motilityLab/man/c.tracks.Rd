@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{c.tracks}
 \alias{c.tracks}
-\title{Concatenate \emph{Tracks} Objects}
+\title{Join Track Datasets}
 \usage{
 \method{c}{tracks}(...)
 }

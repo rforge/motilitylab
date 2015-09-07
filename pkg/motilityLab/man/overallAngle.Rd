@@ -2,7 +2,7 @@
 % Please edit documentation in R/track-measures.R
 \name{overallAngle}
 \alias{overallAngle}
-\title{Angle Between Steps At Track Endpoints}
+\title{Angle Between Steps at Track Endpoints}
 \usage{
 overallAngle(x, limits = c(1, nrow(x)))
 }

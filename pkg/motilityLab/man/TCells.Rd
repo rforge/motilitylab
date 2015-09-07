@@ -27,6 +27,25 @@ Data were generated in 2012 in the Mark J. Miller Lab,
 Department of Medicine,
 Washington University in St Louis, USA.
 }
+\references{
+Zinselmeyer BH, Dempster J, Wokosin DL, Cannon JJ, Pless R, Parker I and Miller MJ
+(2009), 
+Two-photon microscopy and multi-dimensional analysis of cell dynamics.
+\emph{Methods in Enzymology}, \bold{461}:349--78.
+doi:10.1016/S0076-6879(09)05416-0
+
+Konjufca V and Miller MJ (2009),
+Imaging Listeria monocytogenes infection in vivo. 
+\emph{Current Topics in Microbiology and Immunology}, \bold{334}:199--226.   
+doi:10.1007/978-3-540-93864-4_9
+
+Kreisel D, Nava RG, Li W, Zinselmeyer BH, Wang B, Lai J, Pless R, Gelman AE, Krupnick AS, 
+and Miller MJ (2010),
+In vivo two-photon imaging reveals monocyte-dependent neutrophil extravasation during 
+pulmonary inflammation. 
+\emph{PNAS}, \bold{107}(42):18073--18078.
+doi:10.1073/pnas.1008737107
+}
 \examples{
 ## load the tracks
 data(TCells)

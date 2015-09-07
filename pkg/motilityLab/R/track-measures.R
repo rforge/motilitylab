@@ -12,6 +12,7 @@ trackLength <- function(track) {
 		dif <- apply(track[,-1], 2, diff)
 		return(sum(sqrt(apply(dif^2, 1, sum))))
 	} else if (nrow(track) == 2) {
+		# this case is necessary because if dimension dropping by 'apply'
 		return(sqrt(sum((track[2,-1] - track[1,-1])^2)))
 	} else if (nrow(track) == 1) {
 		return(0)
@@ -64,7 +65,7 @@ duration <- function(track) {
 #' @details Computes the Euclidean distance between the track's start and end points.
 #'
 displacement <- function(track, limits=c(1,nrow(track))) {
-  sqrt(sum(track[limits[2], -1] - track[limits[1], -1])^2)
+  sqrt(sum((track[limits[2], -1] - track[limits[1], -1])^2))
 }
 
 #' Vector Between Track Endpoints
@@ -116,7 +117,7 @@ maxDisplacement <- function(track, limits=c(1,nrow(track))) {
 #' the single dimensions.
 #'
 squareDisplacement <- function(track, limits=c(1,nrow(track))) {
-  sum(track[limits[2], -1] - track[limits[1], -1])^2
+  sum((track[limits[2], -1] - track[limits[1], -1])^2)
 }
 
 #' Track Aspericity
@@ -229,7 +230,7 @@ outreachRatio <- function(track) {
   }
 }
 
-#' Angle Between Steps At Track Endpoints
+#' Angle Between Steps at Track Endpoints
 #' 
 #' Computes the angle between the first and the last segment of the given track.
 #' @param x the track whose overall turning angle is to be computed.
@@ -259,7 +260,7 @@ overallAngle <- function(x, limits=c(1,nrow(x))) {
   }
 }
 
-#' Dot Product Between Steps At Track Endpoints
+#' Dot Product Between Steps at Track Endpoints
 #'
 #' Computes the dot product between the first and last steps of the given track.
 #' @param x the input track.
