@@ -47,8 +47,8 @@ track is traversed is assumed not to matter. The values at
 this is exactly the main diagonal) are set to \code{NA}.
 }
 \examples{
-# Compute the staggered matrix for overallAngle applied to all adequate
-# subtracks of the first TCell track
+## Compute the staggered matrix for overallAngle applied to all long enough
+## subtracks of the first T cell track
 computeStaggered(TCells[[1]], overallAngle, matrix=TRUE, min.segments = 2)
 }
 

@@ -4,10 +4,10 @@
 \alias{hurstExponent}
 \title{Track Hurst Exponents}
 \usage{
-hurstExponent(track)
+hurstExponent(x)
 }
 \arguments{
-\item{track}{the track whose Hurst exponent is to be computed.}
+\item{x}{the track whose Hurst exponent is to be computed.}
 }
 \value{
 A vector with the Hurst exponent for each of the tracks dimension

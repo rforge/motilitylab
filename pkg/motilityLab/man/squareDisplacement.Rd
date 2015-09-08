@@ -4,10 +4,10 @@
 \alias{squareDisplacement}
 \title{Square Displacement}
 \usage{
-squareDisplacement(track, limits = c(1, nrow(track)))
+squareDisplacement(x, limits = c(1, nrow(x)))
 }
 \arguments{
-\item{track}{the track whose displacement is to be computed.}
+\item{x}{the track whose displacement is to be computed.}
 
 \item{limits}{Vector giving the first and last row of the track. Can be used to avoid
 extracting subtracks, which is exploited e.g. by
@@ -18,10 +18,5 @@ The track's square displacement will be returned.
 }
 \description{
 Computes the squared distance between the track's first and final positions.
-}
-\details{
-Computes the squared Euclidean distance between the track's start
-and end point, by not extrakting the square root of the squared distances on
-the single dimensions.
 }
 

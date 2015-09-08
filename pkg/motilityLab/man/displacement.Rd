@@ -4,22 +4,19 @@
 \alias{displacement}
 \title{Track Displacement}
 \usage{
-displacement(track, limits = c(1, nrow(track)))
+displacement(x, limits = c(1, nrow(x)))
 }
 \arguments{
-\item{track}{the track whose displacement is to be computed.}
+\item{x}{the track whose displacement is to be computed.}
 
 \item{limits}{Vector giving the first and last row of the track. Can be used to avoid
 extracting subtracks, which is exploited e.g. by
 \code{\link{aggregate.tracks}}.}
 }
 \value{
-The track's displacement will be returned.
+The track's displacement, a nonnegative number.
 }
 \description{
-Computes the distance between the track's first and final positions.
-}
-\details{
 Computes the Euclidean distance between the track's start and end points.
 }
 

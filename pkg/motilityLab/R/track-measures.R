@@ -1,20 +1,20 @@
 #' Track Length
 #' 
 #' Estimates the length of the track as the sum of the lengths of its
-#' linear segments. (Note that this is an underestimation).
+#' linear segments. 
 #'
-#' @param track The track whose length is to be computed.
+#' @param x The track whose length is to be computed.
 #' @return The length.
-#' @details The track length is computed by summing the Euclidean distances 
-#' between consecutive positions.
-trackLength <- function(track) {
-	if (nrow(track) > 2) { 
-		dif <- apply(track[,-1], 2, diff)
+#' @details This amounts to linar interpoplation, which really gives a lower
+#' bound on the track length and is therefore usually an underestimation.
+trackLength <- function(x) {
+	if (nrow(x) > 2) { 
+		dif <- apply(x[,-1], 2, diff)
 		return(sum(sqrt(apply(dif^2, 1, sum))))
-	} else if (nrow(track) == 2) {
+	} else if (nrow(x) == 2) {
 		# this case is necessary because if dimension dropping by 'apply'
-		return(sqrt(sum((track[2,-1] - track[1,-1])^2)))
-	} else if (nrow(track) == 1) {
+		return(sqrt(sum((x[2,-1] - x[1,-1])^2)))
+	} else if (nrow(x) == 1) {
 		return(0)
 	} else {
 		return(NA)
@@ -24,63 +24,51 @@ trackLength <- function(track) {
 
 #' Mean Track Speed
 #' 
-#' Estimate the mean speed of a track by dividing its 
-#' length by its duration.
-#' 
-#' @param track a track.
-#' @return an estimate of the track's average speed.
-#' @details The track's mean speed is computed by dividing its 
+#' Estimate the mean instantaneous speed of a track by dividing its 
 #' \code{\link{trackLength}} by its \code{\link{duration}}.
-#' @seealso \code{\link{trackLength}}, \code{\link{duration}}
-speed <- function(track) {
-  trackLength(track) / duration(track)
+#' 
+#' @param x a track.
+#' @return An estimate of the track's average speed, a nonnegative number.
+speed <- function(x) {
+  trackLength(x) / duration(x)
 }
 
 #' Track Duration
 #' 
-#' Returns the duration of a track.
+#' Returns the duration of a track, i.e., the time elapsed between its first and last 
+#' position.
 #' 
-#' @param track a track.
-#' 
-#' @details Computes the track's duration by subtracting the 
-#' time of the its first point from the time of its last.
-#' 
-#' @return Returns a tracks duration.
-duration <- function(track) {
-  dur <- track[nrow(track), 1] - track[1,1]
+#' @param x a track.
+#' @return The track's duration, a nonnegative number.
+duration <- function(x) {
+  dur <- x[nrow(x), 1] - x[1,1]
   dur <- unname(dur)
   return(dur)
 }
 
 #' Track Displacement
 #' 
-#' Computes the distance between the track's first and final positions.
+#' Computes the Euclidean distance between the track's start and end points.
 #'
-#' @param track the track whose displacement is to be computed.
+#' @param x the track whose displacement is to be computed.
 #' @param limits Vector giving the first and last row of the track. Can be used to avoid
 #' extracting subtracks, which is exploited e.g. by 
 #' \code{\link{aggregate.tracks}}.
 
-#' @return The track's displacement will be returned.
-#' @details Computes the Euclidean distance between the track's start and end points.
+#' @return The track's displacement, a nonnegative number.
 #'
-displacement <- function(track, limits=c(1,nrow(track))) {
-  sqrt(sum((track[limits[2], -1] - track[limits[1], -1])^2))
+displacement <- function(x, limits=c(1,nrow(x))) {
+  sqrt(sum((x[limits[2], -1] - x[limits[1], -1])^2))
 }
 
 #' Vector Between Track Endpoints
 #' 
-#' Computes the coordinates of the vector between that tracks' start and end points.
+#' Computes the vector between the track endpoints.
 #' 
-#' @param track the track whose displacement vector is to be computed.
-#' 
-#' @details The coordinates of the tracks's starting point are subtracted 
-#' from its end point's coordinates.
-#' 
-#' @return The difference between the coordinates of the track's end point and 
-#' those of its starting point is returned.
-displacementVector <- function(track) {
-  ret <- track[nrow(track), 2:ncol(track)] - track[1, 2:ncol(track)]
+#' @param x the track whose displacement vector is to be computed.
+#' @return The displacement vector, which has as many dimensions as the input tracks.
+displacementVector <- function(x) {
+  ret <- x[nrow(x),-1] - x[1,-1]
   rownames(ret) <- NULL  
   return(as.vector(ret))
 }
@@ -90,88 +78,86 @@ displacementVector <- function(track) {
 #' Computes the maximal distance of any position on the track from the 
 #' starting position.
 #' 
-#' @param track the track whose maximal displacement is to be computed.
-#' @param limits Vector giving the first and last row of the track. Can be used to avoid
-#' extracting subtracks, which is exploited e.g. by 
+#' @param x the track whose maximal displacement is to be computed.
+#' @param limits vector giving the first and last row of the track. Can be used to avoid
+#' computing subtracks explicitly, which is exploited by 
 #' \code{\link{aggregate.tracks}}.
-#' @return The maximal displacement.
-#' @details Computes the maximum over all pairwise Euclidean distances between 
-#' the track's starting point and another point on the track.
-maxDisplacement <- function(track, limits=c(1,nrow(track))) {
-	sqrt(max(rowSums(sweep(track[seq(limits[1],limits[2]),-1],2,track[limits[1],-1])^2)))
+#' @return The maximal displacement, a nonnegative number.
+maxDisplacement <- function(x, limits=c(1,nrow(x))) {
+	sqrt(max(rowSums(sweep(x[seq(limits[1],limits[2]),-1],2,x[limits[1],-1])^2)))
 }
 
 #' Square Displacement
 #' 
 #' Computes the squared distance between the track's first and final positions.
 #'
-#' @param track the track whose displacement is to be computed.
+#' @param x the track whose displacement is to be computed.
 #' @param limits Vector giving the first and last row of the track. Can be used to avoid
 #' extracting subtracks, which is exploited e.g. by 
 #' \code{\link{aggregate.tracks}}.
 #' 
 #' @return The track's square displacement will be returned.
 #' 
-#' @details Computes the squared Euclidean distance between the track's start 
-#' and end point, by not extrakting the square root of the squared distances on 
-#' the single dimensions.
-#'
-squareDisplacement <- function(track, limits=c(1,nrow(track))) {
-  sum((track[limits[2], -1] - track[limits[1], -1])^2)
+squareDisplacement <- function(x, limits=c(1,nrow(x))) {
+  sum((x[limits[2], -1] - x[limits[1], -1])^2)
 }
 
 #' Track Aspericity
 #' 
-#' Computes the asphericity of the track's points.
+#' Computes the asphericity of the set of positions on the track
+#' via the length of its principal components
+#' (Mokhtari et al, 2013).  Asphericity is a 
+#' measure for the track's straightness: it is a number between 0 and 1, with 
+#' higher values indicating straighter tracks. 
+#' In that sense it is similar to \code{\link{straightness}}, however, the asphericity is 
+#' not affected by back-and-forth motion of the object. 
 #' 
-#' @param track the track whose asphericity is to be computed. Note that the
-#' track must be in a two- or threedimensional space, thus the data frames 
-#' containing the track's points must contain an \eqn{x} and \eqn{y} value. 
-#' @return The track's asphericity, a vaule between \eqn{0} and \eqn{1}, will 
-#' be returned for two- or threedimensional tracks, otherwise \code{NA}.
-#' @details Computes the asphericity of a track, i.e. the scatter plot of 
-#' its points, by considering the length of its principal components, 
-#' see References. The value will be from the interval \eqn{[0,1]}, 
-#' with high values indicating track straightness. The asphericity is a 
-#' measure for the track's straightness. Note that the asphericity is only 
-#' defined for tracks in two or three dimensions.
+#' @param x input track, which must have two or more spatial dimensions.
+#' @param limits vector giving the first and last row of the track. Can be used to avoid
+#' extracting subtracks, which is exploited e.g. by 
+#' \code{\link{aggregate.tracks}}.
+#' @return The track's asphericity, a value between \eqn{0} and \eqn{1}, is 
+#' returned for two- or higher dimensional tracks. Otherwise the return value is \code{NA}.
+#' @details We define the asphericity of every track with two or fewer positions to be 1. 
+#' This is true even in the case where two positions are identical, which is motivated 
+#' by considering
+#' that situation as the limit of a process in which two points move towards each other.
 #' @references
 #' Zeinab Mokhtari, Franziska Mech, Carolin Zitzmann, Mike Hasenberg, Matthias Gunzer
 #' and Marc Thilo Figge (2013), Automated Characterization and 
 #' Parameter--Free Classification of Cell Tracks Based on Local Migration 
 #' Behavior. \emph{PLoS ONE} \bold{8}(12), e80808. doi:10.1371/journal.pone.0080808
-asphericity <- function(track) {
-	dim <- ncol(track) - 1
+#'
+#' @seealso \code{\link{straightness}}
+#'
+asphericity <- function(x,limits=c(1,nrow(x))) {
+  dim <- ncol(x) - 1
   if (dim == 1) {
     return(NA)
   }
-  if (nrow(track)==1) {
+  if (limits[2]-limits[1]<3) {
     return(1)
   }
-	eigen.values <- eigen(cov(track[,2:ncol(track)]))$values
-	rav <- mean(eigen.values)
-	res <- sum((eigen.values - rav )^2 / dim / (dim - 1) / rav^2)
-#   if (is.nan(res)) print(track)
+  eigen.values <- eigen(cov(x[limits[1]:limits[2],-1]))$values
+  rav <- mean(eigen.values)
+  res <- sum((eigen.values - rav )^2 / dim / (dim - 1) / rav^2)
   return(res)
 }
 
 
 #' Track Straightness
 #' 
-#' Computes a track's straightness, i.e., the track's displacement divided by 
-#' its length.
+#' Computes a track's straightness, i.e., the track's \code{\link{displacement}} 
+#' divided by its \code{\link{trackLength}}.
 #'
-#' @param track the track whose straightness is to be computed.
-#' @return The track's straightness, a value between \eqn{0} and \eqn{1}, will 
-#' be returned. If the track has length \eqn{0}, then NaN is returned.
-#' @details Computes the straightness of a track, i.e. the ratio of the 
-#' track's displacement and length. The value will be from the interval 
-#' \eqn{[0,1]}, or 1 if the track has length \eqn{0}.
-#' @seealso \code{\link{displacement}}, \code{\link{trackLength}}
-straightness <- function(track) {
-  n <- trackLength(track)
-  if (n > 0) {
-    return(displacement(track) / n)
+#' @param x the track whose straightness is to be computed.
+#' @return The track's straightness, a value between \eqn{0} and \eqn{1}. 
+#' If the track has \eqn{0}, then 1 is returned.
+#' @seealso \code{\link{asphericity}} for a different measure of straightness.
+straightness <- function(x) {
+  l <- trackLength(x)
+  if (l > 0) {
+    return(displacement(x) / l)
   } else {
     return(1)
   }
@@ -182,24 +168,20 @@ straightness <- function(track) {
 #' Computes a track's displacement ratio, i.d. the track's (current) 
 #' displacement divided by its maximal displacement.
 #'
-#' @param track the track whose displacement ratio is to be computed.
-#' @return The track's displacement ratio, a vaule between \eqn{0} and \eqn{1}, 
+#' @param x the track whose displacement ratio is to be computed.
+#' @return The track's displacement ratio, a value between \eqn{0} and \eqn{1}, 
 #' will be returned. If the track has a maximal displacement of \eqn{0}, then 
-#' NaN is returned.
-#' @details Computes the displacement ratio of a track, i.e. the ratio of the 
-#' track's (current) displacement and its maximum displacement. The value will
-#' be from the interval \eqn{[0,1]}, or 1 if the track has a maximal 
-#' displacement of 0.
+#' 1 is returned.
 #' @seealso \code{\link{displacement}}, \code{\link{maxDisplacement}}
 #' @references
 #' Zeinab Mokhtari, Franziska Mech, Carolin Zitzmann, Mike Hasenberg, Matthias Gunzer
 #' and Marc Thilo Figge (2013), Automated Characterization and 
 #' Parameter--Free Classification of Cell Tracks Based on Local Migration 
 #' Behavior. \emph{PLoS ONE} \bold{8}(12), e80808. doi:10.1371/journal.pone.0080808
-displacementRatio <- function(track) {
-  dmax <- maxDisplacement(track)
+displacementRatio <- function(x) {
+  dmax <- maxDisplacement(x)
   if (dmax > 0) {
-    return(displacement(track) / dmax)
+    return(displacement(x) / dmax)
   } else {
     return(1)
   }
@@ -208,23 +190,23 @@ displacementRatio <- function(track) {
 #' Track Outreach Ratio
 #' 
 #' Computes a track's maximal displacement divided by its length.
+#' The value will be from the interval \eqn{[0,1]}, or 1 if the track has length 0.
 #'
-#' @param track the track whose outreach ratio is to be computed.
+#' @param x the track whose outreach ratio is to be computed.
 #' @return The track's outreach ratio, a value between \eqn{0} and \eqn{1}, 
 #' will be returned. If the track has length \eqn{0}, then NaN is returned.
 #' @details Computes the outreach ratio of a track, i.e. the ratio of the 
-#' track's maximal displacement and length. The value will be from the interval 
-#' \eqn{[0,1]}, or 1 if the track has length \eqn{0}.
+#' track's maximal displacement and length. 
 #' @seealso \code{\link{maxDisplacement}}, \code{\link{trackLength}}
 #' @references
 #' Zeinab Mokhtari, Franziska Mech, Carolin Zitzmann, Mike Hasenberg, Matthias Gunzer
 #' and Marc Thilo Figge (2013), Automated Characterization and 
 #' Parameter--Free Classification of Cell Tracks Based on Local Migration 
 #' Behavior. \emph{PLoS ONE} \bold{8}(12), e80808. doi:10.1371/journal.pone.0080808
-outreachRatio <- function(track) {
-  trackLength <- trackLength(track) 
-  if (trackLength > 0) {
-    return(maxDisplacement(track) / trackLength)
+outreachRatio <- function(x) {
+  l <- trackLength(x) 
+  if (l > 0) {
+    return(maxDisplacement(x) / l)
   } else {
     return(1)
   }
@@ -256,7 +238,9 @@ overallAngle <- function(x, limits=c(1,nrow(x))) {
   } else {
     a <- diff(x[limits[1]:(limits[1]+1),-1])
     b <- diff(x[(limits[2]-1):limits[2],-1])
-    return( acos(sum(a * b) / (sqrt(sum(a^2) * sum(b^2)))) )
+    a <- a/sqrt(sum(a^2))
+    b <- b/sqrt(sum(b^2))
+    return( acos(sum(a * b)) )
   }
 }
 
@@ -267,7 +251,7 @@ overallAngle <- function(x, limits=c(1,nrow(x))) {
 #' @param limits vector giving the first and last row of the track. Can be used to avoid
 #' extracting subtracks, which is exploited e.g. by 
 #' \code{\link{aggregate.tracks}}.
-#' @return the dot product. 
+#' @return The dot product. 
 #' @examples
 #' ## compute and plot the autocovariance function for the T cell data (assuming isotropy)
 #' with( (aggregate(BCells,overallDot,FUN="mean.se",na.rm=TRUE)),{
@@ -286,14 +270,14 @@ overallDot <- function(x, limits=c(1,nrow(x))) {
 #' 
 #' Computes the mean of all angles between two subsequent segments of the given 
 #' track.
-#' @param track the track whose mean turning angle is to be computed.
+#' @param x the track whose mean turning angle is to be computed.
 #' @details Computes the angle between each two subsequent segments in the 
 #' track and returns their mean. Angles are metered symmetrically, thus 
 #' yielding (degree) values between \eqn{0} and \eqn{180}. (Both a \eqn{90} 
 #' degrees left and right turn yield the value 90.)
 #' @return The tracks mean turning angle will be returned in degrees. 
-meanTurningAngle <- function(track) {
-	mean(sapply(subtracks(track, 2), overallAngle), na.rm=TRUE)
+meanTurningAngle <- function(x) {
+	mean(sapply(subtracks(x, 2), overallAngle), na.rm=TRUE)
 }
 
 
@@ -301,7 +285,7 @@ meanTurningAngle <- function(track) {
 #'
 #' Computes the Hurst exponent of each of the track's dimensions.
 #' 
-#' @param track the track whose Hurst exponent is to be computed.
+#' @param x the track whose Hurst exponent is to be computed.
 #' @details If the track includes at least six and an even number of points,
 #' for each of the track's dimensions, the empirical Hurst exponent is 
 #' determined using the function \code{\link[pracma]{hurstexp}} from the 
@@ -314,21 +298,21 @@ meanTurningAngle <- function(track) {
 #'
 #' @seealso \code{\link{fractalDimension}}
 #'
-hurstExponent <- function(track) {
+hurstExponent <- function(x) {
 	if( !requireNamespace("pracma",quietly=TRUE) ){
 		stop("This function requires the 'pracma' package.")
 	}
-  if (nrow(track) < 6) {
+  if (nrow(x) < 6) {
     return(NA)
   }
-  if ((nrow(track)%%2)==1) {
-    track <- track[1:(nrow(track)-1), ]
+  if ((nrow(x)%%2)==1) {
+    x <- x[1:(nrow(x)-1), ]
   }
   he <- function(x) {
     pracma::hurstexp(x, display=FALSE)$Hs
   }
   ret <- c()
-  ret <- apply(as.matrix(track[,2:ncol(track)]), 2, he)
+  ret <- apply(as.matrix(x[,-1]), 2, he)
   return(ret)
 }
 
@@ -338,7 +322,7 @@ hurstExponent <- function(track) {
 #' Computes the fractal dimension of a track using all track dimensions by the 
 #' box-count method.
 #'
-#' @param track the track for which the fractal dimension is to be calculated.
+#' @param x the track for which the fractal dimension is to be estimated.
 #' @details The fractal dimension is estimated using the function from
 #' \code{\link[fractaldim]{fd.estim.boxcount}} from the 
 #' \code{fractaldim} package. For Brownian motion, fractal dimension and Hurst exponent
@@ -348,7 +332,7 @@ hurstExponent <- function(track) {
 #' track's properties, fractal dimension is a local approach to the track's properties
 #' (Gneiting and Schlather, 2004).
 #'
-#' @return the number indicating the track's fractal dimension.
+#' @return The estimate of the track's fractal dimension.
 #'
 #' @seealso \code{\link{hurstExponent}}
 #'
@@ -357,9 +341,9 @@ hurstExponent <- function(track) {
 #' Dimension and the Hurst Effect. \emph{SIAM Review} \bold{46}(2), 269--282. 
 #' doi:10.1137/S0036144501394387
 #'
-fractalDimension <- function(track){
+fractalDimension <- function(x){
   if( !requireNamespace("fractaldim",quietly=TRUE) ){
     stop("This function requires the 'fractaldim' package.")
   }
-  return(fractaldim::fd.estim.boxcount(track[,-1])$fd)
+  return(fractaldim::fd.estim.boxcount(x[,-1])$fd)
 }

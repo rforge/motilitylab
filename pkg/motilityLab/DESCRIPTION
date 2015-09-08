@@ -2,10 +2,12 @@ Package: MotilityLab
 Type: Package
 Title: Quantitative Motion Analysis
 Version: 1.0
-Date: 2015-08-21
+Date: 2015-09-08
 Author: Katharina Dannenberg, Jeffrey Berry, Johannes Textor
 Maintainer: Johannes Textor <johannes.textor@gmx.de>
-Description: Quantitative analysis of tracks of moving objects like cells, bacteria or animals. Implements various common measures like mean square displacement, confinement ratio, autocorrelation, asphericity, and others.
+Description: Statistics to describe moving things such as cells, bacteria or animals. 
+	Available measures include mean square displacement, confinement ratio, autocorrelation,
+	asphericity, turning angle, and fractal dimension.
 LazyData: true
 License: GPL-2
 Depends:
@@ -13,6 +15,5 @@ Depends:
 Suggests:
     DescTools,
     pracma,
-    ggplot2,
     scatterplot3d,
     fractaldim

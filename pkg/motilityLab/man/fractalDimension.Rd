@@ -4,13 +4,13 @@
 \alias{fractalDimension}
 \title{Track Fractal Dimension}
 \usage{
-fractalDimension(track)
+fractalDimension(x)
 }
 \arguments{
-\item{track}{the track for which the fractal dimension is to be calculated.}
+\item{x}{the track for which the fractal dimension is to be estimated.}
 }
 \value{
-the number indicating the track's fractal dimension.
+The estimate of the track's fractal dimension.
 }
 \description{
 Computes the fractal dimension of a track using all track dimensions by the

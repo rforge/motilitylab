@@ -4,10 +4,10 @@
 \alias{outreachRatio}
 \title{Track Outreach Ratio}
 \usage{
-outreachRatio(track)
+outreachRatio(x)
 }
 \arguments{
-\item{track}{the track whose outreach ratio is to be computed.}
+\item{x}{the track whose outreach ratio is to be computed.}
 }
 \value{
 The track's outreach ratio, a value between \eqn{0} and \eqn{1},
@@ -15,11 +15,11 @@ will be returned. If the track has length \eqn{0}, then NaN is returned.
 }
 \description{
 Computes a track's maximal displacement divided by its length.
+The value will be from the interval \eqn{[0,1]}, or 1 if the track has length 0.
 }
 \details{
 Computes the outreach ratio of a track, i.e. the ratio of the
-track's maximal displacement and length. The value will be from the interval
-\eqn{[0,1]}, or 1 if the track has length \eqn{0}.
+track's maximal displacement and length.
 }
 \references{
 Zeinab Mokhtari, Franziska Mech, Carolin Zitzmann, Mike Hasenberg, Matthias Gunzer

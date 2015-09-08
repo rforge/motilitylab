@@ -4,15 +4,15 @@
 \alias{timeStep}
 \title{Compute Time Step of Tracks}
 \usage{
-timeStep(tracks, FUN = mean)
+timeStep(x, FUN = mean)
 }
 \arguments{
-\item{tracks}{the input tracks}
+\item{x}{the input tracks.}
 
 \item{FUN}{the summary statistic to be applied.}
 }
 \value{
-summary statistic of the time between two consecutive positions in a track
+summary statistic of the time intervals between two consecutive positions in a track
 dataset.
 }
 \description{
@@ -21,8 +21,8 @@ positions in a track dataset.
 }
 \details{
 Most track quantification depends on the assumption that track positions are
-recorded equidistantly in time. If this is not the case, then most of the statistic
-in this (except for some very simple ones like \code{\link{duration}}) will not work.
+recorded at constant time intervals. If this is not the case, then most of the statistics
+in this package (except for some very simple ones like \code{\link{duration}}) will not work.
 In reality, at least small fluctuations of the time steps can be expected. This
 function provides a means for quality control with respect to the tracking time.
 }

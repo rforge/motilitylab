@@ -7,14 +7,14 @@
 brownianTrack(nsteps = 100, dim = 3, mean = 0, sd = 1)
 }
 \arguments{
-\item{nsteps}{number of steps the track shall consist of.}
+\item{nsteps}{desired number of steps (e.g. 10 steps generates a track with 11 positions).}
 
-\item{dim}{the number of dimensions the track shall have.}
+\item{dim}{desired number of dimensions.}
 
 \item{mean}{stepwise mean drift per dimension; use 0 for an
-unbiased Brownian motion and other values for Brownian motion with drift}
+unbiased Brownian motion and other values for Brownian motion with drift.}
 
-\item{sd}{stepwise standard deviation per dimension}
+\item{sd}{stepwise standard deviation per dimension.}
 }
 \value{
 A data frame  containing in cell track with \code{nsteps} steps in

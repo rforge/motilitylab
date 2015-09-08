@@ -4,32 +4,41 @@
 \alias{asphericity}
 \title{Track Aspericity}
 \usage{
-asphericity(track)
+asphericity(x, limits = c(1, nrow(x)))
 }
 \arguments{
-\item{track}{the track whose asphericity is to be computed. Note that the
-track must be in a two- or threedimensional space, thus the data frames
-containing the track's points must contain an \eqn{x} and \eqn{y} value.}
+\item{x}{input track, which must have two or more spatial dimensions.}
+
+\item{limits}{vector giving the first and last row of the track. Can be used to avoid
+extracting subtracks, which is exploited e.g. by
+\code{\link{aggregate.tracks}}.}
 }
 \value{
-The track's asphericity, a vaule between \eqn{0} and \eqn{1}, will
-be returned for two- or threedimensional tracks, otherwise \code{NA}.
+The track's asphericity, a value between \eqn{0} and \eqn{1}, is
+returned for two- or higher dimensional tracks. Otherwise the return value is \code{NA}.
 }
 \description{
-Computes the asphericity of the track's points.
+Computes the asphericity of the set of positions on the track
+via the length of its principal components
+(Mokhtari et al, 2013).  Asphericity is a
+measure for the track's straightness: it is a number between 0 and 1, with
+higher values indicating straighter tracks.
+In that sense it is similar to \code{\link{straightness}}, however, the asphericity is
+not affected by back-and-forth motion of the object.
 }
 \details{
-Computes the asphericity of a track, i.e. the scatter plot of
-its points, by considering the length of its principal components,
-see References. The value will be from the interval \eqn{[0,1]},
-with high values indicating track straightness. The asphericity is a
-measure for the track's straightness. Note that the asphericity is only
-defined for tracks in two or three dimensions.
+We define the asphericity of every track with two or fewer positions to be 1.
+This is true even in the case where two positions are identical, which is motivated
+by considering
+that situation as the limit of a process in which two points move towards each other.
 }
 \references{
 Zeinab Mokhtari, Franziska Mech, Carolin Zitzmann, Mike Hasenberg, Matthias Gunzer
 and Marc Thilo Figge (2013), Automated Characterization and
 Parameter--Free Classification of Cell Tracks Based on Local Migration
 Behavior. \emph{PLoS ONE} \bold{8}(12), e80808. doi:10.1371/journal.pone.0080808
+}
+\seealso{
+\code{\link{straightness}}
 }
 

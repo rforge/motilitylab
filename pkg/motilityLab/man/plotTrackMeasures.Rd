@@ -43,8 +43,8 @@ motility analysis, where clusters of cell tracks are identified based on their
 motility parameters (Moreau et al, 2012; Textor et al, 2014).
 }
 \references{
-Moreau, H. D., Lemaitre, F., Terriac, E., Azar, G., Piel, M., Lennon-Dumenil, A. M.
-and Bousso, P. (2012), Dynamic In Situ Cytometry Uncovers
+Moreau HD, Lemaitre F, Terriac E, Azar G, Piel M, Lennon-Dumenil AM,
+Bousso P (2012), Dynamic In Situ Cytometry Uncovers
 T Cell Receptor Signaling during Immunological Synapses and Kinapses In Vivo.
 \emph{Immunity} \bold{37}(2), 351--363. doi:10.1016/j.immuni.2012.05.014
 

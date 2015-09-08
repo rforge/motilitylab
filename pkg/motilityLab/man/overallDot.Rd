@@ -14,7 +14,7 @@ extracting subtracks, which is exploited e.g. by
 \code{\link{aggregate.tracks}}.}
 }
 \value{
-the dot product.
+The dot product.
 }
 \description{
 Computes the dot product between the first and last steps of the given track.

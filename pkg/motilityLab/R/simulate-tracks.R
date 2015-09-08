@@ -2,11 +2,11 @@
 #' 
 #' Generates a random track with \code{nsteps} steps in \code{dim} dimensions.
 #' 
-#' @param nsteps number of steps the track shall consist of.
-#' @param dim the number of dimensions the track shall have.
+#' @param nsteps desired number of steps (e.g. 10 steps generates a track with 11 positions).
+#' @param dim desired number of dimensions.
 #' @param mean stepwise mean drift per dimension; use 0 for an 
-#' unbiased Brownian motion and other values for Brownian motion with drift
-#' @param sd stepwise standard deviation per dimension
+#' unbiased Brownian motion and other values for Brownian motion with drift.
+#' @param sd stepwise standard deviation per dimension.
 #' 
 #' @details In in every step an for each dimension, a normally distributed 
 #' value with mean \code{mean} and standard deviation \code{sd} is 

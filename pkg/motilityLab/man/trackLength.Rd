@@ -4,20 +4,20 @@
 \alias{trackLength}
 \title{Track Length}
 \usage{
-trackLength(track)
+trackLength(x)
 }
 \arguments{
-\item{track}{The track whose length is to be computed.}
+\item{x}{The track whose length is to be computed.}
 }
 \value{
 The length.
 }
 \description{
 Estimates the length of the track as the sum of the lengths of its
-linear segments. (Note that this is an underestimation).
+linear segments.
 }
 \details{
-The track length is computed by summing the Euclidean distances
-between consecutive positions.
+This amounts to linar interpoplation, which really gives a lower
+bound on the track length and is therefore usually an underestimation.
 }
 

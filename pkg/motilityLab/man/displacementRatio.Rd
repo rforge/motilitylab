@@ -4,25 +4,19 @@
 \alias{displacementRatio}
 \title{Track Displacement Ratio}
 \usage{
-displacementRatio(track)
+displacementRatio(x)
 }
 \arguments{
-\item{track}{the track whose displacement ratio is to be computed.}
+\item{x}{the track whose displacement ratio is to be computed.}
 }
 \value{
-The track's displacement ratio, a vaule between \eqn{0} and \eqn{1},
+The track's displacement ratio, a value between \eqn{0} and \eqn{1},
 will be returned. If the track has a maximal displacement of \eqn{0}, then
-NaN is returned.
+1 is returned.
 }
 \description{
 Computes a track's displacement ratio, i.d. the track's (current)
 displacement divided by its maximal displacement.
-}
-\details{
-Computes the displacement ratio of a track, i.e. the ratio of the
-track's (current) displacement and its maximum displacement. The value will
-be from the interval \eqn{[0,1]}, or 1 if the track has a maximal
-displacement of 0.
 }
 \references{
 Zeinab Mokhtari, Franziska Mech, Carolin Zitzmann, Mike Hasenberg, Matthias Gunzer

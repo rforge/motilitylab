@@ -48,7 +48,7 @@ freely jointed chain model of polymer physics, except for the explicit "pause ph
 between subsequent steps.
 
 This function implements an extended version of the Beauchemin model, which can also
-simulated directionally biased motion. For details, see Textor et al (2013).
+simulate directionally biased motion. For details, see Textor et al (2013).
 
 The default parameters were found to most accurately describe 'default' T
 cell motion in lymph nodes using least-squares fitting to the mean displacement plot

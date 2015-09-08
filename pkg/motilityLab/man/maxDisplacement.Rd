@@ -4,24 +4,20 @@
 \alias{maxDisplacement}
 \title{Maximal Displacement}
 \usage{
-maxDisplacement(track, limits = c(1, nrow(track)))
+maxDisplacement(x, limits = c(1, nrow(x)))
 }
 \arguments{
-\item{track}{the track whose maximal displacement is to be computed.}
+\item{x}{the track whose maximal displacement is to be computed.}
 
-\item{limits}{Vector giving the first and last row of the track. Can be used to avoid
-extracting subtracks, which is exploited e.g. by
+\item{limits}{vector giving the first and last row of the track. Can be used to avoid
+computing subtracks explicitly, which is exploited by
 \code{\link{aggregate.tracks}}.}
 }
 \value{
-The maximal displacement.
+The maximal displacement, a nonnegative number.
 }
 \description{
 Computes the maximal distance of any position on the track from the
 starting position.
-}
-\details{
-Computes the maximum over all pairwise Euclidean distances between
-the track's starting point and another point on the track.
 }
 

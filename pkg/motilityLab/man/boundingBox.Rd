@@ -4,10 +4,10 @@
 \alias{boundingBox}
 \title{Bounding Box of a Tracks Object}
 \usage{
-boundingBox(tracks)
+boundingBox(x)
 }
 \arguments{
-\item{tracks}{the \emph{tracks} object whose bounding box is to be computed.}
+\item{x}{the \code{tracks} object whose bounding box is to be computed.}
 }
 \value{
 Returns a matrix with two rows and \eqn{d} columns, where \eqn{d} is
@@ -17,11 +17,6 @@ the column.
 }
 \description{
 Computes the minimum and maximum coordinates per dimension for all positions in a
-given list of tracks.
-}
-\details{
-In each of the tracks' dimensions the minimum and maximum value
-that any track from the input has is computed and returned. It is assumed
-that all the tracks have the same number of dimensions.
+given list of tracks. Assumes that all tracks have the same number of dimensions.
 }
 

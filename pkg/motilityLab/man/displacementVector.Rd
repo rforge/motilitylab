@@ -4,20 +4,15 @@
 \alias{displacementVector}
 \title{Vector Between Track Endpoints}
 \usage{
-displacementVector(track)
+displacementVector(x)
 }
 \arguments{
-\item{track}{the track whose displacement vector is to be computed.}
+\item{x}{the track whose displacement vector is to be computed.}
 }
 \value{
-The difference between the coordinates of the track's end point and
-those of its starting point is returned.
+The displacement vector, which has as many dimensions as the input tracks.
 }
 \description{
-Computes the coordinates of the vector between that tracks' start and end points.
-}
-\details{
-The coordinates of the tracks's starting point are subtracted
-from its end point's coordinates.
+Computes the vector between the track endpoints.
 }
 

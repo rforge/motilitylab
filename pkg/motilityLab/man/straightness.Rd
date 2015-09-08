@@ -4,25 +4,20 @@
 \alias{straightness}
 \title{Track Straightness}
 \usage{
-straightness(track)
+straightness(x)
 }
 \arguments{
-\item{track}{the track whose straightness is to be computed.}
+\item{x}{the track whose straightness is to be computed.}
 }
 \value{
-The track's straightness, a value between \eqn{0} and \eqn{1}, will
-be returned. If the track has length \eqn{0}, then NaN is returned.
+The track's straightness, a value between \eqn{0} and \eqn{1}.
+If the track has \eqn{0}, then 1 is returned.
 }
 \description{
-Computes a track's straightness, i.e., the track's displacement divided by
-its length.
-}
-\details{
-Computes the straightness of a track, i.e. the ratio of the
-track's displacement and length. The value will be from the interval
-\eqn{[0,1]}, or 1 if the track has length \eqn{0}.
+Computes a track's straightness, i.e., the track's \code{\link{displacement}}
+divided by its \code{\link{trackLength}}.
 }
 \seealso{
-\code{\link{displacement}}, \code{\link{trackLength}}
+\code{\link{asphericity}} for a different measure of straightness.
 }
 

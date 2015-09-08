@@ -4,19 +4,16 @@
 \alias{duration}
 \title{Track Duration}
 \usage{
-duration(track)
+duration(x)
 }
 \arguments{
-\item{track}{a track.}
+\item{x}{a track.}
 }
 \value{
-Returns a tracks duration.
+The track's duration, a nonnegative number.
 }
 \description{
-Returns the duration of a track.
-}
-\details{
-Computes the track's duration by subtracting the
-time of the its first point from the time of its last.
+Returns the duration of a track, i.e., the time elapsed between its first and last
+position.
 }
 

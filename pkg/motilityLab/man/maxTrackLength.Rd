@@ -7,7 +7,7 @@
 maxTrackLength(x)
 }
 \arguments{
-\item{x}{the \emph{tracks} object the tracks in which are to be considered.}
+\item{x}{the \code{tracks} object the tracks in which are to be considered.}
 }
 \value{
 the maximum number of rows of a track in \code{x}

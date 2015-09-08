@@ -4,23 +4,16 @@
 \alias{speed}
 \title{Mean Track Speed}
 \usage{
-speed(track)
+speed(x)
 }
 \arguments{
-\item{track}{a track.}
+\item{x}{a track.}
 }
 \value{
-an estimate of the track's average speed.
+An estimate of the track's average speed, a nonnegative number.
 }
 \description{
-Estimate the mean speed of a track by dividing its
-length by its duration.
-}
-\details{
-The track's mean speed is computed by dividing its
+Estimate the mean instantaneous speed of a track by dividing its
 \code{\link{trackLength}} by its \code{\link{duration}}.
-}
-\seealso{
-\code{\link{trackLength}}, \code{\link{duration}}
 }
 

@@ -13,12 +13,10 @@
 }
 \value{
 the coerced object of S3 class \code{tracks} (i.e., a list
- containing a data frame for each track)
+ containing a matrix for each track)
 }
 \description{
-Converts a List into a \emph{Tracks} Object
-}
-\details{
-The input list is assigned the S3 class \code{tracks}.
+"Converts" a list into a \code{tracks} object by settings its
+S3 class to \code{tracks}.
 }
 

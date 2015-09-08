@@ -6,7 +6,8 @@
 \usage{
 \method{aggregate}{tracks}(x, measure, by = "subtracks", FUN = mean,
   subtrack.length = seq(1, (maxTrackLength(x) - 1)),
-  max.overlap = max(subtrack.length), na.rm = FALSE, ...)
+  max.overlap = max(subtrack.length), na.rm = FALSE,
+  filter.subtracks = NULL, ...)
 }
 \arguments{
 \item{x}{the tracks object whose subtracks are to be considered.
@@ -25,8 +26,8 @@ the parameters \code{subtrack.length} and \code{max.overlap}.}
  from a track's initial position) according to the parameter \code{subtrack.length}.}
 }}
 
-\item{FUN}{a function that is to be used to aggregate the measures
-of corresponding subtracks.
+\item{FUN}{a summary statistic to be computed on the measures of subtracks with the
+same length. Can be a function or a string.
 If a string is given, it is first matched to the following builtin values:
 \itemize{
  \item{"mean.sd"}{ Outputs the mean and \eqn{mean - sd} as lower and
@@ -42,14 +43,13 @@ If a string is given, it is first matched to the following builtin values:
  upper bound}
 }
 If the string is not equal to any of these, it is passed on to
-\code{\link{match.fun}}}
+\code{\link{match.fun}}.}
 
-\item{subtrack.length}{either a numeric value \eqn{i}, indicating that only
-subtracks of exactly \eqn{i} segments are to be regarded, or a vector of all
-the values \eqn{i} that shall be used. In particular, \code{subtrack.length=2}
+\item{subtrack.length}{an integer or a vector of integers defining which subtrack
+lengths are considered. In particular, \code{subtrack.length=2}
 corresponds to a "step-based analysis" (Beltman et al, 2009).}
 
-\item{max.overlap}{Determines the amount by which the subtracks that are taken into
+\item{max.overlap}{an integer controlling what to do with overlapping subtracks.
 account can overlap. A maximum overlap of \code{max(subtrack.length)} will imply
 that all subtracks are considered. For a maximum overlap of 0, only non-overlapping
 subtracks are considered. A negative overlap can be used to ensure that only subtracks
@@ -57,33 +57,33 @@ a certain distance apart are considered. In general, for non-Brownian motion the
 be correlations between subsequent steps, such that a negative overlap may be necessary
 to get a proper error estimate.}
 
-\item{na.rm}{This is passed on to the builtin statistics like "mean.se" or
-"mean".}
+\item{na.rm}{logical. If \code{TRUE}, then \code{NA} values are removed prior to
+computing the builtin statistics like "mean.se" or "mean".}
+
+\item{filter.subtracks}{a function that can be supplied to exclude certain subtracks
+from an analysis. For instance, one may wish to compute angles only between steps of
+a certain minimum length (see Examples).}
 
 \item{...}{further arguments passed to or used by methods.}
 }
 \value{
-a data frame with one row for every \eqn{i} in the set
+a data frame with one row for every \eqn{i}
 specified by \code{subtrack.length}. The first column contains the values
 of \eqn{i} and the remaining columns contain the values of the summary statistic
 of the measure values of tracks having exactly \eqn{i} segments.
 }
 \description{
-This is the main workhorse function to compute many common motility measures
-such as mean square displacement, turning angle, and autocorrelation functions.
+Computes a given measure on subtracks of a given track set, applies a summary
+statistic for each subtrack length, and returns the results in a convenient form.
+This is the main workhorse function that facilitates the most common motility analyses
+such as mean square displacement, turning angle, and autocorrelation plots.
 }
 \details{
-For the given \emph{tracks} object, a track measure is applied to all the
-tracks' subtracks of a certain number of segments \eqn{i}.
-On all the values obtained for a certain value of \eqn{i}, the given
-statistic is computed, and the resulting values are returned.
-
 For every number of segments \eqn{i} in the set defined by
 \code{subtrack.length}, all subtracks of any track in the input
-\emph{\code{tracks}} object, that consist of exactly \eqn{i} segments are
+\code{tracks} object that consist of exactly \eqn{i} segments are
 considered. The input \code{measure} is applied to the subtracks individually,
 and the \code{statistic} is applied to the resulting values.
-The summary statistics are returned for each value of \eqn{i} in a data frame.
 }
 \examples{
 ## A mean square displacement plot with error bars.
@@ -93,6 +93,12 @@ with( dat ,{
   	ylab="mean square displacement", type="l" )
   segments( i, lower, y1=upper )
 } )
+
+## Compute a turning angle plot for the B cell data, taking only steps of at least
+## 1 micrometer length into account
+check <- function(x) all( sapply( list(head(x,2),tail(x,2)), trackLength ) >= 1.0 )
+plot( aggregate( BCells, overallAngle, subtrack.length=1:10,
+  filter.subtracks=check )[,2], type='l' )
 }
 \references{
 Joost B. Beltman, Athanasius F.M. Maree and Rob. J. de Boer (2009).

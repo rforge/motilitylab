@@ -23,13 +23,9 @@ a single data frame containing all individual tracks from the input with a
 prepended column named "id" containing each track's identifier in `x`.
 }
 \description{
-Converts a \code{tracks} object into a data frame.
-}
-\details{
 Converts tracks from the list-of-matrices format, which is good
 for efficient processing and therefore the default in this package, to a
-single dataframe which is efficient for tasks such as plotting or
-writing a dataset to a CSV file.
+single dataframe which is convenient for plotting or saving the data.
 }
 \examples{
 ## Display overall average position of the T cell data

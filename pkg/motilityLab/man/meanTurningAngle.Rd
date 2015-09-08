@@ -4,10 +4,10 @@
 \alias{meanTurningAngle}
 \title{Track Mean Turning Angle}
 \usage{
-meanTurningAngle(track)
+meanTurningAngle(x)
 }
 \arguments{
-\item{track}{the track whose mean turning angle is to be computed.}
+\item{x}{the track whose mean turning angle is to be computed.}
 }
 \value{
 The tracks mean turning angle will be returned in degrees.
