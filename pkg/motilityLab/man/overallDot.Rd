@@ -20,11 +20,12 @@ The dot product.
 Computes the dot product between the first and last steps of the given track.
 }
 \examples{
-## compute and plot the autocovariance function for the T cell data (assuming isotropy)
-with( (aggregate(BCells,overallDot,FUN="mean.se",na.rm=TRUE)),{
-  plot( cos(mean) ~ i, xlab="time",
-  ylab="correlation of orientation", type="l" )
-  segments( i, cos(lower), y1=cos(upper) )
+## compute and plot the autocovariance function for the T cell data
+## (assuming isotropy)
+with( (aggregate(BCells,overallDot,FUN="mean.se")),{
+  plot( mean ~ i, xlab="time",
+  ylab="autocovariance", type="l" )
+  segments( i, lower, y1=upper )
 } )
 }
 

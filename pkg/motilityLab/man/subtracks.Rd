@@ -7,8 +7,7 @@
 subtracks(x, i, overlap = i - 1)
 }
 \arguments{
-\item{x}{a single track or a \emph{tracks} object whose
-subtracks shall be computed.}
+\item{x}{a single track or a \code{tracks} object.}
 
 \item{i}{subtrack length. A single integer, lists are not supported.}
 

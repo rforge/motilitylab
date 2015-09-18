@@ -13,7 +13,7 @@ plotTrackMeasures(x, measurex, measurey, add = FALSE,
 must be of a type which \code{measurex} and \code{measurey} can directly
 be applied to, or, if measurex and measurey are applicable to single tracks,
 the argument can be a \emph{tracks} object, which the measures will be
-applied to using sapply before plotting the result.}
+applied to using \code{sapply} before plotting the result.}
 
 \item{measurex}{the measure to be shown on the X axis.}
 

@@ -7,12 +7,13 @@
 hurstExponent(x)
 }
 \arguments{
-\item{x}{the track whose Hurst exponent is to be computed.}
+\item{x}{the input track.}
 }
 \value{
-A vector with the Hurst exponent for each of the tracks dimension
-is returned. If the track has an uneven number of points, the last one is
-discarded, if it has less than six points, NA will be returned.
+The corrected empircal Hurst exponent as estimated by
+\code{\link[pracma]{hurstexp}}
+is returned. If the track has less than two
+positions, NA will be returned.
 }
 \description{
 Computes the Hurst exponent of each of the track's dimensions.

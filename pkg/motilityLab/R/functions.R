@@ -137,7 +137,7 @@ filterTracks <- function(f,x,...){
 #' @return A \emph{tracks object} that contains the tracks from the input object 
 #' sorted by time is returned.
 sort.tracks <- function(x, decreasing=FALSE, ...) {
-	as.tracks(lapply(x, function(d) d[order(d[,"t"],decreasing=decreasing),] ))
+	as.tracks(lapply(x, function(d) d[order(d[,"t"],decreasing=decreasing),,drop=FALSE] ))
 }
 
 
@@ -251,8 +251,7 @@ read.tracks.csv <- function(file, id.column=1, time.column=2,
 #' Plots tracks contained in a "tracks" object into a twodimensional space
 #' pallelel to the data's axes.
 #' 
-#' @param x the tracks that shall be plotted, in the form of a object of 
-#' class "tracks", as returned by e.g. \code{\link{read.tracks.csv}}.
+#' @param x the tracks to be plotted.
 #' @param dims a vector giving the dimensions of the track data that shall be 
 #' plotted, e.g. \code{c('x','y')} for the \eqn{x} and \eqn{y} dimension.
 #' @param add boolean value indicating whether the tracks are to be added to the
@@ -313,7 +312,7 @@ plot.tracks <- function(x, dims=c('x','y'), add=F,
 #' 
 #' Makes a \code{tracks} object containing the given track.
 #' 
-#' @param x the track that is to be wrapped.
+#' @param x the input track.
 #' 
 #' @return a list of class \code{tracks} containing only the input track \code{x}, which
 #' is assigned the name "1". 
@@ -481,8 +480,7 @@ normalizeTracks <- function(tracks) as.tracks(lapply(tracks, normalizeTrack))
 #' Creates a \emph{tracks} object consisting of all subtracks of `x`
 #' with `i` segments (i.e., `i`+1 positions).
 #' 
-#' @param x a single track or a \emph{tracks} object whose 
-#' subtracks shall be computed.
+#' @param x a single track or a \code{tracks} object.
 #' @param i subtrack length. A single integer, lists are not supported.
 #' @param overlap the number of segments in which each subtrack shall overlap 
 #' with the previous and next subtrack. The default \code{i - 1} returns all
@@ -508,12 +506,11 @@ subtracks <- function(x, i, overlap=i-1 ) {
 
 #' Get Track Prefixes 
 #' 
-#' Creates a \emph{tracks} object consisting of all prefixes (i.e., subtracks
+#' Creates a \code{tracks} object consisting of all prefixes (i.e., subtracks
 #' starting with the first position of a track) of `x`
 #' with `i` segments (i.e., `i`+1 positions).
 #' 
-#' @param x a single track or a \emph{tracks} object whose 
-#' prefixes shall be computed.
+#' @param x a single track or a \code{tracks} object.
 #' @param i subtrack length. A single integer, lists are not supported.
 #'
 #' @details This function behaves exactly like \code{\link{subtracks}} except
@@ -565,7 +562,7 @@ normalizeToDuration <- function(measure) {
 #' must be of a type which \code{measurex} and \code{measurey} can directly
 #' be applied to, or, if measurex and measurey are applicable to single tracks,
 #' the argument can be a \emph{tracks} object, which the measures will be 
-#' applied to using sapply before plotting the result.
+#' applied to using \code{sapply} before plotting the result.
 #' @param add a logical indicating whether the tracks are to be added to an 
 #' existing plot via \code{\link[graphics]{points}}.
 #' @param xlab label of the x-axis. By default the name of the input function 
@@ -634,7 +631,7 @@ plotTrackMeasures <- function(x, measurex, measurey, add=FALSE,
 #' real.celltype <- rep(c("T","N"),c(length(TCells),length(Neutrophils)))
 #' ## Prefix each track ID with its cell class to evaluate the clustering visually
 #' names(cells) <- paste0(real.celltype,seq_along(cells))
-#' clust <- clusterTracks( cells, function(t) mean(hurstExponent(t)[1:2]) )
+#' clust <- clusterTracks( cells, hurstExponent )
 #' plot( clust )
 #' ## How many cells are "correctly" clustered?
 #' sum( real.celltype == c("T","N")[cutree(clust,2)] )

@@ -7,7 +7,7 @@
 wrapTrack(x)
 }
 \arguments{
-\item{x}{the track that is to be wrapped.}
+\item{x}{the input track.}
 }
 \value{
 a list of class \code{tracks} containing only the input track \code{x}, which

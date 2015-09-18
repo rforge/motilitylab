@@ -7,13 +7,12 @@
 prefixes(x, i)
 }
 \arguments{
-\item{x}{a single track or a \emph{tracks} object whose
-prefixes shall be computed.}
+\item{x}{a single track or a \code{tracks} object.}
 
 \item{i}{subtrack length. A single integer, lists are not supported.}
 }
 \description{
-Creates a \emph{tracks} object consisting of all prefixes (i.e., subtracks
+Creates a \code{tracks} object consisting of all prefixes (i.e., subtracks
 starting with the first position of a track) of `x`
 with `i` segments (i.e., `i`+1 positions).
 }

@@ -253,11 +253,12 @@ overallAngle <- function(x, limits=c(1,nrow(x))) {
 #' \code{\link{aggregate.tracks}}.
 #' @return The dot product. 
 #' @examples
-#' ## compute and plot the autocovariance function for the T cell data (assuming isotropy)
-#' with( (aggregate(BCells,overallDot,FUN="mean.se",na.rm=TRUE)),{
-#'   plot( cos(mean) ~ i, xlab="time", 
-#'   ylab="correlation of orientation", type="l" )
-#'   segments( i, cos(lower), y1=cos(upper) )
+#' ## compute and plot the autocovariance function for the T cell data 
+#' ## (assuming isotropy)
+#' with( (aggregate(BCells,overallDot,FUN="mean.se")),{
+#'   plot( mean ~ i, xlab="time", 
+#'   ylab="autocovariance", type="l" )
+#'   segments( i, lower, y1=upper )
 #' } )
 overallDot <- function(x, limits=c(1,nrow(x))) {
   a <- diff(x[limits[1]:(limits[1]+1),-1])
@@ -281,39 +282,26 @@ meanTurningAngle <- function(x) {
 }
 
 
-#' Track Hurst Exponents
+#' Track Hurst Exponent
 #'
-#' Computes the Hurst exponent of each of the track's dimensions.
+#' Computes the empirical Hurst exponent of the track.
 #' 
-#' @param x the track whose Hurst exponent is to be computed.
-#' @details If the track includes at least six and an even number of points,
-#' for each of the track's dimensions, the empirical Hurst exponent is 
-#' determined using the function \code{\link[pracma]{hurstexp}} from the 
-#' \code{pracma} package and returned as part of a vector.
-#' If the track consists of less than six points, NA is returned, if it 
-#' comprises an uneven number of points, the last one is discarded.
-#' @return A vector with the Hurst exponent for each of the tracks dimension 
-#' is returned. If the track has an uneven number of points, the last one is 
-#' discarded, if it has less than six points, NA will be returned.
+#' @param x the input track.
+#' @return The corrected empircal Hurst exponent as estimated by 
+#' \code{\link[pracma]{hurstexp}}
+#' is returned. If the track has less than two 
+#' positions, NA will be returned.
 #'
-#' @seealso \code{\link{fractalDimension}}
+#' @seealso A related measure is the \code{\link{fractalDimension}}.
 #'
 hurstExponent <- function(x) {
 	if( !requireNamespace("pracma",quietly=TRUE) ){
 		stop("This function requires the 'pracma' package.")
 	}
-  if (nrow(x) < 6) {
+  if (nrow(x) < 2) {
     return(NA)
   }
-  if ((nrow(x)%%2)==1) {
-    x <- x[1:(nrow(x)-1), ]
-  }
-  he <- function(x) {
-    pracma::hurstexp(x, display=FALSE)$Hs
-  }
-  ret <- c()
-  ret <- apply(as.matrix(x[,-1]), 2, he)
-  return(ret)
+  return(pracma::hurstexp(x[,-1], display=FALSE)$Hal)
 }
 
 
@@ -322,19 +310,21 @@ hurstExponent <- function(x) {
 #' Computes the fractal dimension of a track using all track dimensions by the 
 #' box-count method.
 #'
-#' @param x the track for which the fractal dimension is to be estimated.
-#' @details The fractal dimension is estimated using the function from
+#' @param x the input track.
+#' @details The fractal dimension is estimated using the function
 #' \code{\link[fractaldim]{fd.estim.boxcount}} from the 
-#' \code{fractaldim} package. For Brownian motion, fractal dimension and Hurst exponent
-#' (see \link{hurstExponent}) 
-#' are related by the formula H=2-D. For non-Brownian motion, however, this relationship
-#' need not hold. While the hurst exponent takes a global approach to the 
+#' \code{fractaldim} package. For self-affine processes in n dimensions, 
+#' fractal dimension and Hurst exponent
+#' (see \code{\link{hurstExponent}}) 
+#' are related by the formula H=n+1-D. 
+#' For non-Brownian motion, however, this relationship
+#' need not hold. While the Hurst exponent takes a global approach to the 
 #' track's properties, fractal dimension is a local approach to the track's properties
 #' (Gneiting and Schlather, 2004).
 #'
 #' @return The estimate of the track's fractal dimension.
 #'
-#' @seealso \code{\link{hurstExponent}}
+#' @seealso A related measure is the \code{\link{hurstExponent}}.
 #'
 #' @references 
 #' Tillmann Gneiting and Martin Schlather (2004), Stochastic Models That Separate Fractal

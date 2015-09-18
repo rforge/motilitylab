@@ -38,7 +38,7 @@ cells <- c(TCells,Neutrophils)
 real.celltype <- rep(c("T","N"),c(length(TCells),length(Neutrophils)))
 ## Prefix each track ID with its cell class to evaluate the clustering visually
 names(cells) <- paste0(real.celltype,seq_along(cells))
-clust <- clusterTracks( cells, function(t) mean(hurstExponent(t)[1:2]) )
+clust <- clusterTracks( cells, hurstExponent )
 plot( clust )
 ## How many cells are "correctly" clustered?
 sum( real.celltype == c("T","N")[cutree(clust,2)] )

@@ -8,8 +8,7 @@
   col = order(names(x)), xlab = "X position", ylab = "Y position", ...)
 }
 \arguments{
-\item{x}{the tracks that shall be plotted, in the form of a object of
-class "tracks", as returned by e.g. \code{\link{read.tracks.csv}}.}
+\item{x}{the tracks to be plotted.}
 
 \item{dims}{a vector giving the dimensions of the track data that shall be
 plotted, e.g. \code{c('x','y')} for the \eqn{x} and \eqn{y} dimension.}

@@ -7,7 +7,7 @@
 fractalDimension(x)
 }
 \arguments{
-\item{x}{the track for which the fractal dimension is to be estimated.}
+\item{x}{the input track.}
 }
 \value{
 The estimate of the track's fractal dimension.
@@ -17,12 +17,14 @@ Computes the fractal dimension of a track using all track dimensions by the
 box-count method.
 }
 \details{
-The fractal dimension is estimated using the function from
+The fractal dimension is estimated using the function
 \code{\link[fractaldim]{fd.estim.boxcount}} from the
-\code{fractaldim} package. For Brownian motion, fractal dimension and Hurst exponent
-(see \link{hurstExponent})
-are related by the formula H=2-D. For non-Brownian motion, however, this relationship
-need not hold. While the hurst exponent takes a global approach to the
+\code{fractaldim} package. For self-affine processes in n dimensions,
+fractal dimension and Hurst exponent
+(see \code{\link{hurstExponent}})
+are related by the formula H=n+1-D.
+For non-Brownian motion, however, this relationship
+need not hold. While the Hurst exponent takes a global approach to the
 track's properties, fractal dimension is a local approach to the track's properties
 (Gneiting and Schlather, 2004).
 }
