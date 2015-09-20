@@ -51,7 +51,13 @@ echo $contents; } ?>
 <p>Install development version from R-forge (use at own risk): <br />
 <p><code>&gt; install.packages("MotilityLab", repos="http://R-Forge.R-project.org")</code></p>
 
-<p> The <strong>project summary page</strong> is <a href="http://<?php echo $domain; ?>/projects/<?php echo $group_name; ?>/"><strong>here</strong></a>. </p>
+<p> The <strong>project summary page</strong> is <a href="http://<?php echo $domain; ?>/projects/<?php echo $group_name; ?>/"><strong>here</strong></a>.
+The <strong>PDF manual</strong> can be downloaded <a href="http://2ptrack.net/MotilityLab-manual.pdf">here</a>.
+ </p>
+
+<p>
+This package is being developed under the auspices of the <a href="http://2ptrack.net">MotilityLab project</a>.
+</p>
 
 </body>
 </html>
