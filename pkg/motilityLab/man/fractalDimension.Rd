@@ -34,6 +34,6 @@ Dimension and the Hurst Effect. \emph{SIAM Review} \bold{46}(2), 269--282.
 doi:10.1137/S0036144501394387
 }
 \seealso{
-\code{\link{hurstExponent}}
+A related measure is the \code{\link{hurstExponent}}.
 }
 

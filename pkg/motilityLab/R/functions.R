@@ -184,7 +184,10 @@ c.tracks <- function(...) {
 #' @param time.column index or name of the column that contains elapsed time.
 #'
 #' @param pos.columns vector containing indices or names of the columns that contain
-#' the spatial coordinates.
+#' the spatial coordinates. If this vector has two entries and the second entry is NA,
+#' e.g. \code{c('x',NA)} or \code{c(5,NA)} then all columns from the indicated column 
+#' to the last column are used. This is useful when reading files where the exact number
+#' of spatial dimensions is not known beforehand.
 #'
 #' @param scale.t a value by which to multiply each time point. Useful for changing units,
 #' or for specifying the time between positions if this is not contained in the file
@@ -216,6 +219,13 @@ read.tracks.csv <- function(file, id.column=1, time.column=2,
 	}
 	if( length(pos.columns) < 1 ){
 		stop("At least one position column needs to be specified!")
+	}
+	if( length(pos.columns) == 2 && !is.finite(pos.columns[2]) ){
+		cx <- match( pos.columns[1], colnames( data.raw ) )
+		if( is.na(cx) && is.numeric(pos.columns[1]) ){
+			cx <- pos.columns[1]
+		}
+		pos.columns <- seq( cx, length(data.raw) )
 	}
 	cx <- as.character(c(id.column,time.column,pos.columns))
 	cxc <- match( cx, colnames(data.raw) )

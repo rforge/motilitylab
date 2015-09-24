@@ -17,7 +17,10 @@ readable text-mode connection or a complete URL
 \item{time.column}{index or name of the column that contains elapsed time.}
 
 \item{pos.columns}{vector containing indices or names of the columns that contain
-the spatial coordinates.}
+the spatial coordinates. If this vector has two entries and the second entry is NA,
+e.g. \code{c('x',NA)} or \code{c(5,NA)} then all columns from the indicated column
+to the last column are used. This is useful when reading files where the exact number
+of spatial dimensions is not known beforehand.}
 
 \item{scale.t}{a value by which to multiply each time point. Useful for changing units,
 or for specifying the time between positions if this is not contained in the file

@@ -2,7 +2,7 @@
 % Please edit documentation in R/track-measures.R
 \name{hurstExponent}
 \alias{hurstExponent}
-\title{Track Hurst Exponents}
+\title{Track Hurst Exponent}
 \usage{
 hurstExponent(x)
 }
@@ -16,17 +16,9 @@ is returned. If the track has less than two
 positions, NA will be returned.
 }
 \description{
-Computes the Hurst exponent of each of the track's dimensions.
-}
-\details{
-If the track includes at least six and an even number of points,
-for each of the track's dimensions, the empirical Hurst exponent is
-determined using the function \code{\link[pracma]{hurstexp}} from the
-\code{pracma} package and returned as part of a vector.
-If the track consists of less than six points, NA is returned, if it
-comprises an uneven number of points, the last one is discarded.
+Computes the empirical Hurst exponent of the track.
 }
 \seealso{
-\code{\link{fractalDimension}}
+A related measure is the \code{\link{fractalDimension}}.
 }
 
