@@ -278,7 +278,11 @@ splitTrack <- function( x, positions, id=NULL, min.length=2 ){
 		split.data.frame( as.matrix(x), segs ),
 		class="tracks")
 	if(!is.null(id) && ( length(r) > 0 ) ){
-		names( r ) <- paste0( id, "_", seq_along(r) )
+		if( length(r) > 1 ){
+			names( r ) <- paste0( id, "_", seq_along(r) )
+		} else if( length(r) == 1 ){
+			names( r ) <- id
+		}
 	}
 	return(r)
 }
