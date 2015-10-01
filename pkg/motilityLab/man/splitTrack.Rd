@@ -4,7 +4,7 @@
 \alias{splitTrack}
 \title{Split Track into Multiple Tracks}
 \usage{
-splitTrack(x, positions, id = NULL)
+splitTrack(x, positions, id = NULL, min.length = 2)
 }
 \arguments{
 \item{x}{the input track (a data frame or a matrix).}
@@ -14,6 +14,9 @@ splitTrack(x, positions, id = NULL)
 \item{id}{a string used to identify the resulting tracks; for instance,
 if \code{id="X"}, then the resulting tracks are named X_1, X_2 and so forth.
 Otherwise, they are simply labelled with integer numbers.}
+
+\item{min.length}{nonnegative integer. Resulting tracks that have fewer positions than
+the value of this parameter are dropped.}
 }
 \description{
 Split Track into Multiple Tracks

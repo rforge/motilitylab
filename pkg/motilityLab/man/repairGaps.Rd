@@ -4,7 +4,7 @@
 \alias{repairGaps}
 \title{Process Tracks Containing Gaps}
 \usage{
-repairGaps(x, how = "split", tol = 0.05)
+repairGaps(x, how = "split", tol = 0.05, split.min.length = 2)
 }
 \arguments{
 \item{x}{the input tracks object.}
@@ -24,10 +24,14 @@ repairGaps(x, how = "split", tol = 0.05)
 }}
 
 \item{tol}{nonnegative number specifying by which fraction each step may deviate
- from the average step duration without being considered a gap. For instance, if
- the average step duration (see \code{\link{timeStep}}) is 100 seconds and \code{tol}
- is 0.05 (the default), then step durations between 95 and 105 seconds (both inclusive)
- are not considered gaps. This option is ignored for \code{how="interpolate"}.}
+from the average step duration without being considered a gap. For instance, if
+the average step duration (see \code{\link{timeStep}}) is 100 seconds and \code{tol}
+is 0.05 (the default), then step durations between 95 and 105 seconds (both inclusive)
+are not considered gaps. This option is ignored for \code{how="interpolate"}.}
+
+\item{split.min.length}{nonnegative integer. For \code{how="split"}, this
+discards all resulting tracks shorter than
+this many positions.}
 }
 \description{
 Process Tracks Containing Gaps

@@ -268,12 +268,16 @@ read.tracks.csv <- function(file, id.column=1, time.column=2,
 #' if \code{id="X"}, then the resulting tracks are named X_1, X_2 and so forth.
 #' Otherwise, they are simply labelled with integer numbers.
 #' @param positions a vector of positive integers, given in ascending order.
-splitTrack <- function( x, positions, id=NULL ){
-	segs <- rep( seq_len(length(positions)+1), diff(c(0,positions,nrow(x))) )
+#' @param min.length nonnegative integer. Resulting tracks that have fewer positions than
+#'  the value of this parameter are dropped. 
+splitTrack <- function( x, positions, id=NULL, min.length=2 ){
+	freqs <- diff(c(0,positions,nrow(x)))
+	segs <- rep( seq_len(length(positions)+1), freqs )
+	segs[rep(freqs,freqs) < min.length] <- NA
 	r <- structure( 
 		split.data.frame( as.matrix(x), segs ),
 		class="tracks")
-	if(!is.null(id)){
+	if(!is.null(id) && ( length(r) > 0 ) ){
 		names( r ) <- paste0( id, "_", seq_along(r) )
 	}
 	return(r)
@@ -1055,11 +1059,11 @@ plot3d <- function(x,...){
 #' ## Show tracking time fluctuations for the T cell data
 #' d <- timeStep( TCells )
 #' plot( sapply( subtracks( TCells, 1 ) , duration ) - d, ylim=c(-d,d) ) 
-timeStep <- function( x, FUN=mean ){
+timeStep <- function( x, FUN=median ){
 	if( class(FUN) == "character" ){
 		FUN=match.fun( FUN )
 	}
-	return( FUN( sapply( subtracks( x, 1 ) , duration )  ) )
+	return( FUN( .ulapply( x, function(x) diff(x[,1]) ) ) )
 }
 
 #' Interpolate Track Positions

@@ -4,7 +4,7 @@
 \alias{timeStep}
 \title{Compute Time Step of Tracks}
 \usage{
-timeStep(x, FUN = mean)
+timeStep(x, FUN = median)
 }
 \arguments{
 \item{x}{the input tracks.}

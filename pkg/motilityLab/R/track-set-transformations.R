@@ -41,12 +41,15 @@ projectDimensions <- function(x, dims=c("x","y")) {
 #'  the average step duration (see \code{\link{timeStep}}) is 100 seconds and \code{tol}
 #'  is 0.05 (the default), then step durations between 95 and 105 seconds (both inclusive)
 #'  are not considered gaps. This option is ignored for \code{how="interpolate"}.
+#' @param split.min.length nonnegative integer. For \code{how="split"}, this
+#' discards all resulting tracks shorter than
+#' this many positions. 
 #'
 #' @examples
 #' ## The Neutrophil data are imaged at rather nonconstant intervals
 #' print( length( Neutrophils ) )
 #' print( length( repairGaps( Neutrophils, tol=0.01 ) ) )
-repairGaps <- function( x, how="split", tol=0.05 ){
+repairGaps <- function( x, how="split", tol=0.05, split.min.length=2 ){
 	deltaT <- timeStep( x )
 	if( how=="drop" ){
 		gi <- which( sapply( x, function(t) length( .gaps( t, tol=tol, deltaT=deltaT ) ) >0 ) )
@@ -58,7 +61,8 @@ repairGaps <- function( x, how="split", tol=0.05 ){
 	} else if( how=="split" ){
 		ids <- names(x)
 		as.tracks( unlist( lapply( seq_along(x), function(i){
-			splitTrack( x[[i]], .gaps( x[[i]], tol, deltaT ), id=ids[i] )
+			splitTrack( x[[i]], .gaps( x[[i]], tol, deltaT ), id=ids[i], 
+				min.length=split.min.length )
 		} ), recursive=FALSE ) )
 	} else if( how=="interpolate" ){
 		as.tracks( lapply( x, function(t)
