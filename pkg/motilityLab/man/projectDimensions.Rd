@@ -4,10 +4,10 @@
 \alias{projectDimensions}
 \title{Extract Subset of Dimensions}
 \usage{
-projectDimensions(tracks, dims = c("x", "y"))
+projectDimensions(x, dims = c("x", "y"))
 }
 \arguments{
-\item{tracks}{the \emph{tracks} onject whose tracks are to be projected.}
+\item{x}{the input tracks object.}
 
 \item{dims}{a character vector giving the dimensions to extract from each track.}
 }
@@ -16,6 +16,11 @@ A tracks object is returned that contains only those dimensions
 of the input \code{tracks} that are given in \code{dims}.
 }
 \description{
-Projects tracks in a \emph{tracks} object onto the given dimensions.
+Projects tracks onto the given dimensions.
+}
+\examples{
+## Compare 2D and 3D speeds
+speed.2D <- mean( sapply( subtracks( projectDimensions( TCells, c("x","z") ), 2 ), speed ) )
+speed.3D <- mean( sapply( TCells, speed ) )
 }
 

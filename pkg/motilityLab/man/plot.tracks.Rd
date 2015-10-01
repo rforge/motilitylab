@@ -5,7 +5,7 @@
 \title{Plot Tracks in 2D Space}
 \usage{
 \method{plot}{tracks}(x, dims = c("x", "y"), add = F,
-  col = order(names(x)), xlab = "X position", ylab = "Y position", ...)
+  col = order(names(x)), pch.start = 1, pch.end = NULL, ...)
 }
 \arguments{
 \item{x}{the tracks to be plotted.}
@@ -20,12 +20,14 @@ current plot.}
 of size \code{length(x)}, where each entry specififes the color for the
 corresponding track.}
 
-\item{xlab}{a sting that should be used as a label for the x axis.}
+\item{pch.start}{point symbol with which to label the first position of the track
+(see \code{\link[graphics]{points}})}
 
-\item{ylab}{a sting that should be used as a label for the y axis.}
+\item{pch.end}{point symbol with which to label the last position of the track}
 
-\item{...}{additional parameters to be passed to \code{\link[graphics]{plot}}
-(in case add=False) or \code{\link[graphics]{points}} (in case add=True),
+\item{...}{additional parameters (e.g. xlab, ylab)
+to be passed to \code{\link[graphics]{plot}}
+(for \code{add=FALSE}) or \code{\link[graphics]{points}} (for \code{add=TRUE}),
 respectively.}
 }
 \description{

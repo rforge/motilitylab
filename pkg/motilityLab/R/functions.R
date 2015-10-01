@@ -74,6 +74,13 @@ as.list.tracks <- function(x, ...)
 as.tracks.list <- function(x,...) 
   structure(x, class="tracks")
 
+#' Check for Class Tracks
+#'
+#' Verifies whether the input object inherits from S3 class \code{"tracks"}.
+#'
+#' @param x the input object.
+is.tracks <- function(x)
+  inherits(x, "tracks")
 
 #' Get a Subset of Tracks
 #' 
@@ -254,7 +261,23 @@ read.tracks.csv <- function(file, id.column=1, time.column=2,
 		class="tracks"))
 }
 
-
+#' Split Track into Multiple Tracks
+#' 
+#' @param x the input track (a data frame or a matrix).
+#' @param id a string used to identify the resulting tracks; for instance,
+#' if \code{id="X"}, then the resulting tracks are named X_1, X_2 and so forth.
+#' Otherwise, they are simply labelled with integer numbers.
+#' @param positions a vector of positive integers, given in ascending order.
+splitTrack <- function( x, positions, id=NULL ){
+	segs <- rep( seq_len(length(positions)+1), diff(c(0,positions,nrow(x))) )
+	r <- structure( 
+		split.data.frame( as.matrix(x), segs ),
+		class="tracks")
+	if(!is.null(id)){
+		names( r ) <- paste0( id, "_", seq_along(r) )
+	}
+	return(r)
+}
 
 #' Plot Tracks in 2D Space
 #' 
@@ -269,10 +292,12 @@ read.tracks.csv <- function(file, id.column=1, time.column=2,
 #' @param col a specification of the color(s) to be used. This can be a vector
 #'  of size \code{length(x)}, where each entry specififes the color for the 
 #'  corresponding track.
-#' @param xlab a sting that should be used as a label for the x axis.
-#' @param ylab a sting that should be used as a label for the y axis.
-#' @param ... additional parameters to be passed to \code{\link[graphics]{plot}} 
-#' (in case add=False) or \code{\link[graphics]{points}} (in case add=True), 
+#' @param pch.start point symbol with which to label the first position of the track
+#'  (see \code{\link[graphics]{points}})
+#' @param pch.end point symbol with which to label the last position of the track
+#' @param ... additional parameters (e.g. xlab, ylab) 
+#' to be passed to \code{\link[graphics]{plot}} 
+#' (for \code{add=FALSE}) or \code{\link[graphics]{points}} (for \code{add=TRUE}), 
 #' respectively.
 #' @details One dimension of the data (by default \eqn{y}) is plotted against 
 #' another (by default \eqn{x}). The dimesions can be chosen by means of the 
@@ -282,28 +307,37 @@ read.tracks.csv <- function(file, id.column=1, time.column=2,
 #' to \code{TRUE}.
 #' @seealso \code{\link{plot3d}}
 plot.tracks <- function(x, dims=c('x','y'), add=F,
-		col=order(names(x)), xlab="X position", ylab="Y position", ... ) {
+		col=order(names(x)), pch.start=1, pch.end=NULL, ... ) {
 	args <- list(...)
 
 	ids <- names(x)
-  	lcol <- rep_len(col, length(ids))
-  	pcol <- rep(lcol, lapply(x,nrow))
-	px <- unlist( lapply(x,'[', , dims[1]) )
-	py <- unlist( lapply(x,'[', , dims[2]) )
+	lcol <- rep_len(col, length(ids))
+	pcol <- rep(lcol, lapply(x,nrow))
+	dim1 <- unlist( lapply(x,'[', , dims[1]) )
+	dim2 <- unlist( lapply(x,'[', , dims[2]) )
 
 	if (add==T) {
-		points( px, py, col=pcol, cex=.5, ... )
+		points( dim1, dim2, col=pcol, cex=.5, ... )
 	} else {
-		plot( px, py, xlab=xlab, ylab=ylab, col=pcol, cex=.5, ...)
+		plot( dim1, dim2, col=pcol, cex=.5, ...)
 	}
   
-	starting.points <- lapply( x, function(p) p[1,] )
-	px <- sapply(starting.points,'[[',dims[1])
-	py <- sapply(starting.points,'[[',dims[2])
-	points( px, py, col=col, cex=2 )
+	if( !is.null(pch.start) ){
+		starting.points <- lapply( x, function(p) p[1,] )
+		px <- sapply(starting.points,'[[',dims[1])
+		py <- sapply(starting.points,'[[',dims[2])
+		points( px, py, col=col, pch=pch.start, cex=2 )
+	}
+
+	if( !is.null(pch.end) ){
+		end.points <- lapply( x, function(p) p[nrow(p),] )
+		px <- sapply(end.points,'[[',dims[1])
+		py <- sapply(end.points,'[[',dims[2])
+		points( px, py, col=col, pch=pch.end, cex=2 )
+	}
   
 	lseg <- function(f,i) {
-	    function(d) f( d[,dims[i]], -1 ) 
+		function(d) f( d[,dims[i]], -1 ) 
 	}
 
 	x0 <- .ulapply(x,lseg(head,1))
@@ -313,8 +347,8 @@ plot.tracks <- function(x, dims=c('x','y'), add=F,
 	y1 <- .ulapply(x,lseg(tail,2))
 
 	lcol <- rep(lcol, lapply(x, function(d) {
-      nrow(d) - 1
-    }))
+		nrow(d) - 1
+	}))
 	segments(x0, y0, x1, y1, col=lcol)
 }
 
@@ -507,7 +541,7 @@ normalizeTracks <- function(tracks) as.tracks(lapply(tracks, normalizeTrack))
 #' of any track in the input \emph{tracks} object that consist of exactly `i`
 #' segments and overlap adjacent subtracks in `overlap` segments.
 subtracks <- function(x, i, overlap=i-1 ) {
-	if( class(x) != "tracks" ){
+	if( !is.tracks(x) ){
 		x <- wrapTrack( x )
 	}
 	Reduce(c, lapply(x, 
@@ -527,7 +561,7 @@ subtracks <- function(x, i, overlap=i-1 ) {
 #' that only subtracks starting from the first position are considered.
 #'
 prefixes <- function(x,i) {
-	if( class(x) != "tracks" ){
+	if( !is.tracks(x) ){
 		x <- wrapTrack( x )
 	}
 	lapply( x,
@@ -603,7 +637,7 @@ normalizeToDuration <- function(measure) {
 plotTrackMeasures <- function(x, measurex, measurey, add=FALSE, 
                               xlab=deparse(substitute(measurex)), 
                               ylab=deparse(substitute(measurey)), ...) {
-	if( class(x)!="tracks" ){
+	if( !is.tracks(x) ){
 		x <- wrapTrack( x )
 	}
     if(add) {
@@ -868,7 +902,7 @@ maxTrackLength <- function(x) {
 #' and the second row the maximum value of any track in the dimension given by 
 #' the column.
 boundingBox <- function(x) {
-  if( class(x) != "tracks" ){
+  if( !is.tracks(x) ){
     x <- wrapTrack(x) 
   }
   bounding.boxes <- lapply(x, .boundingBoxTrack) 
@@ -1028,3 +1062,25 @@ timeStep <- function( x, FUN=mean ){
 	return( FUN( sapply( subtracks( x, 1 ) , duration )  ) )
 }
 
+#' Interpolate Track Positions
+#'
+#' Approximates the track positions at given time points using linear interpolation
+#' (via the \code{\link[stats]{approx}} function).
+#'
+#' @param x the input track (a matrix or data frame).
+#' @param t the times at which to approximate track positions. These must lie 
+#' within the interval spanned by the track timepoints.
+#' @param how specifies how to perform the interpolation. Possible values are 
+#' \code{"linear"} (which uses \code{\link[stats]{approx}} with default values) and
+#' \code{"spline"} (which uses \code{\link[stats]{spline}} with default values). 
+#'
+interpolateTrack <- function( x, t, how="linear" ){
+	f=approx
+	if( how=="spline" ){
+		f=spline
+	}
+	pos.interpolated <- apply(x[,-1],2,function(p) f(x[,1], p, xout=t)$y) 
+	r <- cbind( t, pos.interpolated )
+	colnames(r) <- colnames(x)
+	return(r)
+}

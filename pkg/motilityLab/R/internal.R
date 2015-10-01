@@ -148,4 +148,8 @@
 	}
 }
 
+.gaps <- function(x, tol=0.05, deltaT=NULL){
+	gapThreshold <- tol*deltaT
+	which( abs(diff(x[,1])-deltaT) > gapThreshold )
+}
 
