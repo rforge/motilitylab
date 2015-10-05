@@ -1,0 +1,13 @@
+Package: PeptideMHC
+Type: Package
+Title: Methods to predict the binding strength of peptides to major histocompatibility
+	complex (MHC) molecules
+Version: 0.1.0
+Date: 2015-10-05
+Author: Johannes Textor
+Maintainer: Johannes Textor <johannes.textor@gmx.de>
+Description: Predicts binding of 9- to 12-mer peptides to MHC class I molecules using the 
+	stabilized matrix method. Can predict binding for several alleles from 
+	humans (HLA A/B), mice (H-2), chimpanzees (Patr A/B), and rhesus macaques (Mamu A/B).
+LazyData: true
+License: GPL-2
