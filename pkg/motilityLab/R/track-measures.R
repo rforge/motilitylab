@@ -233,15 +233,17 @@ outreachRatio <- function(x) {
 #'   segments( i, lower, y1=upper )
 #' } )
 overallAngle <- function(x, limits=c(1,nrow(x))) {
-  if (limits[2]-limits[1] < 2) {
-    return(0)
-  } else {
-    a <- diff(x[limits[1]:(limits[1]+1),-1])
-    b <- diff(x[(limits[2]-1):limits[2],-1])
-    a <- a/sqrt(sum(a^2))
-    b <- b/sqrt(sum(b^2))
-    return( acos(sum(a * b)) )
-  }
+	if( limits[1]==limits[2] ){
+		return(0)
+	} else if (limits[2]-limits[1] == 1) {
+		return(0)
+  	} else {
+		a <- diff(x[limits[1]:(limits[1]+1),-1])
+		b <- diff(x[(limits[2]-1):limits[2],-1])
+		a <- a/sqrt(sum(a^2))
+		b <- b/sqrt(sum(b^2))
+		return( acos(sum(a * b)) )
+	}
 }
 
 #' Dot Product Between Steps at Track Endpoints
@@ -261,9 +263,12 @@ overallAngle <- function(x, limits=c(1,nrow(x))) {
 #'   segments( i, lower, y1=upper )
 #' } )
 overallDot <- function(x, limits=c(1,nrow(x))) {
-  a <- diff(x[limits[1]:(limits[1]+1),-1])
-  b <- diff(x[(limits[2]-1):limits[2],-1])
-  return( sum(a * b) )
+	if( limits[1]==limits[2] ){
+		return(NaN)
+	}
+	a <- diff(x[limits[1]:(limits[1]+1),-1])
+	b <- diff(x[(limits[2]-1):limits[2],-1])
+	return( sum(a * b) )
 }
 
 

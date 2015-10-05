@@ -64,17 +64,17 @@
 
 .computeSubtracksOfISegments <- function(track, i, overlap=i-1) {
   if (nrow(track) <= i) {
-    return( NULL )
+    return( as.tracks(list()) )
   } 
   if (overlap > i-1) {
     warning("Overlap exceeds segment length")
     overlap <- i-1
   }
   l <- list()
-  for (j in seq(1, (nrow(track)-i),i-overlap)) {
+  for (j in seq(1, (nrow(track)-i), max(1,i-overlap))) {
     l[[as.character(j)]] <- track[j:(j+i), ,drop=FALSE]
   }    
-  structure(l, class="tracks")
+  return( as.tracks(l) )
 }
 
 
@@ -149,7 +149,14 @@
 }
 
 .gaps <- function(x, tol=0.05, deltaT=NULL){
+	if( nrow(x) < 2 ){
+		return(integer())
+	}
 	gapThreshold <- tol*deltaT
-	which( abs(diff(x[,1])-deltaT) > gapThreshold )
+	xt <- x[,1]
+	xt[apply( is.na(x), 1, any )] <-  NA
+	r <- abs(diff(x[,1])-deltaT) > gapThreshold
+	r[is.na(r)] <- TRUE
+	which(r)
 }
 

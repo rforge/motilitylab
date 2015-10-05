@@ -20,9 +20,9 @@ using \code{\link{wrapTrack}} (but note that this requires an explicit call
 \item{by}{a string that indicates how grouping is performed. Currently, two
 kinds of grouping are supported:
 \itemize{
- \item{\code{"subtracks"}}{ Apply \code{measure} to all subtracks according to
+ \item{"subtracks"}{ Apply \code{measure} to all subtracks according to
 the parameters \code{subtrack.length} and \code{max.overlap}.}
- \item{\code{"prefixes"}}{ Apply \code{measure} to all prefixes (i.e., subtracks starting
+ \item{"prefixes"}{ Apply \code{measure} to all prefixes (i.e., subtracks starting
  from a track's initial position) according to the parameter \code{subtrack.length}.}
 }}
 
@@ -57,8 +57,8 @@ a certain distance apart are considered. In general, for non-Brownian motion the
 be correlations between subsequent steps, such that a negative overlap may be necessary
 to get a proper error estimate.}
 
-\item{na.rm}{logical. If \code{TRUE}, then \code{NA} values are removed prior to
-computing the builtin statistics like "mean.se" or "mean".}
+\item{na.rm}{logical. If \code{TRUE}, then \code{NA}'s and \code{NaN}'s
+are removed prior to computing the summary statistic.}
 
 \item{filter.subtracks}{a function that can be supplied to exclude certain subtracks
 from an analysis. For instance, one may wish to compute angles only between steps of
@@ -101,7 +101,7 @@ plot( aggregate( BCells, overallAngle, subtrack.length=1:10,
   filter.subtracks=check )[,2], type='l' )
 }
 \references{
-Joost B. Beltman, Athanasius F.M. Maree and Rob. J. de Boer (2009).
+Joost B. Beltman, Athanasius F.M. Maree and Rob. J. de Boer (2009),
 Analysing immune cell migration. \emph{Nature Reviews Immunology} \bold{9},
 789--798. doi:10.1038/nri2638
 }

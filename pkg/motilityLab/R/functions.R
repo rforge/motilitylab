@@ -31,6 +31,8 @@ as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE, ...) {
 	return(r)
 }
 
+`[.tracks` <- function(x,y) as.tracks(as.list(x)[y])
+
 #' Convert to Tracks
 #' 
 #' Coerces \code{x} to a \code{tracks} object.
@@ -716,9 +718,9 @@ clusterTracks <- function(tracks, measures, scale=TRUE, ...) {
 #' @param by a string that indicates how grouping is performed. Currently, two
 #' kinds of grouping are supported: 
 #' \itemize{
-#'  \item{\code{"subtracks"}}{ Apply \code{measure} to all subtracks according to 
+#'  \item{"subtracks"}{ Apply \code{measure} to all subtracks according to 
 #' the parameters \code{subtrack.length} and \code{max.overlap}.}
-#'  \item{\code{"prefixes"}}{ Apply \code{measure} to all prefixes (i.e., subtracks starting
+#'  \item{"prefixes"}{ Apply \code{measure} to all prefixes (i.e., subtracks starting
 #'  from a track's initial position) according to the parameter \code{subtrack.length}.}
 #' }
 #' 
@@ -752,8 +754,8 @@ clusterTracks <- function(tracks, measures, scale=TRUE, ...) {
 #' a certain distance apart are considered. In general, for non-Brownian motion there will
 #' be correlations between subsequent steps, such that a negative overlap may be necessary
 #' to get a proper error estimate.
-#' @param na.rm logical. If \code{TRUE}, then \code{NA} values are removed prior to 
-#' computing the builtin statistics like "mean.se" or "mean".
+#' @param na.rm logical. If \code{TRUE}, then \code{NA}'s and \code{NaN}'s 
+#' are removed prior to computing the summary statistic.
 #' @param filter.subtracks a function that can be supplied to exclude certain subtracks
 #' from an analysis. For instance, one may wish to compute angles only between steps of
 #' a certain minimum length (see Examples).
@@ -785,7 +787,7 @@ clusterTracks <- function(tracks, measures, scale=TRUE, ...) {
 #'   filter.subtracks=check )[,2], type='l' )
 #'
 #' @references
-#' Joost B. Beltman, Athanasius F.M. Maree and Rob. J. de Boer (2009).
+#' Joost B. Beltman, Athanasius F.M. Maree and Rob. J. de Boer (2009),
 #' Analysing immune cell migration. \emph{Nature Reviews Immunology} \bold{9},
 #' 789--798. doi:10.1038/nri2638
 aggregate.tracks <- function( x, measure, by="subtracks", FUN=mean, 
@@ -802,47 +804,57 @@ aggregate.tracks <- function( x, measure, by="subtracks", FUN=mean,
     if (max(subtrack.length) > (maxTrackLength(x)-1)) {
 		warning("No track is long enough!")
   	}
+  	the.statistic <- NULL
   	if (is.character(FUN)) {
 		if (FUN == "mean.ci.95") {
-		  the.statistic <- function(x,...) {
+		  the.statistic <- function(x) {
 		  	mx <- mean(x,na.rm=na.rm)
 			ci <- tryCatch( t.test(x)$conf.int, error=function(e) rep(NA,2) )
 			return(c(lower=ci[1], mean=mx, upper=ci[2]))
 		  }
 		} else if (FUN == "mean.ci.99") {
-		  the.statistic <- function(x,...) {
+		  the.statistic <- function(x) {
 			mx <- mean(x,na.rm=na.rm)
 			ci <- tryCatch( t.test(x, conf.level=.99)$conf.int, 
 				error=function(e) rep(NA,2) )
 			return(c(lower=ci[1], mean=mean(x), upper=ci[2]))
 		  }
 		} else if (FUN == "mean.se") {
-		  the.statistic <- function(x,...) {
+		  the.statistic <- function(x) {
 		  	mx <- mean(x,na.rm=na.rm)
 		  	sem <- sd(x,na.rm=na.rm)/sqrt(sum(!is.na(x))) 
 		  		# note that this also works is na.omit is FALSE
 			return(c(mean=mx, lower = mx - sem, upper = mx + sem))
 		  }
 		} else if (FUN == "mean.sd") {
-		  the.statistic <- function(x,...) {
+		  the.statistic <- function(x) {
 		  	mx <- mean(x,na.rm=na.rm)
 		  	sem <- sd(x,na.rm=na.rm)
 			return(c(mean=mx, lower = mx - sem, upper = mx + sem))
 		  }
 		} else if (FUN == "iqr") {
-		  the.statistic <- function(x,...) {
+		  the.statistic <- function(x) {
 			lx <- quantile(x,probs=c(.25,.5,.75),na.rm=na.rm)
 			names(lx) <- c("lower","median","upper")
 			return(lx)
 		  }
 		} else {
-			the.statistic <- match.fun( FUN )
+			the.statistic.raw <- match.fun( FUN )
 		}
 	} else {
 		if ( !is.function( FUN) ) {
 		   stop("FUN must be a function or a string")
 		} else {
-			the.statistic <- FUN
+			the.statistic.raw <- FUN
+		}
+	}
+	if( is.null( the.statistic ) ){
+		if( na.rm ){
+			the.statistic <- function(x){
+				the.statistic.raw(x[!is.na(x) & !is.nan(x)])
+			}
+		} else {
+			the.statistic <- the.statistic.raw
 		}
 	}
 	if( is.function( filter.subtracks ) ){
@@ -854,20 +866,22 @@ aggregate.tracks <- function( x, measure, by="subtracks", FUN=mean,
 		# optimized version: avoids making copies of subtracks (relevant especially
 		# for measures like displacement, which actually only consider the track
 		# endpoints)
-		if( ( length( intersect(c("track","limits"),names(formals(measure))) ) == 2 )
+		if( ( length( intersect(c("x","limits"),names(formals(measure))) ) == 2 )
 			&& !is.function( filter.subtracks ) ){
 			measure.values <- lapply( subtrack.length, 
 				function(i) .ulapply( Filter(function(t) nrow(t)>i, x),
 					function(t) apply( .subtrackIndices(t,i,min(max.overlap,i-1)), 
-						 1, measure, track=t ) ) )
+						 1, measure, x=t ) ) )
 		} else {
 		# unoptimized version: makes copies of all subtracks.
 			the.subtracks <- list()
 			measure.values <- list()
+			k <- 1
 			for (i in subtrack.length) {
-				the.subtracks[[i]] <- subtracks(x, i, min(max.overlap,i-1) )
-				the.subtracks[[i]] <- Filter( isValidSubtrack, the.subtracks[[i]] )
-				measure.values[[i]] <- sapply( the.subtracks[[i]], measure )
+				the.subtracks[[k]] <- subtracks(x, i, min(max.overlap,i-1) )
+				the.subtracks[[k]] <- Filter( isValidSubtrack, the.subtracks[[k]] )
+				measure.values[[k]] <- sapply( the.subtracks[[k]], measure )
+				k <- k+1
 			}
 		}
 	} else if (by == "prefixes" ) {
@@ -1049,6 +1063,9 @@ plot3d <- function(x,...){
 #' 
 #' @param x the input tracks.
 #' @param FUN the summary statistic to be applied.
+#' @param na.rm logical, indicates 
+#'  whether to remove missing values before
+#'  applying FUN.
 #'
 #' @details Most track quantification depends on the assumption that track positions are
 #' recorded at constant time intervals. If this is not the case, then most of the statistics
@@ -1063,11 +1080,15 @@ plot3d <- function(x,...){
 #' ## Show tracking time fluctuations for the T cell data
 #' d <- timeStep( TCells )
 #' plot( sapply( subtracks( TCells, 1 ) , duration ) - d, ylim=c(-d,d) ) 
-timeStep <- function( x, FUN=median ){
+timeStep <- function( x, FUN=median, na.rm=FALSE ){
 	if( class(FUN) == "character" ){
 		FUN=match.fun( FUN )
 	}
-	return( FUN( .ulapply( x, function(x) diff(x[,1]) ) ) )
+	x <- .ulapply( x, function(x) diff(x[,1]) )
+	if( na.rm ){
+		x <- x[!is.na(x)]
+	}
+	return( FUN( x ) )
 }
 
 #' Interpolate Track Positions
@@ -1091,4 +1112,25 @@ interpolateTrack <- function( x, t, how="linear" ){
 	r <- cbind( t, pos.interpolated )
 	colnames(r) <- colnames(x)
 	return(r)
+}
+
+#' Subsample Track by Constant Factor
+#'
+#' Make tracks more coarse-grained by keeping only every \emph{k}th position.
+#'
+#' @param x an input track or tracks object.
+#' @param k a positive integer. Every \eqn{k}th position of each
+#' input track is kept.
+#' @seealso \code{interpolateTrack}, which can be used for more flexible track 
+#' coarse-graining. 
+#' @examples
+#' ## Compare original and subsampled versions of the T cell tracks
+#' plot( TCells, col=1 )
+#' plot( subsample( TCells, 3 ), col=2, add=TRUE, pch.start=NULL )
+subsample <- function( x, k=2 ){
+	if( is.tracks(x) ){
+		as.tracks( lapply( x, function(t) subsample(t,k) ) )
+	} else {
+		x[seq(1,nrow(x),by=k),]
+	}
 }

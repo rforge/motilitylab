@@ -4,12 +4,16 @@
 \alias{timeStep}
 \title{Compute Time Step of Tracks}
 \usage{
-timeStep(x, FUN = median)
+timeStep(x, FUN = median, na.rm = FALSE)
 }
 \arguments{
 \item{x}{the input tracks.}
 
 \item{FUN}{the summary statistic to be applied.}
+
+\item{na.rm}{logical, indicates
+ whether to remove missing values before
+ applying FUN.}
 }
 \value{
 summary statistic of the time intervals between two consecutive positions in a track

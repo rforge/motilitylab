@@ -50,7 +50,7 @@ projectDimensions <- function(x, dims=c("x","y")) {
 #' print( length( Neutrophils ) )
 #' print( length( repairGaps( Neutrophils, tol=0.01 ) ) )
 repairGaps <- function( x, how="split", tol=0.05, split.min.length=2 ){
-	deltaT <- timeStep( x )
+	deltaT <- timeStep( x, na.rm=TRUE )
 	if( how=="drop" ){
 		gi <- which( sapply( x, function(t) length( .gaps( t, tol=tol, deltaT=deltaT ) ) >0 ) )
 		if( length(gi)>0 ){
