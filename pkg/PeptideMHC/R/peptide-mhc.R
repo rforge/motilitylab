@@ -64,7 +64,8 @@ smmMatrix <- function( mhc="HLA-A-02:01", l=9 ){
 				c=get( paste(matrixname,"-c",sep=""), envir=.smm.cache ) )
 		)
 	}
-	matrixfile <- system.file( "extdata", paste(matrixname,".txt",sep=""), package="NetMHCpan" )
+	matrixfile <- system.file( "extdata", paste(matrixname,".txt",sep=""), 
+		package="PeptideMHC" )
 	if( matrixfile == "" ){
 		stop( paste( "SMM matrix for MHC",mhc,"and peptide length",l,"not found!") )
 	} else {
