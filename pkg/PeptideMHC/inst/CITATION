@@ -1,7 +1,7 @@
 citHeader("To cite PeptideMHC in publications use:")
 
 citEntry(entry = "Article",
-  title        = "Dates and Times Made Easy with {lubridate}",
+  title        = "Derivation of an amino acid similarity matrix for peptide:{MHC} binding and its application as a {B}ayesian prior",
   author       = personList(as.person("Yohan Kim"),
                    as.person("John Sidney"),
                    as.person("Clemencia Pinilla"),

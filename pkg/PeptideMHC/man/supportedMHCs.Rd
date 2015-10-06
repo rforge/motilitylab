@@ -2,21 +2,24 @@
 % Please edit documentation in R/peptide-mhc.R
 \name{supportedMHCs}
 \alias{supportedMHCs}
-\title{Supported MHC Molecules and Peptide Lengths.}
+\title{Supported MHC Molecules and Peptide Lengths}
 \usage{
-supportedMHCs()
+supportedMHCs(l = NULL)
+}
+\arguments{
+\item{l}{integer giving the desired peptide length. If not given (default), then all
+possible combinations of peptide lengths and MHC molecules are returned.}
 }
 \value{
-A named list. The names are the MHC molecules and the list entries
-are integer vectors containing the supported peptide lengths for each MHC.
+A data frame containing the combinations of supported MHCs and peptide lengths.
 }
 \description{
-Supported MHC Molecules and Peptide Lengths.
+Supported MHC Molecules and Peptide Lengths
 }
 \examples{
 ## Which MHC molecules are supported?
-names( supportedMHCs() )
+levels( supportedMHCs()$mhc )
 ## Which peptide lengths are supported for HLA-A02:01?
-supportedMHCs()[["HLA-A02:01"]]
+with( supportedMHCs(), l[mhc=="HLA-A-02:01"] )
 }
 
