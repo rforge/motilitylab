@@ -14,7 +14,8 @@
 #'
 #' @export
 supportedMHCs <- function( l=NULL ){
-	r <- read.table( system.file( "extdata", "model_list.txt", package="PeptideMHC" ),
+	print( getPackageName() )
+	r <- read.table( system.file( "extdata", "model_list.txt", package=getPackageName() ),
 		as.is=TRUE )$V1
 	mhcname <- gsub( '-[0-9][0-9]?$', '', r )
 	mhcname <- gsub( '-([0-9][0-9])([0-9][0-9])', '-\\1:\\2', mhcname )
@@ -65,7 +66,7 @@ smmMatrix <- function( mhc="HLA-A-02:01", l=9 ){
 		)
 	}
 	matrixfile <- system.file( "extdata", paste(matrixname,".txt",sep=""), 
-		package="PeptideMHC" )
+		package=getPackageName() )
 	if( matrixfile == "" ){
 		stop( paste( "SMM matrix for MHC",mhc,"and peptide length",l,"not found!") )
 	} else {
@@ -141,7 +142,7 @@ binders <- function( x, mhc="HLA-A-02:01", l=9, ic50.threshold=500,
 #'
 #' Predicts peptide-MHC binding using the stabilized matrix method (SMM) 
 #' algorithm with a specifically constructed amino acid substitution matrix. 
-#' See \code{citation(package='PeptideMHC')} for the reference.
+#' See \code{citation(package='EpitopePrediction')} for the reference.
 #'
 #' @param x vector of strings containing the peptides for which to predict MHC
 #' binding.

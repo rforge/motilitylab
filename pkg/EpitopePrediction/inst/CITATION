@@ -1,4 +1,4 @@
-citHeader("To cite PeptideMHC in publications use:")
+citHeader("To cite EpitopePrediction in publications use:")
 
 citEntry(entry = "Article",
   title        = "Derivation of an amino acid similarity matrix for peptide:{MHC} binding and its application as a {B}ayesian prior",

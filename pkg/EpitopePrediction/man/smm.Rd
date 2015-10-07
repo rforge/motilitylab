@@ -21,7 +21,7 @@ base10-logarithm.}
 \description{
 Predicts peptide-MHC binding using the stabilized matrix method (SMM)
 algorithm with a specifically constructed amino acid substitution matrix.
-See \code{citation(package='PeptideMHC')} for the reference.
+See \code{citation(package='EpitopePrediction')} for the reference.
 }
 \examples{
 ## Predict IC50 binding values for two famous peptides

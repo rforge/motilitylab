@@ -1,8 +1,7 @@
-Package: PeptideMHC
+Package: EpitopePrediction
 Type: Package
-Title: Methods to predict the binding strength of peptides to major histocompatibility
-	complex (MHC) molecules
-Version: 0.1.1
+Title: Predict Binding Between Peptides and MHC Molecules
+Version: 0.1.2
 Date: 2015-10-06
 Author: Johannes Textor
 Maintainer: Johannes Textor <johannes.textor@gmx.de>
