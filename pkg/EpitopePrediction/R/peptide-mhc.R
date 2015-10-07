@@ -1,3 +1,9 @@
+#' @importFrom methods getPackageName
+#' @importFrom grDevices rainbow
+#' @importFrom graphics axis barplot strheight text
+#' @importFrom stats quantile var
+#' @importFrom utils read.table tail
+NULL
 
 .smm.cache <- new.env()
 
