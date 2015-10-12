@@ -10,7 +10,7 @@ Description: Predicts binding of 9- to 12-mer peptides to MHC class I molecules 
 	(HLA A/B), mice (H-2), chimpanzees (Patr A/B), and rhesus macaques (Mamu A/B).
 VignetteBuilder: knitr
 LazyData: true
-License: GPL-2
+License: CC BY-NC-SA 4.0
 Imports:
     methods
 Suggests:
