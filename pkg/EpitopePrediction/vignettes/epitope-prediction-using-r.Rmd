@@ -1,5 +1,5 @@
 ---
-title: "Peptide-MHC Binding Predictions Using R"
+title: "Epitope Prediction Using R"
 author: "Johannes Textor"
 date: "`r Sys.Date()`"
 vignette: >
@@ -13,12 +13,12 @@ output:
 
 ```{r, echo = FALSE, message = FALSE}
 knitr::opts_chunk$set(comment = "")
-library(EpitopePrediction)
 ```
 
-## About this package
+## Epitope Prediction Using R
 
-This package implements the stabilized matrix method (SMM), developed by Kim, Peters and 
+The package `EpitopePrediction` implements the stabilized matrix method (SMM), 
+developed by Kim, Peters and 
 colleagues [@kim09], to predict the binding strength between peptides and major 
 histocompatibility
 complex (MHC) class I molecules. This is an essential step in vaccine design and is also
@@ -29,6 +29,12 @@ than other methods like NetMHCpan. Future versions of this package may implement
 binding prediction methods.
 
 ## Getting started
+
+As usual, load the package first.
+
+```{r}
+library(EpitopePrediction)
+```
 
 To predict which 9-mers from the CORE protein of the hepatitis C virus would bind to the
 HLA-A-02:01 molecule, we can use:
