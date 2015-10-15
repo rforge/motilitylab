@@ -2,7 +2,7 @@
 % Please edit documentation in R/dagitty.r
 \name{names.dagitty}
 \alias{names.dagitty}
-\title{Get Names of All Variables}
+\title{Names of Variables in Graph}
 \usage{
 \method{names}{dagitty}(x)
 }
@@ -10,6 +10,16 @@
 \item{x}{the input graph.}
 }
 \description{
-Get Names of All Variables
+Names of Variables in Graph
+}
+\examples{
+## A "DAG" with Greek and Portuguese variable names. These are input using
+## URL-encoding.
+g <- dagitty( "graph {
+  \%CE\%BA\%CE\%B1\%CF\%81\%CE\%B4\%CE\%AF\%CE\%B1 [pos=\\"0.297,0.502\\"]
+  cora\%C3\%A7\%C3\%A3o [pos=\\"0.482,0.387\\"]
+  \%CE\%BA\%CE\%B1\%CF\%81\%CE\%B4\%CE\%AF\%CE\%B1 -> cora\%C3\%A7\%C3\%A3o
+}" )
+names( g )
 }
 

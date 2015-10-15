@@ -43,11 +43,31 @@ var DagittyR = {
 		return r
 	},
 	
+	edge2r : function( g ){
+		'use strict'
+		var r = { v : [], w : [], e : [], x : [], y : [] }, j=1, rk
+		_.each(g.edges, function( e ){
+			r.v.push( e.v1.id )
+			r.w.push( e.v2.id )
+			r.x.push( e.layout_pos_x )
+			r.y.push( e.layout_pos_y )
+			switch( e.directed ){
+			case Graph.Edgetype.Directed :
+				r.e.push("->"); break
+			case Graph.Edgetype.Undirected :
+				r.e.push("--"); break
+			case Graph.Edgetype.Bidirected :
+				r.e.push("<->"); break
+			}
+		} )
+		return r
+	},
+	
 	findExample : function( s ){
 		'use strict'
 		for( var i = 0 ; i < examples.length ; i++ ){
 			if( examples[i].l.toLowerCase().indexOf(s.toLowerCase()) >= 0 ){
-				return GraphParser.parseGuess(examples[i].e,examples[i].v).toDot()
+				return GraphParser.parseGuess(examples[i].e,examples[i].v).toString()
 			}
 		}
 	}

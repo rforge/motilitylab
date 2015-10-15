@@ -2,10 +2,10 @@
  * both directed, undirected, and bidirected edges. 
  *	 
  * TODO: there are still some algorithmic methods in this class, these should
- * be moved to either GraphAnalyzer or GraphTransform in the future.
+ * be moved to either GraphAnalyzer, GraphTransform or GraphSerializer in the future.
  */
 
-/* globals _, Class, Hash */
+/* globals _, Class, Hash, GraphSerializer */
 
 var Graph = Class.extend({ 
 	// additional getter and setter methods for these properties are mixed in below,
@@ -37,7 +37,7 @@ var Graph = Class.extend({
 		if( vv ){
 			this.managed_vertex_properties[p].set( vv.id, vv )
 		}
-		return this;
+		return this
 	},
 	removeVertexProperty : function( v, p ){
 		var vv = this.getVertex( v )
@@ -57,15 +57,14 @@ var Graph = Class.extend({
 	copyAllVertexPropertiesTo : function( g2 ){
 		var g = this
 		_.each( g.managed_vertex_property_names, ( function( p ){
-			_.each( 
-			g.getVerticesWithProperty( p ), function( v ){
+			_.each( g.getVerticesWithProperty( p ), function( v ){
 					g2.addVertexProperty( v, p ) 
-				} )
-		} ) );
+			} )
+		} ) )
 	},
 	
 	getVertex : function( v ){
-		if( typeof v === 'string' ){
+		if( typeof v === "string" ){
 			return this.vertices.get(v)
 		} else if( v instanceof Graph.Vertex ){
 			return this.vertices.get(v.id)
@@ -91,15 +90,15 @@ var Graph = Class.extend({
 			var pcamel = p.substring(0,1).toUpperCase()+
 				p.substring(1,p.length)
 			if( this["is"+pcamel]( v ) ){
-				properties.push(pcamel);
-				this["remove"+pcamel]( v );
+				properties.push(pcamel)
+				this["remove"+pcamel]( v )
 			}
 		},this)
 		this.vertices.unset( id_old )
 		v.id = id_new
 		this.vertices.set( v.id, v )
 		_.each( properties, function(p){ this["add"+p](v) },this )
-		return this;
+		return this
 	},
 	
 	deleteVertex : function( v ){
@@ -107,14 +106,14 @@ var Graph = Class.extend({
 		v = this.getVertex( v )
 		_.each( ["adjacentUndirectedEdges", "adjacentBidirectedEdges"],
 			function( edgelist ){
-			_.each( v[edgelist], function( e ) {
-				if( e.v1 === v ){
-					e.v2[edgelist] = _.without(e.v2[edgelist], e )
-				} else {
-					e.v1[edgelist] = _.without(e.v1[edgelist], e )             
-				}
-			} );
-		} )
+				_.each( v[edgelist], function( e ) {
+					if( e.v1 === v ){
+						e.v2[edgelist] = _.without(e.v2[edgelist], e )
+					} else {
+						e.v1[edgelist] = _.without(e.v1[edgelist], e )
+					}
+				} )
+			} )
 		
 		_.each( v.outgoingEdges, function( e ) {
 			e.v2.incomingEdges = _.without(e.v2.incomingEdges, e )
@@ -131,13 +130,13 @@ var Graph = Class.extend({
 		
 		// remove the vertex from all property lists
 		_.each( this.managed_vertex_property_names, function(p){
-			var pcamel = p.substring(0,1).toUpperCase()+p.substring(1,p.length);
+			var pcamel = p.substring(0,1).toUpperCase()+p.substring(1,p.length)
 			this["remove"+pcamel]( v )
 		},this)
 		
 		// then remove the vertex itself
 		this.vertices.unset( v.id )
-		return this;
+		return this
 	},
 	
 	clone : function(){
@@ -149,7 +148,7 @@ var Graph = Class.extend({
 			g2.addEdge( e.v1.id, e.v2.id, e.directed )
 		} )
 		this.copyAllVertexPropertiesTo(g2)
-		return g2;
+		return g2
 	},
 	
 	/** 
@@ -184,7 +183,7 @@ var Graph = Class.extend({
 	},
 	
 	transitiveClosureOf : function( vertex_array, kinship_function, clear_visited_function ){
-		'use strict'
+		"use strict"
 		if( clear_visited_function ){
 			clear_visited_function()
 		} else {
@@ -251,15 +250,15 @@ var Graph = Class.extend({
 		var vh = new Hash()
 		_.each( vertex_array, function(v){
 			vh.set( v.id, v )
-		} );
+		})
 		var rh = new Hash()
 		_.each( vertex_array, function(v){
 			_.each( v.getNeighbours(), function(w){
 				if( !vh.get( w.id ) ){
 					rh.set(w.id,w)
 				}
-			});
-		});
+			})
+		})
 		return rh.values()
 	},    
 	
@@ -282,52 +281,52 @@ var Graph = Class.extend({
 		var v
 		if( !root ) return; 
 						// calculate the depth of all nodes in the tree 
-		var q = [root];
+		var q = [root]
 		_.each( this.vertices.values(), function(v){
 			v.traversal_info.depth = 0;
 		});
 		root.traversal_info.parent = null;        
-		var max_depth = 0;
+		var max_depth = 0
 		while( q.length > 0 ){
 			v = q.pop();
 			var children = _.reject( v.getNeighbours(), 
-			function(v2){ return (v2 === root) || (v2.traversal_info.depth > 0) });
+			function(v2){ return (v2 === root) || (v2.traversal_info.depth > 0) })
 			_.each( children, function(v2){
 				v2.traversal_info.depth = v.traversal_info.depth + 1;
 				if(  Graph.Vertex.isVisited(v2) && 
 					v2.traversal_info.depth > max_depth ){
-					max_depth = v2.traversal_info.depth;
-					}
-					v2.traversal_info.parent = v;
-				q.push(v2);
+					max_depth = v2.traversal_info.depth
+				}
+				v2.traversal_info.parent = v
+				q.push(v2)
 			});
 		}
 		// layer the tree
-		var tokens = new Array( max_depth + 1 );
+		var tokens = new Array( max_depth + 1 )
 		for( var i = 0 ; i <= max_depth ; i ++ ){
-			tokens[i] = [];
+			tokens[i] = []
 		}
 		var nr_tokens = 0;
 		_.chain(this.vertices.values()).filter(Graph.Vertex.isVisited).each(function(v){
-			tokens[v.traversal_info.depth].push(v);
-			nr_tokens ++;
+			tokens[v.traversal_info.depth].push(v)
+			nr_tokens ++
 		});
 		while( nr_tokens > 1 ){
 			v = tokens[max_depth].pop();
 			if( v.traversal_info.parent && !Graph.Vertex.isVisited( v.traversal_info.parent ) ){
-				Graph.Vertex.markAsVisited( v.traversal_info.parent );
-				tokens[max_depth-1].push( v.traversal_info.parent );
+				Graph.Vertex.markAsVisited( v.traversal_info.parent )
+				tokens[max_depth-1].push( v.traversal_info.parent )
 			} else {
-				nr_tokens --;
+				nr_tokens --
 			}
 			while( (nr_tokens > 0) && (tokens[max_depth].length == 0) ){
-				max_depth --; 
+				max_depth --
 			}
 		}
 	},
 	
 	getEdges : function(){
-		return this.edges;
+		return this.edges
 	},
 	
 	getEdge : function( v1, v2, edgetype ){
@@ -338,15 +337,15 @@ var Graph = Class.extend({
 		}
 		if( !(v1 && v2) ){ return undefined; }
 		switch( edgetype ){
-			case Graph.Edgetype.Undirected :
-				return _.find( v1.adjacentUndirectedEdges, function( e ){
-					return e.v2.id === v2.id || e.v1.id == v2.id } )
-			case Graph.Edgetype.Directed :
-				return _.find( v1.outgoingEdges, function( e ){
-					return e.v2.id === v2.id } )
-			case Graph.Edgetype.Bidirected :
-				return _.find( v1.adjacentBidirectedEdges, function( e ){
-					return ( e.v2.id === v2.id || e.v1.id === v2.id ) } )
+		case Graph.Edgetype.Undirected :
+			return _.find( v1.adjacentUndirectedEdges, function( e ){
+				return e.v2.id === v2.id || e.v1.id == v2.id } )
+		case Graph.Edgetype.Directed :
+			return _.find( v1.outgoingEdges, function( e ){
+				return e.v2.id === v2.id } )
+		case Graph.Edgetype.Bidirected :
+			return _.find( v1.adjacentBidirectedEdges, function( e ){
+				return ( e.v2.id === v2.id || e.v1.id === v2.id ) } )
 		}
 		return undefined
 	},
@@ -360,21 +359,21 @@ var Graph = Class.extend({
 		var e = this.getEdge( v1, v2, edgetype )
 		if( e === undefined ){
 			switch( edgetype ){
-				case Graph.Edgetype.Undirected :
-					e = new Graph.Edge.Undirected({v1:v1,v2:v2})
-					e.v1.adjacentUndirectedEdges.push( e )
-					e.v2.adjacentUndirectedEdges.push( e )
-					break
-				case Graph.Edgetype.Directed :
-					e = new Graph.Edge.Directed({v1:v1,v2:v2})
-					e.v1.outgoingEdges.push( e )
-					e.v2.incomingEdges.push( e )
-					break
-				case Graph.Edgetype.Bidirected :
-					e = new Graph.Edge.Bidirected({v1:v1,v2:v2})
-					e.v1.adjacentBidirectedEdges.push( e )
-					e.v2.adjacentBidirectedEdges.push( e )
-					break
+			case Graph.Edgetype.Undirected :
+				e = new Graph.Edge.Undirected({v1:v1,v2:v2})
+				e.v1.adjacentUndirectedEdges.push( e )
+				e.v2.adjacentUndirectedEdges.push( e )
+				break
+			case Graph.Edgetype.Directed :
+				e = new Graph.Edge.Directed({v1:v1,v2:v2})
+				e.v1.outgoingEdges.push( e )
+				e.v2.incomingEdges.push( e )
+				break
+			case Graph.Edgetype.Bidirected :
+				e = new Graph.Edge.Bidirected({v1:v1,v2:v2})
+				e.v1.adjacentBidirectedEdges.push( e )
+				e.v2.adjacentBidirectedEdges.push( e )
+				break
 			}
 			this.edges.push( e )
 		} 
@@ -389,18 +388,18 @@ var Graph = Class.extend({
 			return false
 		}
 		switch( edgetype ){
-			case Graph.Edgetype.Undirected:
-				e.v1.adjacentUndirectedEdges = _.without( e.v1.adjacentUndirectedEdges, e )
-				e.v2.adjacentUndirectedEdges = _.without( e.v2.adjacentUndirectedEdges, e )
-				break
-			case Graph.Edgetype.Directed:
-				e.v1.outgoingEdges = _.without( e.v1.outgoingEdges, e )
-				e.v2.incomingEdges = _.without( e.v2.incomingEdges, e )
-				break
-			case Graph.Edgetype.Bidirected:
-				e.v1.adjacentBidirectedEdges = _.without( e.v1.adjacentBidirectedEdges, e )
-				e.v2.adjacentBidirectedEdges = _.without( e.v2.adjacentBidirectedEdges, e )
-				break
+		case Graph.Edgetype.Undirected:
+			e.v1.adjacentUndirectedEdges = _.without( e.v1.adjacentUndirectedEdges, e )
+			e.v2.adjacentUndirectedEdges = _.without( e.v2.adjacentUndirectedEdges, e )
+			break
+		case Graph.Edgetype.Directed:
+			e.v1.outgoingEdges = _.without( e.v1.outgoingEdges, e )
+			e.v2.incomingEdges = _.without( e.v2.incomingEdges, e )
+			break
+		case Graph.Edgetype.Bidirected:
+			e.v1.adjacentBidirectedEdges = _.without( e.v1.adjacentBidirectedEdges, e )
+			e.v2.adjacentBidirectedEdges = _.without( e.v2.adjacentBidirectedEdges, e )
+			break
 		}
 		this.edges = _.without( this.edges, e )
 		return true
@@ -436,19 +435,19 @@ var Graph = Class.extend({
 		for( var i = 0 ; i < children.length ; i ++ ){
 			var pp = this.searchCycleFrom( children[i], p.concat(v.id) )
 			if( pp !== undefined ){
-				return pp;
+				return pp
 			}
 		}
-		Graph.Vertex.markAsNotVisited( v );
-		return undefined;
+		Graph.Vertex.markAsNotVisited( v )
+		return undefined
 	},
 	
 	toAdjacencyList: function(){
-		var ra = [];
-		var g = this;
+		var ra = []
+		var g = this
 		_.each( g.vertices.values(), function( v ){
 			var children = v.getChildren()
-			var r = "",rc = [];
+			var r = "",rc = []
 			if( children.length + v.adjacentBidirectedEdges.length
 				+ v.adjacentUndirectedEdges.length > 0 ){
 				_.each( 
@@ -457,7 +456,7 @@ var Graph = Class.extend({
 						r = encodeURIComponent(e.v2.id)
 						if( e.layout_pos_x ){
 							r += " @"+e.layout_pos_x.toFixed(3)+","
-							+e.layout_pos_y.toFixed(3);
+							+e.layout_pos_y.toFixed(3)
 						}
 					} else {
 						r = encodeURIComponent(e.v1.id)
@@ -470,88 +469,30 @@ var Graph = Class.extend({
 					r = encodeURIComponent(v2.id)
 					if( e.layout_pos_x ){
 						r += " @"+e.layout_pos_x.toFixed(3)+","
-						+e.layout_pos_y.toFixed(3);
+						+e.layout_pos_y.toFixed(3)
 					}
 					rc.push(r)
 				} )
-				_.each( 
-				v.adjacentBidirectedEdges, function( e ){
+				_.each( v.adjacentBidirectedEdges, function( e ){
 					if( e.v1.id === v.id ){
 						r = encodeURIComponent(e.v2.id)
 						if( e.layout_pos_x ){
 							r += " @"+e.layout_pos_x.toFixed(3)+","
-							+e.layout_pos_y.toFixed(3);
+							+e.layout_pos_y.toFixed(3)
 						}
 					} else {
 						r = encodeURIComponent(e.v1.id)
 					}
 					rc.push(r)
 				} )
-				}
-				if( rc.length > 0 ){
-					rc.sort();
-					ra.push(encodeURIComponent(v.id)+" "+rc.join(" "));
-				}
+			}
+			if( rc.length > 0 ){
+				rc.sort()
+				ra.push(encodeURIComponent(v.id)+" "+rc.join(" "))
+			}
 		} );
-		ra.sort();
-		return ra.join("\n");
-	},
-	
-	toDot : function(){
-		return "graph {\n" + this.toDotVertexStatements()+
-			this.toDotEdgeStatements()+"\n}\n"
-	},
-	
-	//TODO incorporate layout
-	toDotVertexStatements : function(){
-		var expandLabel = function( v, g ){
-			var properties = [], property_string = ""
-			g.isSource(v) && properties.push("exposure")
-			g.isTarget(v) && properties.push("outcome")
-			g.isAdjustedNode(v) && properties.push("adjusted")
-			g.isLatentNode(v) && properties.push("latent")
-			g.isSelectionNode(v) && properties.push("selected")
-			if( typeof v.layout_pos_x!== 'undefined'  ){
-				properties.push( 'pos="' + 
-					v.layout_pos_x.toFixed(3) + "," + 
-					v.layout_pos_y.toFixed(3) + '"' )
-			}
-			if( properties.length > 0 ){
-				property_string = " ["+properties.join(",")+"]"
-			}
-			return encodeURIComponent(v.id) + property_string
-		};
-		var r = "";
-		var g = this;
-		var ra = [];
-		_.each( 
-		this.vertices.values(), function( v ){
-			ra.push(expandLabel( v, g )+"\n");
-		} );
-		ra.sort();
-		return r + ra.join('');
-	},
-	
-	toDotEdgeStatements : function(){
-		var edgestat = [], es, eop
-		_.each(this.edges,function(e){
-			es = e.toString()
-			eop = []
-			if( e.layout_pos_x ){
-				eop.push('pos="' + 
-					e.layout_pos_x.toFixed(3) + "," + 
-					e.layout_pos_y.toFixed(3) + '"')
-			}
-			if( e.id ){
-				eop.push('label="' + encodeURIComponent( e.id ) + '"')
-			}
-			if( eop.length > 0 ){
-				es += " ["+eop.join(",")+"]"
-			}
-			edgestat.push( es )
-		})
-		edgestat.sort()
-		return edgestat.join("\n")
+		ra.sort()
+		return ra.join("\n")
 	},
 	
 	toVertexLabels: function(){
@@ -574,11 +515,11 @@ var Graph = Class.extend({
 			ra.push(expandLabel( v, g )+"\n");
 		} );
 		ra.sort();
-		return r + ra.join('');
+		return r + ra.join("");
 	},
 	
 	toString : function(){
-		return this.toDot()
+		return GraphSerializer.toDot( this )
 	},
 	
 	oldToString : function(){
@@ -630,40 +571,39 @@ var Graph = Class.extend({
 			return false;
 		}
 		if( arguments.length == 0 ){
-			return this.sourceConnectedToTarget( this.getSource(), this.getTarget() );
+			return this.sourceConnectedToTarget( this.getSource(), this.getTarget() )
 		} else if( arguments.length == 1 ){
-			var avoid_nodes = arguments[0];      
-			this.clearTraversalInfo();
+			var avoid_nodes = arguments[0]
+			this.clearTraversalInfo()
 			_.each( avoid_nodes, function(v){ 
-				this.getVertex(v) && (this.getVertex(v).traversal_info.visited = true);
+				this.getVertex(v) && (this.getVertex(v).traversal_info.visited = true)
 			}, this );
-			return this.sourceConnectedToTarget( this.getSource(), this.getTarget() );
-		}
-		else {
-			var s = arguments[0], t = arguments[1];
-			if( !s.traversal_info ){ this.clearTraversalInfo(); } 
+			return this.sourceConnectedToTarget( this.getSource(), this.getTarget() )
+		} else {
+			var s = arguments[0], t = arguments[1]
+			if( !s.traversal_info ){ this.clearTraversalInfo() } 
 			if( s == t ){
-				return true;
+				return true
 			}
 			s.traversal_info.visited = true;
 			if( s.getChildren().any( function( n ){
 				return !n.traversal_info.visited && !n.traversal_info.adjusted_for 
 				&& this.sourceConnectedToTarget( n, t ) }, this ) ){
-				return true;
-				}
-				s.traversal_info.visited = false;
-				return false;
+				return true
+			}
+			s.traversal_info.visited = false
+			return false
 		}
 	},
 	
 	listClosedPaths: function(){
 		var r
 		if( arguments.length == 0 ){
-			this.clearTraversalInfo();
-			if( !this.getSource() || !this.getTarget() ){ throw( "Source and/or target not set!" ); }
-			r = { paths : "", prefix: "", count:0, limit: 100 };
+			this.clearTraversalInfo()
+			if( !this.getSource() || !this.getTarget() ){ throw( "Source and/or target not set!" ) }
+			r = { paths : "", prefix: "", count:0, limit: 100 }
 			try{ 
-				this.listClosedPaths( this.getSource(), this.getTarget(), r, undefined, false );
+				this.listClosedPaths( this.getSource(), this.getTarget(), r, undefined, false )
 			} catch( e ){
 				r.paths += "..."
 			}
@@ -681,29 +621,29 @@ var Graph = Class.extend({
 			
 			if( s == t ){
 				if( contains_collider ){
-					r.paths = r.paths+r.prefix+s.id+"\n";
-					r.count ++;
+					r.paths = r.paths+r.prefix+s.id+"\n"
+					r.count ++
 					if( r.count > r.limit ){
-						throw( "Too many paths!" );
+						throw( "Too many paths!" )
 					}
 				}
-				return;            
+				return
 			}
 			
 			else {
-				s.traversal_info.visited = true;
-				var oldprefix = r.prefix;
-				r.prefix = oldprefix+s.id+"->";
+				s.traversal_info.visited = true
+				var oldprefix = r.prefix
+				r.prefix = oldprefix+s.id+"->"
 				_.each( s.getChildren(), function( n ){
-					this.listClosedPaths( n, t, r, false, contains_collider );
-				}, this );
+					this.listClosedPaths( n, t, r, false, contains_collider )
+				}, this )
 				r.prefix = oldprefix+s.id+"<-";
 				_.each( s.getParents(), function( n ){
-					this.listClosedPaths( n, t, r, true, contains_collider || (in_edge_inverted===false) );
-				}, this );
-				r.prefix = oldprefix;
-				s.traversal_info.visited = false;
-				return;
+					this.listClosedPaths( n, t, r, true, contains_collider || (in_edge_inverted===false) )
+				}, this )
+				r.prefix = oldprefix
+				s.traversal_info.visited = false
+				return
 			}
 		}
 	}
@@ -745,26 +685,26 @@ Graph.Vertex = Class.extend({
 			_.each( 
 			n.adjacentUndirectedEdges, function( e ){
 				r.push( e.v1 === n ? e.v2 : e.v1 )
-			} ); 
+			} )
 		}
 		else if( consider_bidirected_edges ){
 			_.each( 
 			n.adjacentBidirectedEdges, function( e ){
 				r.push( e.v1 === n ? e.v2 : e.v1 )
-			} ); 
+			} )
 		}
 		else if( !inverse_direction ){
 			_.each( 
 			n.outgoingEdges, function( e ){
-				r.push( e.v2 );
+				r.push( e.v2 )
 			} );
 		} else {
 			_.each( 
 			n.incomingEdges, function( e ){
-				r.push( e.v1 );
-			} );
+				r.push( e.v1 )
+			} )
 		}
-		return r;
+		return r
 	},
 	getChildrenAndNeighbours : function(){
 		return this.getNeighbours().concat(this.getChildren())
@@ -773,20 +713,20 @@ Graph.Vertex = Class.extend({
 		return this.getNeighbours().concat(this.getParents())
 	},
 	getNeighbours : function(){
-		return this.getKinship( false, true, false );
+		return this.getKinship( false, true, false )
 	},	
 	getSpouses : function(){
-		return this.getKinship( false, false, true );
+		return this.getKinship( false, false, true )
 	},
 	getChildren : function(){
-		return this.getKinship( false, false, false );
+		return this.getKinship( false, false, false )
 	},
 	getParents : function(){
-		return this.getKinship( true, false, false );
+		return this.getKinship( true, false, false )
 	},
 	cloneWithoutEdges : function(){
 		var r = new Graph.Vertex( this );
-		return r;
+		return r
 	}
 } );
 
@@ -812,8 +752,8 @@ Graph.Edge = Class.extend( {
 	toString : function(){
 		var edge_join = "->"
 		switch( this.directed ){
-			case 0: edge_join = "--"; break;
-			case 2: edge_join = "<->"; break;
+		case 0: edge_join = "--"; break
+		case 2: edge_join = "<->"; break
 		}
 		var v1id = this.v1.id
 		var v2id = this.v2.id
@@ -824,8 +764,8 @@ Graph.Edge = Class.extend( {
 			v2id = tmp
 		}
 		
-		return v1id.replace(edge_join,"["+edge_join+"]")+
-			" "+edge_join+" "+v2id.replace(edge_join,"["+edge_join+"]")
+		return encodeURIComponent(v1id).replace(edge_join,"["+edge_join+"]")+
+			" "+edge_join+" "+encodeURIComponent(v2id).replace(edge_join,"["+edge_join+"]")
 	}
 } );
 

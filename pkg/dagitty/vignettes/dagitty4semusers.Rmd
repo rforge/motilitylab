@@ -44,6 +44,10 @@ g2 <- dagitty( "graph {
 }")
 ```
 
+```{r}
+plot(layout(g1))
+```
+
 ## List testable implications of a structural equation model
 ```{r} 
 print( impliedConditionalIndependencies( g1 ) )

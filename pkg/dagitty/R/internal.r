@@ -1,6 +1,68 @@
 
 .dagitty.cache <- new.env()
 
+.crossprod <- function( vx, vy, wx, wy ) vx*wy-vy*wx
+
+.autoControlPoint <- function( x1, y1, x2, y2, asp, delta=.2 ){
+	mx <- (x1+x2)/2
+	my <- (y1+y2)/2
+	omy <- (x1-x2)*asp
+	omx <- (y2-y1)/asp
+	list(x=mx+delta*omx,y=my+delta*omy)
+}
+
+.arc <- function( x1, y1, x2, y2, xm, ym, col="gray", length=0.1, code=3 ){
+	x <- c(x1,xm,x2)
+	y <- c(y1,ym,y2)
+	res <- xspline(x, y, 1, draw=FALSE)
+	lines(res, col=col)
+	nr <- length(res$x)
+	if( code >= 3 ){
+		arrows(res$x[1], res$y[1], res$x[4], res$y[4], col=col, code = 1, length = length)
+	}
+	if( code >= 2 ){
+		arrows(res$x[nr-3], res$y[nr-3], res$x[nr], res$y[nr], col=col, code = 2, length = length)	
+	}
+}
+
+.lineSegIntersect <- function( px, py, p2x, p2y,
+	qx, qy, q2x, q2y ){
+	rx <- p2x-px; ry <- p2y-py
+	sx <- q2x-qx; sy <- q2y-qy
+	rxs <- .crossprod( rx, ry, sx, sy ) 
+	if( rxs == 0 ){
+		return( NULL )
+	}
+	t <- .crossprod( qx-px, qy-py, 
+		sx, sy ) / rxs
+	u <- .crossprod( qx-px, qy-py, 
+		rx, ry ) / rxs
+	if( u < 0 || u > 1 || t < 0 || t > 1 ){
+		return( NULL )
+	}
+	list( x=qx+u*sx, y=qy+u*sy )
+}
+
+# (p,q) are box coordinates
+# (a,b) are line segment coordinates
+.lineSegBoxIntersect <- function(
+	px, py, qx, qy, ax, ay, bx, by ){
+	c(
+	.lineSegIntersect( 
+		px, py, qx, py, 
+		ax, ay, bx, by ),
+	.lineSegIntersect( 
+		px, py, px, qy, 
+		ax, ay, bx, by ),
+	.lineSegIntersect( 
+		px, qy, qx, qy, 
+		ax, ay, bx, by ),
+	.lineSegIntersect( 
+		qx, py, qx, qy, 
+		ax, ay, bx, by )
+	)
+}
+
 .getJSContext <- function(){
 	if( !exists("ct",.dagitty.cache) ){
 		requireNamespace("V8",quietly=TRUE)
@@ -12,6 +74,8 @@
 		ct$source(system.file("js/GraphParser.js",package="dagitty"))
 		ct$source(system.file("js/GraphTransformer.js",package="dagitty"))
 		ct$source(system.file("js/GraphAnalyzer.js",package="dagitty"))
+		ct$source(system.file("js/GraphSerializer.js",package="dagitty"))
+		ct$source(system.file("js/GraphLayouter.js",package="dagitty"))
 		ct$source(system.file("js/RUtil.js",package="dagitty"))
 		ct$source(system.file("js/example-dags.js",package="dagitty"))
 		assign("ct",ct,.dagitty.cache)

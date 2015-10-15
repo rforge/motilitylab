@@ -221,9 +221,17 @@ c.tracks <- function(...) {
 #' necessary. The tracks' ids are retained in their position in the list, while
 #' the field \eqn{pos} will be unmaintained.
 read.tracks.csv <- function(file, id.column=1, time.column=2, 
-	pos.columns=c(3,4,5), scale.t=1, scale.pos=1, ...) {
-	data.raw <- read.csv(file, ...)
-	if( ncol(data.raw) < length(pos.columns)+2 ){
+	pos.columns=c(3,4,5), scale.t=1, scale.pos=1, 
+	header=TRUE, sep="", track.sep.blankline=FALSE, ...) {
+	if( track.sep.blankline ){
+		data.raw <- read.table(file, header=header, sep=sep,
+			blank.lines.skip = FALSE, ...)
+		is.blank <- apply( data.raw, 1, function(x) all( is.na(x) ) )
+		ids <- cumsum( is.blank )
+	} else {
+		data.raw <- read.table(file, header=header, sep=sep, ...)
+	}
+	if( ncol(data.raw) < length(pos.columns)+1+as.integer(!track.sep.blankline) ){
 		stop("CSV file does not contain enough columns! (Perhaps you need to specify 'sep')")
 	}
 	if( length(pos.columns) < 1 ){
@@ -235,6 +243,11 @@ read.tracks.csv <- function(file, id.column=1, time.column=2,
 			cx <- pos.columns[1]
 		}
 		pos.columns <- seq( cx, length(data.raw) )
+	}
+	if( track.sep.blankline ){
+		data.raw <- cbind( data.raw, ids )
+		data.raw <- data.raw[!is.blank,]
+		id.column <- ncol( data.raw )
 	}
 	cx <- as.character(c(id.column,time.column,pos.columns))
 	cxc <- match( cx, colnames(data.raw) )

@@ -51,7 +51,11 @@ getExample <- function( x ){
 		.jsassign( xv, x )
 		r <- ct$eval( paste0("DagittyR.findExample(global.",xv,")") )
 	}, finally={.deleteJSVar(xv)})
-	structure(r,class="dagitty")
+	if( r != "undefined" ){
+		structure(r,class="dagitty")
+	} else {
+		stop("Example ",x," could not be found!")
+	}
 }
 
 #' Change Status of Variables in Graph
@@ -89,7 +93,7 @@ setVariableStatus <- function( x, var.names, status ) {
 				.jseval( paste0( "global.",xv,".addTarget(",vv,")" ) )
 			}
 		}
-		r <- .jsget( paste0( xv,".toDot()" ) )
+		r <- .jsget( paste0( xv,".toString()" ) )
 	},finally={ 
 		.deleteJSVar(vv)
 		.deleteJSVar(xv)
@@ -107,7 +111,7 @@ canonicalGraph <- function( x ){
 		.jsassign( xv, as.character(x) )
 		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
 		.jsassign( xv, .jsp("GraphTransformer.canonicalGraph(global.",xv,")") )
-		r$g <- structure( .jsget( paste0(xv,".g.toDot()") ), class="dagitty" )
+		r$g <- structure( .jsget( paste0(xv,".g.toString()") ), class="dagitty" )
 		r$L <- .jsget( paste0(xv,".L") )
 		r$S <- .jsget( paste0(xv,".S") )
 	},finally={
@@ -178,9 +182,18 @@ outcomes <- function( x ){
 	.nodesWithProperty( x, "target" )
 }
 
-#' Get Names of All Variables
+#' Names of Variables in Graph
 #' @param x the input graph.
 #' @export
+#' @examples
+#' ## A "DAG" with Greek and Portuguese variable names. These are input using 
+#' ## URL-encoding.
+#' g <- dagitty( "graph {
+#'   %CE%BA%CE%B1%CF%81%CE%B4%CE%AF%CE%B1 [pos=\"0.297,0.502\"]
+#'   cora%C3%A7%C3%A3o [pos=\"0.482,0.387\"]
+#'   %CE%BA%CE%B1%CF%81%CE%B4%CE%AF%CE%B1 -> cora%C3%A7%C3%A3o
+#' }" )
+#' names( g )
 names.dagitty <- function( x ){
 	ct <- .getJSContext()
 	xv <- .getJSVar()
@@ -191,6 +204,215 @@ names.dagitty <- function( x ){
 		r <- .jsget(xv)},
 	finally={.deleteJSVar(xv)})
 	r
+}
+
+#' Plot Coordinates of Variables in Graph
+#'
+#' The DAGitty syntax allows specification of plot coordinates for each variable in a 
+#' graph. This function extracts these plot coordinates from the graph description in a
+#' \code{dagitty} object. Note that the coordinate system is undefined, typically one 
+#' needs to compute the bounding box before plotting the graph.
+#'
+#' @param x the input graph.
+#' @return A list with components \code{x} and \code{y}, giving relative coordinates 
+#' for each variable.
+#' 
+#' @examples
+#' ## Plot localization of each node in the Shier example
+#' plot( coordinates( getExample("Shrier") ) )
+#' @seealso
+#' Function \link{layout} for automtically generating layout coordinates, and function
+#' \link{plot.dagitty} for plotting graphs.
+#'
+#' @export
+coordinates <- function( x ){
+	ct <- .getJSContext()
+	xv <- .getJSVar()
+	yv <- .getJSVar()
+	tryCatch({
+		.jsassign( xv, as.character(x) )
+		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,").vertices.values()") )
+		.jsassign( yv, .jsp("_.pluck(global.",xv,",'id')") )
+		labels <- .jsget(yv)
+		.jsassign( yv, .jsp("_.pluck(global.",xv,",'layout_pos_x')") )
+		rx <- .jsget(yv)
+		.jsassign( yv, .jsp("_.pluck(global.",xv,",'layout_pos_y')") )
+		ry <- .jsget(yv)},
+	finally={
+		.deleteJSVar(xv)
+		.deleteJSVar(yv)
+	})
+	names(rx) <- labels
+	names(ry) <- labels
+	list( x=rx, y=ry )
+}
+
+#' Graph Edges
+#' 
+#' Extracts edge information from the input graph. 
+#'
+#' @param x the input graph.
+#' @return a data frame with the following variables:
+#' \itemize{
+#'  \item{v}{Name of the start node.}
+#'  \item{w}{Name of the end node. For symmetric edges (bidirected and undirected), the
+#'  order of start and end node is arbitrary.}
+#'  \item{e}{Type of edge. Can be one of \code{"->"}, \code{"<->"} and \code{"--"}}
+#'  \item{x}{X coordinate for a control point. If this is not \code{NA}, then the edge
+#'  is drawn as an \link{xspline} through the start point, this control point, and the 
+#'  end point. This is especially important for cases where there is more than one edge
+#'  between two variables (for instance, both a directed and a bidirected edge).}
+#'  \item{y}{Y coordinate for a control point.}
+#' }
+#'
+#' @examples
+#' ## Which kinds of edges are used in the Shrier example?
+#' levels( edges( getExample("Shrier") )$e )
+#' @export 
+edges <- function( x ){
+	xv <- .getJSVar()
+	tryCatch({
+		.jsassign( xv, as.character(x) )
+		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		.jsassign( xv, .jsp("DagittyR.edge2r(global.",xv,")") )
+		r <- .jsget(xv)
+	}, finally={.deleteJSVar(xv)})
+	as.data.frame(r)
+}
+
+#' Test for Graph Class
+#' 
+#' A function to check whether an object has class \code{dagitty}.
+#'
+#' @param x object to be tested.
+#' 
+#' @export
+is.dagitty <- function(x) inherits(x,"dagitty")
+
+#' Generate Graph Layout
+#'
+#' This function generates plot coordinates for each variable in a graph that does not
+#' have them already. To this end, the well-known \dQuote{Spring} layout algorithm is
+#' used. Note that this is a stochastic algorithm, so the generated layout will be 
+#' different every time (which also means that you can try several times until you find
+#' a decent layout).
+#' 
+#' @param x the input graph.
+#' @param method the layout method; currently, only \code{"spring"} is supported.
+#' @return the same graph as \code{x} but with layout coordinates added. 
+#' 
+#' @examples
+#' ## Generate a layout for the M-bias graph and plot it
+#' plot( layout( dagitty( "graph { X <- U1 -> M <- U2 -> Y } " ) ) )
+#'
+#' @export
+layout <- function( x, method="spring" ){
+	if( !(method %in% c("spring")) ){
+		stop("Layout method ",method," not supported!")
+	}
+	if( !is.dagitty( x ) ){
+		stop("Expecting a graph as input x!")
+	}
+	xv <- .getJSVar()
+	tryCatch({
+		.jsassign( xv, as.character(x) )
+		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		.jseval( paste0("(new GraphLayouter.Spring(global.",xv,")).layout()") )
+		.jsassign( xv, .jsp("global.",xv,".toString()") )
+		r <- .jsget(xv)
+	}, finally={.deleteJSVar(xv)})
+	structure( r, class="dagitty" )
+}
+
+#' Plotting Graph
+#'
+#' A simple plot method to quickly visualize a graph. This is intended mainly for 
+#' validation purposes and is not yet meant to become a full-fledged graph drawing
+#' function.
+#'
+#' @param x the input graph.
+#' @param ... not used.
+#'
+#' @export
+plot.dagitty <- function( x, ... ){	
+	if( !is.dagitty( x ) ){
+		stop("Expecting a graph as input x!")
+	}
+	coords <- coordinates( x )
+	labels <- names(coords$x)
+	plot.new()
+	par(new=TRUE,mar=rep(0,4))
+	wx <- sapply( paste0("mm",labels), 
+		function(s) strwidth(s,units="inches") )
+	wy <- sapply( paste0("\n",labels), 
+		function(s) strheight(s,units="inches") )
+	ppi.x <- dev.size("in")[1] / (max(coords$x)-min(coords$x))
+	ppi.y <- dev.size("in")[2] / (max(coords$y)-min(coords$y))
+	wx <- wx/ppi.x
+	wy <- wy/ppi.y
+	xlim <- c(min(coords$x-wx/2),max(coords$x+wx/2))
+	ylim <- c(-max(coords$y+wy/2),-min(coords$y-wy/2))
+	plot( NA, xlim=xlim, ylim=ylim, xlab="", ylab="", bty="n",
+		xaxt="n", yaxt="n" )
+	wx <- sapply( labels, 
+		function(s) strwidth(paste0("xx",s)) )
+	wy <- sapply( labels,
+		function(s) strheight(paste0("\n",s)) )
+	asp <- par("pin")[1]/diff(par("usr")[1:2]) /
+		(par("pin")[2]/diff(par("usr")[3:4]))
+	ex <- edges(x)
+	ax1 <- rep(0,nrow(ex))
+	ax2 <- rep(0,nrow(ex))
+	ay1 <- rep(0,nrow(ex))
+	ay2 <- rep(0,nrow(ex))
+	axc <- rep(0,nrow(ex))
+	ayc <- rep(0,nrow(ex))
+	acode <- rep(2,nrow(ex))
+	has.control.point <- rep(FALSE,nrow(ex))
+	for( i in seq_len(nrow(ex)) ){
+		if( ex[i,3] == "<->" ){
+			acode[i] <- 3
+			has.control.point[i] <- TRUE
+		}
+		if( ex[i,3] == "--" ){
+			acode[i] <- 0
+		}
+		l1 <- as.character(ex[i,1]); l2 <- as.character(ex[i,2])
+		x1 <- coords$x[l1]; y1 <- coords$y[l1]
+		x2 <- coords$x[l2]; y2 <- coords$y[l2]
+		if( is.na( ex[i,4] ) || is.na( ex[i,5] ) ){
+			cp <- .autoControlPoint( x1, y1, x2, y2, asp,
+				.2*as.integer( acode[i]==3 ) )
+		} else {
+			cp <- list(x=ex[i,4],y=ex[i,5])
+			has.control.point[i] <- TRUE
+		}
+		bi1 <- .lineSegBoxIntersect( x1-wx[l1]/2,y1-wy[l1]/2,
+			x1+wx[l1]/2,y1+wy[l1]/2, x1, y1, cp$x, cp$y )
+		bi2 <- .lineSegBoxIntersect( x2-wx[l2]/2,y2-wy[l2]/2,
+			x2+wx[l2]/2,y2+wy[l2]/2, cp$x, cp$y, x2, y2 )
+		if( length(bi1) == 2 ){
+			x1 <- bi1$x; y1 <- bi1$y
+		}
+		if( length(bi2) == 2 ){
+			x2 <- bi2$x; y2 <- bi2$y
+		}
+		ax1[i] <- x1; ax2[i] <- x2
+		ay1[i] <- y1; ay2[i] <- y2
+		axc[i] <- cp$x; ayc[i] <- cp$y
+	}
+	directed <- acode==2 & !has.control.point
+	undirected <- acode==0 & !has.control.point
+	arrows( ax1[directed], -ay1[directed], 
+		ax2[directed], -ay2[directed], length=0.1, col="gray" )
+	segments( ax1[undirected], -ay1[undirected], 
+		ax2[undirected], -ay2[undirected], col="gray" )
+	for( i in which( has.control.point ) ){
+		.arc( ax1[i], -ay1[i], 
+			ax2[i], -ay2[i], axc[i], -ayc[i], col="gray", 
+			code=acode[i], length=0.1 )
+	}
+	text( coords$x, -coords$y[labels], labels )
 }
 
 #' Find Adjustment Sets to Estimate Causal Effects
@@ -336,10 +558,27 @@ dagitty <- function(x){
 	xv <- .getJSVar()
 	tryCatch({
 		.jsassign( xv, as.character(x) )
-		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,").toDot()") )
+		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,").toString()") )
 		r <- structure( .jsget(xv), class="dagitty" )
 	}, finally={.deleteJSVar(xv)})
 	structure( r, class="dagitty" )
+}
+
+#' Load Graph drom dagitty.net
+#'
+#' @param x dagitty model URL
+#' @export
+downloadGraph <- function(x="dagitty.net/mz-Tuw9"){
+	if( !requireNamespace( "base64enc", quietly=TRUE ) ){
+		stop("This function requires the package 'base64enc'!")
+	}
+	id <- gsub( "dagitty\\.net\\/m(.*)$", "\\1", x )
+	r <- base64enc::base64decode(scan(paste0("http://dagitty.net/dags/load.php?id=",id),"character"))
+	if( base64enc::checkUTF8(r) ){
+		dagitty( rawToChar( r ) )
+	} else {
+		NULL
+	}
 }
 
 #' @export
