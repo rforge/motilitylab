@@ -2,14 +2,26 @@
 % Please edit documentation in R/dagitty.r
 \name{canonicalGraph}
 \alias{canonicalGraph}
-\title{Replace Bidirected Edges by Latent Variables}
+\title{Canonicalize an Ancestral Graph}
 \usage{
 canonicalGraph(x)
 }
 \arguments{
 \item{x}{the input graph.}
 }
+\value{
+A list containing the following components:
+\itemize{
+ \item{g}{The resulting graph.}
+ \item{L}{Names of newly inserted latent variables.}
+ \item{S}{Names of newly inserted selection variables.}
+}
+}
 \description{
-Replace Bidirected Edges by Latent Variables
+Takes an input ancestral graph (a graph with directed, bidirected and undirected
+edges) and converts it to a DAG by replacing every bidirected edge x <-> y with a
+substructure x <- L -> y, where L is a latent variable, and every undirected edge
+x -- y with a substructure x -> S <- y, where S is a selection variable. This function
+does not check whether the input is actually an ancestral graph.
 }
 

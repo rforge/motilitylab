@@ -17,9 +17,9 @@ a data frame with the following variables:
  order of start and end node is arbitrary.}
  \item{e}{Type of edge. Can be one of \code{"->"}, \code{"<->"} and \code{"--"}}
  \item{x}{X coordinate for a control point. If this is not \code{NA}, then the edge
- is drawn as an \link{xspline} through the start point, this control point, and the
- end point. This is especially important for cases where there is more than one edge
- between two variables (for instance, both a directed and a bidirected edge).}
+ is drawn as an \code{\link{xspline}} through the start point, this control point,
+ and the end point. This is especially important for cases where there is more than
+ one edge between two variables (for instance, both a directed and a bidirected edge).}
  \item{y}{Y coordinate for a control point.}
 }
 }

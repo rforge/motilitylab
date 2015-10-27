@@ -93,8 +93,8 @@ var GraphTransformer = {
 	
 	/***
 	 *		This is a slightly different version of Judea Pearl's BackDoor
-	 *		construction. Only such edges are deleted that are actually
-	 *		causal ancestors of some outcome. 
+	 *		construction. Only such edges are deleted that are the first edge of a 
+	 *      proper causal path.
 	 *
 	 *		Parameters X and Y are source and target vertex sets, respectively,
 	 *		and are optional.
@@ -103,41 +103,43 @@ var GraphTransformer = {
 	 *		two sources are deleted. --- THIS DOES NOT SEEM TO BE NECESSARY
 	 **/
 	backDoorGraph : function( g, X, Y ){
-		var gback = g.clone(), i, in_Y = []
+		var gback = g.clone(), i, in_X = [], in_Y = []
 		if( arguments.length == 1 ){
 			X = g.getSources()
 			Y = g.getTargets()
 		}
 		if( X.length == 0 || Y.length == 0 ){
-			return gback;
+			return gback
+		}
+		for( i = 0 ; i < X.length ; i ++ ){
+			in_X[ X[i].id ] = 1
 		}
 		for( i = 0 ; i < Y.length ; i ++ ){
 			in_Y[ Y[i].id ] = 1
 		}
-		g.clearTraversalInfo();
+		g.clearTraversalInfo()
 		
 		var visit = function( v ){
 			if( !v.traversal_info.visited ){
 				v.traversal_info.visited = true;
-				//*** TODO */
 				if( in_Y[ v.id ] ){
 					v.traversal_info.reaches_target = true;
 				} else {
-					var children = v.getChildren();
-					_.each( children, visit );
+					var children = _.reject(v.getChildren(),function(v){return in_X[v.id]})
+					_.each( children, visit )
 					v.traversal_info.reaches_target = _.chain(children)
 						.pluck('traversal_info')
 						.pluck('reaches_target')
-						.some().value();
+						.some().value()
 				}
 			}
 		};
 		
 		_.each( X, function(s){
-			visit( s );
+			visit( s )
 			_.each( s.getChildren(), function( c ){
-				if( /*g.isSource(c) ||*/ c.traversal_info.reaches_target ){
-					gback.deleteEdge( s, c, Graph.Edgetype.Directed );
+				if( c.traversal_info.reaches_target ){
+					gback.deleteEdge( s, c, Graph.Edgetype.Directed )
 				}
 			});
 		});
@@ -365,7 +367,7 @@ var GraphTransformer = {
 		
 		// To finish, add the vertices on biasing non-backdoor routes whose
 		// simple versions are causal paths.
-		var w_nodes = _.reject( GraphAnalyzer.properCausalPaths(g), // See Shpitser et al, UAI 2010
+		var w_nodes = _.reject( GraphAnalyzer.dpcp(g), // See Shpitser et al, UAI 2010
 			function(w){return !retain[w.id]} )
 		var paths_to_violators = g.ancestorsOf(GraphAnalyzer.
 			nodesThatViolateAdjustmentCriterionWithoutIntermediates(g))

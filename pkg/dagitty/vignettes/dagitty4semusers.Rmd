@@ -42,10 +42,8 @@ g2 <- dagitty( "graph {
 	X <- W1 -> Y
 	X <- W2 -> Y
 }")
-```
 
-```{r}
-plot(layout(g1))
+plot(graphLayout(g1))
 ```
 
 ## List testable implications of a structural equation model

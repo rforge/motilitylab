@@ -261,8 +261,7 @@ var GraphAnalyzer = {
 	listMsasTotalEffect : function( g, must, must_not ){
 		if(GraphAnalyzer.violatesAdjustmentCriterion(g)){ return [] }
 		var adjusted_nodes = g.getAdjustedNodes();
-		var latent_nodes = g.getLatentNodes().concat( 
-			g.descendantsOf( g.w_nodes() ) )
+		var latent_nodes = g.getLatentNodes().concat( this.dpcp(g) )
 		
 		var gam = GraphTransformer.moralGraph( 
 			GraphTransformer.ancestorGraph( 
@@ -277,10 +276,13 @@ var GraphAnalyzer = {
 	},
 	
 	listMsasDirectEffect : function( g, must, must_not ){
-		var dangerous_nodes = g.descendantsOf(_.filter(g.w_nodes(),g.isTarget,g))
-		if(_.some(dangerous_nodes,g.isAdjustedNode,g)){ return [] }
 		var adjusted_nodes = g.getAdjustedNodes()
-		var latent_nodes = g.getLatentNodes().concat( dangerous_nodes )
+		var de_y = g.descendantsOf( _.intersection( g.descendantsOf( g.getSources() ),
+			g.getTargets() ) )
+		if( _.intersection( de_y, adjusted_nodes ).length > 0 ){
+			return []
+		}
+		var latent_nodes = g.getLatentNodes().concat( de_y )
 		var gam =  GraphTransformer.moralGraph(
 			GraphTransformer.ancestorGraph(
 				GraphTransformer.indirectGraph(g) ) )
@@ -387,24 +389,71 @@ var GraphAnalyzer = {
 	},
 	
 	violatesAdjustmentCriterion : function( g ){
-		return _.some( g.descendantsOf( g.w_nodes() ), g.isAdjustedNode, g )
+		return _.some( this.dpcp(g), g.isAdjustedNode, g )
 	},
 
-	/** TODO remove g.w_nodes and use only this function */	
-	properCausalPaths : function(g){
-		return g.w_nodes()
+	/** 
+		Returns all nodes lying on proper causal paths including the nodes in X and Y.
+		
+		X and Y are optional, the exposures and outcomes defined in g are 
+		taken by default.
+	 */	
+	properCausalPaths : function( g, X, Y ){
+		var i, in_X = [], in_Y = [], visited = {}, reaches_target = {}, r = []
+		if( arguments.length == 1 ){
+			X = g.getSources()
+			Y = g.getTargets()
+		}
+		for( i = 0 ; i < X.length ; i ++ ){
+			in_X[ X[i].id ] = 1
+		}
+		for( i = 0 ; i < Y.length ; i ++ ){
+			in_Y[ Y[i].id ] = 1
+		}		
+		var visit = function( v ){
+			if( !visited[v.id] ){
+				visited[v.id] = true
+				if( in_Y[v.id] ){
+					r.push(v)
+					reaches_target[v.id] = true
+				} else {
+					var children = _.reject(v.getChildren(),function(v){return in_X[v.id]})
+					if( _.any( children.map( visit ) ) ){
+						r.push(v)
+						reaches_target[v.id] = true
+					} else {
+						reaches_target[v.id] = false
+					}
+				}
+			}
+			return reaches_target[v.id]
+		}
+		_.each( X, visit )
+		return r
+	},
+	
+	/*
+		descendants of nodes on proper causal paths, except X.
+	 */
+	dpcp : function( g, X, Y ){
+		if( arguments.length == 1 ){
+			X = g.getSources()
+			Y = g.getTargets()
+		}
+		return g.descendantsOf( _.difference( this.properCausalPaths( g, X, Y ), 
+			g.getSources() ) )
 	},
 	
 	nodesThatViolateAdjustmentCriterion : function( g ){
-		return _.intersection( g.descendantsOf( g.w_nodes() ), g.getAdjustedNodes() )
+		return _.intersection( this.dpcp(g), g.getAdjustedNodes() )
 	},
 	
 	nodesThatViolateAdjustmentCriterionWithoutIntermediates : function( g ){
 		var is_on_causal_path = [];
 		var set_causal =  function(v){ is_on_causal_path[v.id]=true }
-		_.each( g.nodesOnCausalPaths(), set_causal )
+		_.each( this.properCausalPaths(g), set_causal )
 		var is_violator = function(v){ return g.isAdjustedNode( v ) && !is_on_causal_path[v.id] }
-		return _.filter( g.descendantsOf( g.w_nodes() ), is_violator )
+		return _.filter( this.dpcp(g), is_violator )
 	},
 	
 	intermediates : function( g ){

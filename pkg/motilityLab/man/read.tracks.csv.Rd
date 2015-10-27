@@ -2,10 +2,11 @@
 % Please edit documentation in R/functions.R
 \name{read.tracks.csv}
 \alias{read.tracks.csv}
-\title{Read Tracks from CSV File}
+\title{Read Tracks from Text File}
 \usage{
 read.tracks.csv(file, id.column = 1, time.column = 2, pos.columns = c(3,
-  4, 5), scale.t = 1, scale.pos = 1, ...)
+  4, 5), scale.t = 1, scale.pos = 1, header = TRUE, sep = "",
+  track.sep.blankline = FALSE, ...)
 }
 \arguments{
 \item{file}{the name of the file which the data are to be read from, a
@@ -29,6 +30,18 @@ itself.}
 \item{scale.pos}{a value, or a vector of values, by which to multiply each spatial
 position. Useful for changing units.}
 
+\item{header}{a logical value indicating whether the file contains the
+names of the variables as its first line. See \code{\link[utils]{read.table}}.}
+
+\item{sep}{a character specifying how the colums of the data are separated.
+The default value \code{""} means columns are separated by tabs or other spaces.
+See \code{\link[utils]{read.table}}.}
+
+\item{track.sep.blankline}{logical. If set to \code{TRUE}, then tracks are expected
+to be separated by one or more blank lines in the input file instead of being
+designated by a track ID column. In this case, numerical track IDs are automatically
+generated.}
+
 \item{...}{Further arguments to be passed to \code{read.csv}, for instance
 \code{sep="\t"} can be useful for tab-separated files.}
 }
@@ -39,7 +52,8 @@ have a column \eqn{t}, followed by one column for each of the input track's
 coordinates.
 }
 \description{
-Reads cell tracks from a CSV file. Data are expected to be organized as follows.
+Reads cell tracks from a CSV or other text file. Data are expected to be organized as
+follows.
 One column contains a track identifier, which can be numeric or a string, and
 determines which points belong to the same track.
 Another column is expected to contain a time index or a time period (e.g. number of

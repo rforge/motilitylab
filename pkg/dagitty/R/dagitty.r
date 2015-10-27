@@ -101,25 +101,6 @@ setVariableStatus <- function( x, var.names, status ) {
 	structure(r,class="dagitty")
 }
 
-#' Replace Bidirected Edges by Latent Variables
-#' @param x the input graph.
-#' @export
-canonicalGraph <- function( x ){
-	xv <- .getJSVar()
-	r <- list()
-	tryCatch({
-		.jsassign( xv, as.character(x) )
-		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
-		.jsassign( xv, .jsp("GraphTransformer.canonicalGraph(global.",xv,")") )
-		r$g <- structure( .jsget( paste0(xv,".g.toString()") ), class="dagitty" )
-		r$L <- .jsget( paste0(xv,".L") )
-		r$S <- .jsget( paste0(xv,".S") )
-	},finally={
-		.deleteJSVar(xv)
-	})
-	r	
-}
-
 #' Get Graphical Descendants
 #'
 #' Finds all variables that are reachable from \eqn{v} via a directed path. By definition,
@@ -214,14 +195,27 @@ names.dagitty <- function( x ){
 #' needs to compute the bounding box before plotting the graph.
 #'
 #' @param x the input graph.
-#' @return A list with components \code{x} and \code{y}, giving relative coordinates 
-#' for each variable.
+#' @param value a list with components \code{x} and \code{y}, 
+#' giving relative coordinates for each variable. This format is suitable 
+#' for \code{\link{xy.coords}}.
 #' 
 #' @examples
-#' ## Plot localization of each node in the Shier example
+#' ## Plot localization of each node in the Shrier example
 #' plot( coordinates( getExample("Shrier") ) )
+#' 
+#' ## Define a graph and set coordinates afterwards
+#' x <- dagitty('graph{
+#'     G <-> H <-> I <-> G
+#'     D <- B -> C -> I <- F <- B <- A
+#'     H <- E <- C -> G <- D
+#' }')
+#' coordinates( x ) <-
+#'     list( x=c(A=1, B=2, D=3, C=3, F=3, E=4, G=5, H=5, I=5),
+#'         y=c(A=0, B=0, D=1, C=0, F=-1, E=0, G=1, H=0, I=-1) )
+#' plot( x )
+#'
 #' @seealso
-#' Function \link{layout} for automtically generating layout coordinates, and function
+#' Function \link{graphLayout} for automtically generating layout coordinates, and function
 #' \link{plot.dagitty} for plotting graphs.
 #'
 #' @export
@@ -244,7 +238,70 @@ coordinates <- function( x ){
 	})
 	names(rx) <- labels
 	names(ry) <- labels
-	list( x=rx, y=ry )
+	list( x=rx, y=ry ) 
+}
+
+#' @rdname coordinates
+#' @export
+'coordinates<-' <- function( x, value ){
+	xv <- .getJSVar()
+	xv2 <- .getJSVar()
+	tryCatch({
+		.jsassign( xv, as.character(x) )
+		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		for( n in intersect( names(value$x), names(x) ) ){
+			.jsassign( xv2, as.character(n) )
+			.jseval(.jsp("global.",xv,".vertices.get(",xv2,").layout_pos_x=",
+				as.numeric(value$x[n])))
+			.jseval(.jsp("global.",xv,".vertices.get(",xv2,").layout_pos_y=",
+				as.numeric(value$y[n])))
+		}
+		.jsassign( xv, .jsp("global.",xv,".toString()") )
+		r <- .jsget( xv )
+	}, 
+	error=function(e) stop(e),
+	finally={.deleteJSVar(xv);.deleteJSVar(xv2)})
+	structure(r,class="dagitty")
+}
+
+#' Canonicalize an Ancestral Graph
+#'
+#' Takes an input ancestral graph (a graph with directed, bidirected and undirected
+#' edges) and converts it to a DAG by replacing every bidirected edge x <-> y with a 
+#' substructure x <- L -> y, where L is a latent variable, and every undirected edge
+#' x -- y with a substructure x -> S <- y, where S is a selection variable. This function
+#' does not check whether the input is actually an ancestral graph.
+#' 
+#' @param x the input graph.
+#' @return A list containing the following components:
+#' \itemize{
+#'  \item{g}{The resulting graph.}
+#'  \item{L}{Names of newly inserted latent variables.}
+#'  \item{S}{Names of newly inserted selection variables.}
+#' } 
+#' 
+#' @export
+canonicalGraph <- function( x ){
+	x <- as.dagitty(x)
+	xv <- .getJSVar()
+	xv2 <- .getJSVar()
+	r <- NULL
+	tryCatch({
+		.jsassign( xv, as.character(x) )
+		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		.jsassign( xv, .jsp("GraphTransformer.canonicalGraph(global.",xv,")") )
+		.jsassign( xv2, .jsp("global.",xv,".g.toString()") )
+		g <- .jsget( xv2 )
+		.jsassign( xv2, .jsp("global.",xv,".g.toString()") )
+		.jsassign( xv2, .jsp("_.pluck(",xv,".L,'id')") )
+		L <- .jsget( xv2 )
+		.jsassign( xv2, .jsp("_.pluck(",xv,".S,'id')") )
+		S <- .jsget( xv2 )	
+		r <- list( g=structure(g,class="dagitty"), L=L, S=S )
+	}, 
+	error=function(e) stop(e),
+	finally={.deleteJSVar(xv);.deleteJSVar(xv2)})
+	r
 }
 
 #' Graph Edges
@@ -259,9 +316,9 @@ coordinates <- function( x ){
 #'  order of start and end node is arbitrary.}
 #'  \item{e}{Type of edge. Can be one of \code{"->"}, \code{"<->"} and \code{"--"}}
 #'  \item{x}{X coordinate for a control point. If this is not \code{NA}, then the edge
-#'  is drawn as an \link{xspline} through the start point, this control point, and the 
-#'  end point. This is especially important for cases where there is more than one edge
-#'  between two variables (for instance, both a directed and a bidirected edge).}
+#'  is drawn as an \code{\link{xspline}} through the start point, this control point, 
+#'  and the end point. This is especially important for cases where there is more than
+#'  one edge between two variables (for instance, both a directed and a bidirected edge).}
 #'  \item{y}{Y coordinate for a control point.}
 #' }
 #'
@@ -303,10 +360,10 @@ is.dagitty <- function(x) inherits(x,"dagitty")
 #' 
 #' @examples
 #' ## Generate a layout for the M-bias graph and plot it
-#' plot( layout( dagitty( "graph { X <- U1 -> M <- U2 -> Y } " ) ) )
+#' plot( graphLayout( dagitty( "graph { X <- U1 -> M <- U2 -> Y } " ) ) )
 #'
 #' @export
-layout <- function( x, method="spring" ){
+graphLayout <- function( x, method="spring" ){
 	if( !(method %in% c("spring")) ){
 		stop("Layout method ",method," not supported!")
 	}
@@ -471,9 +528,9 @@ impliedConditionalIndependencies <- function( x, max.results=100 ){
 			.jsassign( xv, .jsp("GraphAnalyzer.listMinimalImplications(global.",xv,")"))
 		}
 		.jsassign( xv, .jsp("DagittyR.imp2r(global.",xv,")") )
-		r <- structure( .jsget(xv), class="dagitty.cis" )
+		r  <- structure( lapply( .jsget(xv), 
+				function(x) structure(x,class="dagitty.ci") ), class="dagitty.cis" )
 	},finally={.deleteJSVar(xv)})
-	
 	r
 }
 
@@ -525,10 +582,46 @@ vanishingTetrads <- function( x ){
 }
 
 #' Convert Lavaan Model to Dagitty Graph
+#'
+#' The \code{lavaan} package is a popular package for structural equation 
+#' modeling. To provide interoperability with lavaan, this function 
+#' converts models specified in lavaan syntax to dagitty graphs.
+#'
 #' @param x data frame, lavaan parameter table such as returned by 
 #' \code{\link[lavaan]{lavaanify}}.
+#' @param ... Not used.
+#'
+#' @examples
+#' if( require(lavaan) ){
+#' mdl <- lavaanify("
+#' X ~ C1 + C3
+#' M ~ X + C3
+#' Y ~ X + M + C3 + C5
+#' C1 ~ C2
+#' C3 ~ C2 + C4
+#' C5 ~ C4
+#' C1 ~~ C2 \n C1 ~~ C3 \n C1 ~~ C4 \n C1 ~~ C5
+#' C2 ~~ C3 \n C2 ~~ C4 \n C2 ~~ C5
+#' C3 ~~ C4 \n C3 ~~ C5",fixed.x=FALSE)
+#' plot( graphLayout( as.dagitty( mdl ) ) ) 
+#' }
 #' @export
-as.dagitty.data.frame <- function( x ){
+as.dagitty <- function( x, ... ) UseMethod("as.dagitty")
+
+#' @export
+as.dagitty.character <- function( x, ... ) dagitty( x )
+
+#' @export
+as.dagitty.default <- function( x, ... ){
+	if( class(x) == "dagitty" ){
+		x
+	} else {
+		stop("Cannot coerce object to class 'dagitty': ",x)
+	}
+}
+
+#' @export
+as.dagitty.data.frame <- function( x, ... ){
 	latents <- c()
 	arrows <- c()
 	for( i in seq_len( nrow(x) ) ){
@@ -543,10 +636,38 @@ as.dagitty.data.frame <- function( x ){
 			arrows <- c(arrows,paste(x$lhs[i]," <-> ",x$rhs[i]))
 		}
 	}
-	dagitty( paste("graph { ",
-		paste(latents,' [latent]',collapse="\n"),"\n",
+	if( length(latents) > 0 ){
+		latents <- paste(latents,' [latent]',collapse="\n")
+	} else {
+		latents <- ""
+	}
+	dagitty( paste("graph { ",latents,"\n",
 		paste(arrows,collapse="\n")," } ",collapse="\n") )
 }
+
+#' @export
+toString.dagitty <- function( x, format="dagitty", ... ){
+	x <- as.dagitty( x )
+	if( !format %in% c("dagitty","tikz","lavaan") ){
+		stop( "Unsupported export format: ", format )
+	}
+	r <- NULL
+	if( format == "dagitty" ){
+		r <- as.character( x )
+	} else if( format %in% c("lavaan","tikz") ){
+		xv <- .getJSVar()
+		tryCatch({
+			.jsassign( xv, as.character(x) )
+			.jsassign( xv, .jsp("GraphSerializer.to",
+				toupper(substring(format, 1,1)), substring(format, 2),
+				"(GraphParser.parseGuess(global.",xv,"))") )
+			r <- as.character( .jsget(xv) )
+		}, error=function(e){
+			stop( e )
+		},finally={.deleteJSVar(xv)})
+	}
+	r
+} 
 
 #' Parse Dagitty Graph
 #' @param x character, string describing a graphical model in dagitty syntax.
@@ -560,7 +681,9 @@ dagitty <- function(x){
 		.jsassign( xv, as.character(x) )
 		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,").toString()") )
 		r <- structure( .jsget(xv), class="dagitty" )
-	}, finally={.deleteJSVar(xv)})
+	}, error=function(e){
+		stop( e )
+	},finally={.deleteJSVar(xv)})
 	structure( r, class="dagitty" )
 }
 
@@ -604,12 +727,42 @@ print.dagitty.sets <- function( x, prefix="", ... ){
 }
 
 #' @export
+as.character.dagitty.ci <- function( x, ... ){
+	r <- paste0( x$X, " _||_ ", x$Y )
+	if( length( x$Z > 0 ) ){
+		r <- paste0( r, " | ", paste(x$Z,collapse=", ") )
+	}
+	r
+}
+
+#' @export
+print.dagitty.ci <- function( x, ... ){
+	cat( as.character( x ),"\n" )
+}
+
+#' @export
 print.dagitty.cis <- function( x, ... ){
-	for( i in x ){
-		cat( i$X, " _||_ ", i$Y )
-		if( length( i$Z > 0 ) ){
-			cat( " | ", paste(i$Z,collapse=", ") )
-		}
+	for( i in seq_along(x) ){
+		cat( as.character( x[[i]] ) )
 		cat("\n")
 	}
 }
+
+#' @export
+as.list.dagitty.cis <- function( x, ... ) structure( x, class="list" )
+
+#' @export
+`[.dagitty.cis` <- function(x,y) structure(as.list(x)[y],class="dagitty.cis")
+
+
+#' @export
+as.list.dagitty.sets <- function( x, ... ) structure( x, class="list" )
+
+#' @export
+`[.dagitty.sets` <- function(x,y) structure(as.list(x)[y],class="dagitty.sets")
+
+#' @export
+as.list.dagitty.ivs <- function( x, ... ) structure( x, class="list" )
+
+#' @export
+`[.dagitty.ivs` <- function(x,y) structure(as.list(x)[y],class="dagitty.ivs")

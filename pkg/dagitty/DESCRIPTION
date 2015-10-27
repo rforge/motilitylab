@@ -14,9 +14,10 @@ VignetteBuilder: knitr
 LazyData: true
 License: GPL-2
 URL: http://www.dagitty.net
-Depends:
+Imports:
   V8,
   jsonlite
 Suggests:
   knitr,
-  base64enc
+  base64enc,
+  lavaan

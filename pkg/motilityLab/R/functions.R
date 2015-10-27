@@ -169,9 +169,10 @@ c.tracks <- function(...) {
 }
 
 
-#' Read Tracks from CSV File
+#' Read Tracks from Text File
 #' 
-#' Reads cell tracks from a CSV file. Data are expected to be organized as follows.
+#' Reads cell tracks from a CSV or other text file. Data are expected to be organized as
+#' follows.
 #' One column contains a track identifier, which can be numeric or a string, and 
 #' determines which points belong to the same track. 
 #' Another column is expected to contain a time index or a time period (e.g. number of
@@ -205,6 +206,18 @@ c.tracks <- function(...) {
 #' @param scale.pos a value, or a vector of values, by which to multiply each spatial 
 #' position. Useful for changing units.
 #' 
+#' @param header a logical value indicating whether the file contains the
+#' names of the variables as its first line. See \code{\link[utils]{read.table}}.
+#'
+#' @param sep a character specifying how the colums of the data are separated. 
+#' The default value \code{""} means columns are separated by tabs or other spaces.  
+#' See \code{\link[utils]{read.table}}.
+#'
+#' @param track.sep.blankline logical. If set to \code{TRUE}, then tracks are expected
+#' to be separated by one or more blank lines in the input file instead of being 
+#' designated by a track ID column. In this case, numerical track IDs are automatically
+#' generated.
+#'
 #' @param ... Further arguments to be passed to \code{read.csv}, for instance 
 #' \code{sep="\t"} can be useful for tab-separated files.
 #' 
@@ -761,7 +774,7 @@ clusterTracks <- function(tracks, measures, scale=TRUE, ...) {
 #' corresponds to a "step-based analysis" (Beltman et al, 2009).
 #'
 #' @param max.overlap an integer controlling what to do with overlapping subtracks.
-#' account can overlap. A maximum overlap of \code{max(subtrack.length)} will imply
+#' A maximum overlap of \code{max(subtrack.length)} will imply
 #' that all subtracks are considered. For a maximum overlap of 0, only non-overlapping
 #' subtracks are considered. A negative overlap can be used to ensure that only subtracks
 #' a certain distance apart are considered. In general, for non-Brownian motion there will

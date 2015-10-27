@@ -50,7 +50,7 @@ lengths are considered. In particular, \code{subtrack.length=2}
 corresponds to a "step-based analysis" (Beltman et al, 2009).}
 
 \item{max.overlap}{an integer controlling what to do with overlapping subtracks.
-account can overlap. A maximum overlap of \code{max(subtrack.length)} will imply
+A maximum overlap of \code{max(subtrack.length)} will imply
 that all subtracks are considered. For a maximum overlap of 0, only non-overlapping
 subtracks are considered. A negative overlap can be used to ensure that only subtracks
 a certain distance apart are considered. In general, for non-Brownian motion there will

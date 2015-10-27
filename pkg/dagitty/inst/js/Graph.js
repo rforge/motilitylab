@@ -267,11 +267,6 @@ var Graph = Class.extend({
 			this.ancestorsOf( this.getTargets() ) )
 	},
 	
-	w_nodes : function(){
-		return _.difference( 
-			_.intersection( this.descendantsOf( this.getSources() ),
-				this.ancestorsOf( this.getTargets() ) ), this.getSources() )
-	},
 	/**
 	 *      Graph is assumed to be a tree (not a forest), only
 	 *      undirected edges are considered. */
