@@ -101,6 +101,69 @@ setVariableStatus <- function( x, var.names, status ) {
 	structure(r,class="dagitty")
 }
 
+#' Simulate Data from Structural Equation Model
+#'
+#' Interprets the input graph as a structural equation model, generates random path 
+#' coefficients, and simulates data from the model. This is just a dumb frontend to 
+#' lavaan's \code{\link[lavaan]{simulateData}} function and probably not very useful 
+#' except for quick validation purposes (e.g. checking that an implied vanishing 
+#' tetrad truly vanishes in simulated data). For more elaborate simulation studies, please
+#' use the lavaan package or similar facilities in other packages.
+#'
+#' @details Data are generated in the following manner. 
+#. Each directed arrow is assigned a path coefficient chosen uniformly
+#' at random from the interval given by \code{b.lower} and \code{b.upper} (inclusive; set
+#' both parameters to the same value for constant path coefficients). Each bidirected 
+#' arrow a <-> b is replaced by a substructure  a <- L -> b, where L is an exogenous latent
+#' variable. Path coefficients on such substructures are set to \code{sqrt(x)}, where 
+#' \code{x} is again chosen at random from the given interval; if \code{x} is negative,
+#' one path coefficient is set to \code{-sqrt(x)} and the other to \code{sqrt(x)}. All
+#' residual variances are set to \code{eps}.
+#' 
+#' @param x the input graph, which may contain directed and bidirected edges.
+#' @param N number of samples to generate.
+#' @param b.lower lower bound for path coefficients.
+#' @param b.upper upper bound for path coefficients.
+#' @param eps residual variance.
+#' 
+#' @return a data frame containing \code{N} values for each variable in \code{x}.
+#' 
+#' @examples
+#' ## Simulate data with pre-defined path coefficients of -.6
+#' if( require(lavaan) ){
+#'   g <- dagitty('graph{z <-> x -> y}')
+#'   x <- simulateSEM( g, -.6, -.6 )
+#'   coef(sem(toString(g,"lavaan"),x,fixed.x=FALSE))
+#' }
+#' 
+#' @export
+simulateSEM <- function( x, b.lower=-.6, b.upper=.6, eps=1, N=500 ){
+	if( !requireNamespace( "lavaan", quietly=TRUE ) ){
+		stop("This function requires the 'lavaan' package!")
+	}
+    vars <- names( x )
+    x <- canonicalGraph( x )
+    mdl <- lavaan::lavaanify( toString(x$g,"lavaan"), fixed.x=FALSE )
+    for( l in x$L ){
+    	b <- runif( 1, b.lower, b.upper )
+    	if( b < 0 ){
+    		b2 <- -sqrt( -b )
+    		b <- sqrt( -b )
+    	} else {
+    		b2 <- sqrt( b )
+    		b <- sqrt( b )
+    	}
+    	mdl$ustart[(mdl$op == "~") & (mdl$rhs == l)] <- c( b, b2 )
+    }
+    arrows <- which( (mdl$op == "~") & !(mdl$rhs %in% x$L) )
+    residvars <- which( mdl$op == "~~" )
+    mdl$ustart[arrows] <- runif( length(arrows), b.lower, b.upper )
+    mdl$ustart[residvars] <- eps
+    r <- lavaan::simulateData( mdl, sample.nobs=N ) 
+    r[,vars]
+}
+
+
 #' Get Graphical Descendants
 #'
 #' Finds all variables that are reachable from \eqn{v} via a directed path. By definition,
@@ -689,7 +752,7 @@ dagitty <- function(x){
 
 #' Load Graph drom dagitty.net
 #'
-#' @param x dagitty model URL
+#' @param x dagitty model URL.
 #' @export
 downloadGraph <- function(x="dagitty.net/mz-Tuw9"){
 	if( !requireNamespace( "base64enc", quietly=TRUE ) ){

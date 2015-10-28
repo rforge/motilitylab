@@ -7,7 +7,7 @@
 downloadGraph(x = "dagitty.net/mz-Tuw9")
 }
 \arguments{
-\item{x}{dagitty model URL}
+\item{x}{dagitty model URL.}
 }
 \description{
 Load Graph drom dagitty.net
