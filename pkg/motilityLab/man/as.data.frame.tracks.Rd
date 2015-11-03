@@ -4,7 +4,8 @@
 \alias{as.data.frame.tracks}
 \title{Convert Tracks to Data Frame}
 \usage{
-\method{as.data.frame}{tracks}(x, row.names = NULL, optional = FALSE, ...)
+\method{as.data.frame}{tracks}(x, row.names = NULL, optional = FALSE,
+  include.timepoint.column = FALSE, ...)
 }
 \arguments{
 \item{x}{the \code{tracks} object to be coerced to a data frame.}
@@ -15,6 +16,11 @@ data frame.  Missing values are not allowed.}
 \item{optional}{logical. Required for S3 consistency, but
 has no effect: column names are always assigned to the resulting
  data frame regardless of the setting of this option.}
+
+\item{include.timepoint.column}{logical. If set to \code{TRUE}, then the resulting
+dataframe will contain a column that consecutively numbers the positions according
+to their time. Note that this information is anyway implicitly present in the time
+information.}
 
 \item{...}{further arguments to be passed from or to other methods.}
 }

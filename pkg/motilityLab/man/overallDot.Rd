@@ -4,14 +4,19 @@
 \alias{overallDot}
 \title{Dot Product Between Steps at Track Endpoints}
 \usage{
-overallDot(x, limits = c(1, nrow(x)))
+overallDot(x, from = 1, to = nrow(x), xdiff = diff(x))
 }
 \arguments{
-\item{x}{the input track.}
+\item{x}{the input track. Must have at least 2 rows or an error is thrown.}
 
-\item{limits}{vector giving the first and last row of the track. Can be used to avoid
-extracting subtracks, which is exploited e.g. by
-\code{\link{aggregate.tracks}}.}
+\item{from}{index of first row of the track.}
+
+\item{to}{index of last row of the track.
+Both `from` and `to` can be vectors and are useful to avoid extracting subtracks,
+which is exploited by \code{\link{aggregate.tracks}}.}
+
+\item{xdiff}{row differences of x, should be pre-computed if this function is calleed
+repeatedly for subtracks of a long track.}
 }
 \value{
 The dot product.

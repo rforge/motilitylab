@@ -1,8 +1,8 @@
 Package: MotilityLab
 Type: Package
 Title: Quantitative Motion Analysis
-Version: 0.2-1
-Date: 2015-10-08
+Version: 0.2-3
+Date: 2015-11-01
 Author: Katharina Dannenberg, Jeffrey Berry, Johannes Textor
 Maintainer: Johannes Textor <johannes.textor@gmx.de>
 Description: Statistics to describe tracks of moving things (x-y-z-t data) such
@@ -17,4 +17,5 @@ Suggests:
   DescTools,
   pracma,
   scatterplot3d,
-  fractaldim
+  fractaldim,
+  ellipse

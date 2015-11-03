@@ -4,14 +4,16 @@
 \alias{displacement}
 \title{Track Displacement}
 \usage{
-displacement(x, limits = c(1, nrow(x)))
+displacement(x, from = 1, to = nrow(x))
 }
 \arguments{
 \item{x}{the track whose displacement is to be computed.}
 
-\item{limits}{Vector giving the first and last row of the track. Can be used to avoid
-extracting subtracks, which is exploited e.g. by
-\code{\link{aggregate.tracks}}.}
+\item{from}{index of first row of the track.}
+
+\item{to}{index of last row of the track.
+Both `from` and `to` can be vectors and are useful to avoid extracting subtracks,
+which is exploited by \code{\link{aggregate.tracks}}.}
 }
 \value{
 The track's displacement, a nonnegative number.

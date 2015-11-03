@@ -78,68 +78,70 @@ brownianTrack <- function(nsteps=100, dim=3, mean=0, sd=1) {
 
 beaucheminTrack <- function(sim.time=10,delta.t=1,p.persist=0.5,p.bias=0.9,
 	bias.dir=c(0,0,0),taxis.mode=1,t.free=2,v.free=18.8,t.pause=0.5){  
-  # Parameter checks
-  if(p.persist < 0 || p.persist > 1){
-    stop("p.persist must be a value between 0 and 1")
-  }
-  if(!(taxis.mode %in% 0:4)){
-    stop("taxis.mode can either be 1, 2, 3, or 0 for no taxis. ",
-    	"See documentation for details on which model you would like to use.")
-  }
-  if(p.bias < 0){
-    stop("p.bias must be a value greater than or equal to 0")
-  }
-  if(sim.time <= 0){
-    stop("sim.time has to be positive")
-  }
-  if(delta.t <= 0){
-    stop("delta.t must be a value larger than 0")
-  }
-  if(t.pause <= 0){
-    stop("t.pause must be a value larger than 0")
-  }
-  if(t.free <= 0){
-    stop("t.free must be a value larger than 0")
-  }
-  if(v.free <= 0){
-    stop("v.free must be a value larger than 0")
-  }
+	# Parameter checks
+	if(p.persist < 0 || p.persist > 1){
+		stop("p.persist must be a value between 0 and 1")
+	}
+	if(!(taxis.mode %in% seq(0,3))){
+		stop("taxis.mode can either be 1, 2, 3, or 0 for no taxis. ",
+			"See documentation for details on which model you would like to use.")
+	}
+	if(p.bias < 0){
+		stop("p.bias must be a value greater than or equal to 0")
+	}
+	if(sim.time <= 0){
+		stop("sim.time has to be positive")
+	}
+	if(delta.t <= 0){
+		stop("delta.t must be a value larger than 0")
+	}
+	if(t.pause <= 0){
+		stop("t.pause must be a value larger than 0")
+	}
+	if(t.free <= 0){
+		stop("t.free must be a value larger than 0")
+	}
+	if(v.free <= 0){
+		stop("v.free must be a value larger than 0")
+	}
 
-  # Initializing parameters 
-  if(any(bias.dir != 0)){
-	bias.dir <- bias.dir/sqrt(sum(bias.dir^2))
-  }
-  
-  rot.mat <- NULL
-  if(taxis.mode==2){
-  	# cache rotation matrix for topotaxis to avoid recomputing it frequently
-  	rot.mat <- .beaucheminRotationMatrix( c(1,0,0), bias.dir )
-  }
-  pos <- matrix(rep(0,4),1,4)
+	# Initializing parameters 
+	if(any(bias.dir != 0)){
+		bias.dir <- bias.dir/sqrt(sum(bias.dir^2))
+	}
 
-  n.steps <- ceiling( sim.time / (t.free+t.pause) ) + 1
+	rot.mat <- NULL
+	if(taxis.mode==2){
+		# cache rotation matrix for topotaxis to avoid recomputing it frequently
+		rot.mat <- .beaucheminRotationMatrix( c(1,0,0), bias.dir )
+	}
+	pos <- matrix(rep(0,4),1,4)
 
-  d <- .beaucheminPickNewDirection( NULL,p.bias,0,bias.dir,taxis.mode,
+	d <- .beaucheminPickNewDirection( NULL,p.bias,0,bias.dir,taxis.mode,
 			t.free,v.free,rot.mat )
-  p <- c(0,0,0)
-  t <- t.pause
-  for( i in seq_len(n.steps) ){
+	p <- c(0,0,0)
+	t <- t.pause
+	while( t <= sim.time+t.free+t.pause ){
+		pnew <- p+d[4]*d[-4]
+		tnew <- t+d[4]
+		pos <- rbind( pos, c(t,p), c(tnew,pnew) )
+		t <- tnew + t.pause
+		p <- pnew
+		d <- .beaucheminPickNewDirection( d,p.bias,0,bias.dir,taxis.mode,
+					t.free,v.free,rot.mat )
+	}
 	pnew <- p+d[4]*d[-4]
 	tnew <- t+d[4]
 	pos <- rbind( pos, c(t,p), c(tnew,pnew) )
-	t <- tnew + t.pause
-	p <- pnew
-	d <- .beaucheminPickNewDirection( d,p.bias,0,bias.dir,taxis.mode,
-				t.free,v.free,rot.mat )
-  }
-  
-  # interpolate track observations according to delta.t
-  t <- seq(0,sim.time,by=delta.t)+runif(1,max=t.free+t.pause)
-  pos.interpolated <- apply(pos[,-1],2,function(x) approx(pos[,1], x, xout=t)$y) 
-  pos <- cbind( t, pos.interpolated )
-  colnames(pos) <- c("t","x","y","z")
 
-  return(normalizeTrack(pos))
+	
+	# interpolate track observations according to delta.t
+	t <- seq(0,sim.time,by=delta.t)+runif(1,max=t.free+t.pause)
+	pos.interpolated <- apply(pos[,-1],2,function(x) approx(pos[,1], x, xout=t)$y) 
+	pos <- cbind( t, pos.interpolated )
+	colnames(pos) <- c("t","x","y","z")
+
+	return(normalizeTrack(pos))
 }
 
 

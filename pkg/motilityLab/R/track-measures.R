@@ -51,14 +51,16 @@ duration <- function(x) {
 #' Computes the Euclidean distance between the track's start and end points.
 #'
 #' @param x the track whose displacement is to be computed.
-#' @param limits Vector giving the first and last row of the track. Can be used to avoid
-#' extracting subtracks, which is exploited e.g. by 
-#' \code{\link{aggregate.tracks}}.
-
+#' @param from index of first row of the track. 
+#' @param to index of last row of the track. 
+#' Both `from` and `to` can be vectors and are useful to avoid extracting subtracks, 
+#' which is exploited by \code{\link{aggregate.tracks}}.
+#' 
 #' @return The track's displacement, a nonnegative number.
 #'
-displacement <- function(x, limits=c(1,nrow(x))) {
-  sqrt(sum((x[limits[2], -1] - x[limits[1], -1])^2))
+displacement <- function( x, from=1, to=nrow(x) ) {
+  sqrt(.rowSums((x[to, -1, drop=FALSE] - x[from, -1, drop=FALSE])^2,
+  	length(from),ncol(x)-1))
 }
 
 #' Vector Between Track Endpoints
@@ -79,11 +81,9 @@ displacementVector <- function(x) {
 #' starting position.
 #' 
 #' @param x the track whose maximal displacement is to be computed.
-#' @param limits vector giving the first and last row of the track. Can be used to avoid
-#' computing subtracks explicitly, which is exploited by 
-#' \code{\link{aggregate.tracks}}.
 #' @return The maximal displacement, a nonnegative number.
-maxDisplacement <- function(x, limits=c(1,nrow(x))) {
+maxDisplacement <- function(x) {
+	limits <- c(1,nrow(x))
 	sqrt(max(rowSums(sweep(x[seq(limits[1],limits[2]),-1],2,x[limits[1],-1])^2)))
 }
 
@@ -92,14 +92,16 @@ maxDisplacement <- function(x, limits=c(1,nrow(x))) {
 #' Computes the squared distance between the track's first and final positions.
 #'
 #' @param x the track whose displacement is to be computed.
-#' @param limits Vector giving the first and last row of the track. Can be used to avoid
-#' extracting subtracks, which is exploited e.g. by 
-#' \code{\link{aggregate.tracks}}.
+#' @param from index of first row of the track. 
+#' @param to index of last row of the track. 
+#' Both `from` and `to` can be vectors and are useful to avoid extracting subtracks, 
+#' which is exploited by \code{\link{aggregate.tracks}}.
 #' 
 #' @return The track's square displacement will be returned.
 #' 
-squareDisplacement <- function(x, limits=c(1,nrow(x))) {
-  sum((x[limits[2], -1] - x[limits[1], -1])^2)
+squareDisplacement <- function(x, from=1, to=nrow(x)) {
+  .rowSums((x[to, -1, drop=FALSE] - x[from, -1, drop=FALSE])^2,
+  	length(from),ncol(x)-1)
 }
 
 #' Track Aspericity
@@ -113,9 +115,6 @@ squareDisplacement <- function(x, limits=c(1,nrow(x))) {
 #' not affected by back-and-forth motion of the object. 
 #' 
 #' @param x input track, which must have two or more spatial dimensions.
-#' @param limits vector giving the first and last row of the track. Can be used to avoid
-#' extracting subtracks, which is exploited e.g. by 
-#' \code{\link{aggregate.tracks}}.
 #' @return The track's asphericity, a value between \eqn{0} and \eqn{1}, is 
 #' returned for two- or higher dimensional tracks. Otherwise the return value is \code{NA}.
 #' @details We define the asphericity of every track with two or fewer positions to be 1. 
@@ -130,11 +129,12 @@ squareDisplacement <- function(x, limits=c(1,nrow(x))) {
 #'
 #' @seealso \code{\link{straightness}}
 #'
-asphericity <- function(x,limits=c(1,nrow(x))) {
+asphericity <- function(x) {
   dim <- ncol(x) - 1
   if (dim == 1) {
     return(NA)
   }
+  limits <- c(1,nrow(x))
   if (limits[2]-limits[1]<3) {
     return(1)
   }
@@ -216,9 +216,12 @@ outreachRatio <- function(x) {
 #' 
 #' Computes the angle between the first and the last segment of the given track.
 #' @param x the track whose overall turning angle is to be computed.
-#' @param limits vector giving the first and last row of the track. Can be used to avoid
-#' extracting subtracks, which is exploited e.g. by 
-#' \code{\link{aggregate.tracks}}.
+#' @param from index of first row of the track. 
+#' @param to index of last row of the track. 
+#' Both `from` and `to` can be vectors and are useful to avoid extracting subtracks, 
+#' which is exploited by \code{\link{aggregate.tracks}}.
+#' @param xdiff row differences of x, should be pre-computed if this function is calleed
+#' repeatedly for subtracks of a long track.
 #' @details Computes the angle between the vectors representing the track's 
 #' first and last segment, respectively, i.e. the overall turning angle.
 #' Angles are measured symmetrically, thus the return values range from 0 to 180 degrees.
@@ -232,27 +235,27 @@ outreachRatio <- function(x) {
 #'   	ylab="turning angle (rad)", type="l" )
 #'   segments( i, lower, y1=upper )
 #' } )
-overallAngle <- function(x, limits=c(1,nrow(x))) {
-	if( limits[1]==limits[2] ){
-		return(0)
-	} else if (limits[2]-limits[1] == 1) {
-		return(0)
-  	} else {
-		a <- diff(x[limits[1]:(limits[1]+1),-1])
-		b <- diff(x[(limits[2]-1):limits[2],-1])
-		a <- a/sqrt(sum(a^2))
-		b <- b/sqrt(sum(b^2))
-		return( acos(sum(a * b)) )
-	}
+overallAngle <- function(x, from=1, to=nrow(x), xdiff=diff(x)) {
+	r <- rep(0, length(from))
+	ft <- from<(to-1)
+	a <- xdiff[from[ft],-1,drop=FALSE]
+	b <- xdiff[to[ft]-1,-1,drop=FALSE]
+	a <- a/sqrt(.rowSums(a^2, nrow(a), ncol(a)))
+	b <- b/sqrt(.rowSums(b^2, nrow(b), ncol(b)))
+	r[ft] <- acos(.rowSums(a * b, nrow(a), ncol(a)))
+	r
 }
 
 #' Dot Product Between Steps at Track Endpoints
 #'
 #' Computes the dot product between the first and last steps of the given track.
-#' @param x the input track.
-#' @param limits vector giving the first and last row of the track. Can be used to avoid
-#' extracting subtracks, which is exploited e.g. by 
-#' \code{\link{aggregate.tracks}}.
+#' @param x the input track. Must have at least 2 rows or an error is thrown.
+#' @param from index of first row of the track. 
+#' @param to index of last row of the track. 
+#' Both `from` and `to` can be vectors and are useful to avoid extracting subtracks, 
+#' which is exploited by \code{\link{aggregate.tracks}}.
+#' @param xdiff row differences of x, should be pre-computed if this function is calleed
+#' repeatedly for subtracks of a long track.
 #' @return The dot product. 
 #' @examples
 #' ## compute and plot the autocovariance function for the T cell data 
@@ -262,13 +265,13 @@ overallAngle <- function(x, limits=c(1,nrow(x))) {
 #'   ylab="autocovariance", type="l" )
 #'   segments( i, lower, y1=upper )
 #' } )
-overallDot <- function(x, limits=c(1,nrow(x))) {
-	if( limits[1]==limits[2] ){
-		return(NaN)
-	}
-	a <- diff(x[limits[1]:(limits[1]+1),-1])
-	b <- diff(x[(limits[2]-1):limits[2],-1])
-	return( sum(a * b) )
+overallDot <- function(x, from=1, to=nrow(x), xdiff=diff(x)) {
+	r <- rep(NaN, length(from))
+	ft <- from<to
+	a <- xdiff[from[ft],-1,drop=FALSE]
+	b <- xdiff[to[ft]-1,-1,drop=FALSE]
+	r[ft] <- .rowSums(a * b, nrow(a), ncol(a))
+	r
 }
 
 

@@ -4,14 +4,19 @@
 \alias{overallAngle}
 \title{Angle Between Steps at Track Endpoints}
 \usage{
-overallAngle(x, limits = c(1, nrow(x)))
+overallAngle(x, from = 1, to = nrow(x), xdiff = diff(x))
 }
 \arguments{
 \item{x}{the track whose overall turning angle is to be computed.}
 
-\item{limits}{vector giving the first and last row of the track. Can be used to avoid
-extracting subtracks, which is exploited e.g. by
-\code{\link{aggregate.tracks}}.}
+\item{from}{index of first row of the track.}
+
+\item{to}{index of last row of the track.
+Both `from` and `to` can be vectors and are useful to avoid extracting subtracks,
+which is exploited by \code{\link{aggregate.tracks}}.}
+
+\item{xdiff}{row differences of x, should be pre-computed if this function is calleed
+repeatedly for subtracks of a long track.}
 }
 \value{
 The track's overall turning angle in radians.

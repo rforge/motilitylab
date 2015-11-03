@@ -5,7 +5,7 @@
 \title{Test Unbiasedness of Motion}
 \usage{
 hotellingsTest(tracks, dim = c("x", "y"), step.spacing = 0, plot = FALSE,
-  ...)
+  add = FALSE, ellipse.col = "blue", conf.level = 0.95, ...)
 }
 \arguments{
 \item{tracks}{the tracks whose biasedness is to be determined.}
@@ -26,15 +26,22 @@ origin of ordinates (green circle) and the mean of the data points (green
 cross) are to be plotted. (In one dimension also the bounds of the
 condfidence interval are given.) Plot works only in one or two dimensions.}
 
+\item{add}{whether to add the plot to the current plot (\code{TRUE}) or create a}
+
+\item{ellipse.col}{color with which to draw the confidence ellipse. Use \code{NA} to
+omit the confidence ellipse.}
+
+\item{conf.level}{the desired confidence level for the confidence ellipse.}
+
 \item{...}{further arguments passed on to \code{plot}.}
 }
 \value{
 a list with class \code{htest}, see \code{\link[DescTools]{HotellingsT2Test}}.
 }
 \description{
-Test the null hypothesis that a given set of tracks originates from an unbiased
-type of motion (e.g., a random walk without drift). This is done by testing whether
-the mean step vector is equal to the null vector.
+Test the null hypothesis that a given set of tracks originates from an uncorrelated
+and unbiased type of motion (e.g., a random walk without drift). This is done by
+testing whether the mean step vector is equal to the null vector.
 }
 \details{
 Computes the displacement vectors of all segments in the tracks
@@ -42,9 +49,8 @@ given in \code{tracks}, and performs Hotelling's T-square Test on that vector.
 (see \code{\link[DescTools]{HotellingsT2Test}}).
 }
 \examples{
-## Test H_0: T-cells are migrating by random walk on x and y coordinates,
-## and report the p-value
-
+## Test H_0: T-cells migrate by uncorrelated random walk on x and y coordinates,
+## and report the p-value.
 if( require( DescTools ) ){
    hotellingsTest( TCells, plot=FALSE )$p.value
 }

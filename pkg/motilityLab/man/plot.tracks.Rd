@@ -2,10 +2,10 @@
 % Please edit documentation in R/functions.R
 \name{plot.tracks}
 \alias{plot.tracks}
-\title{Plot Tracks in 2D Space}
+\title{Plot Tracks in 2D}
 \usage{
 \method{plot}{tracks}(x, dims = c("x", "y"), add = F,
-  col = order(names(x)), pch.start = 1, pch.end = NULL, ...)
+  col = order(names(x)), pch.start = 1, pch.end = NULL, cex = 0.5, ...)
 }
 \arguments{
 \item{x}{the tracks to be plotted.}
@@ -21,11 +21,13 @@ of size \code{length(x)}, where each entry specififes the color for the
 corresponding track.}
 
 \item{pch.start}{point symbol with which to label the first position of the track
-(see \code{\link[graphics]{points}})}
+(see \code{\link[graphics]{points}}).}
 
 \item{pch.end}{point symbol with which to label the last position of the track}
 
-\item{...}{additional parameters (e.g. xlab, ylab)
+\item{cex}{point size for positions on the tracks.}
+
+\item{...}{additional parameters (e.g. xlab, ylab).
 to be passed to \code{\link[graphics]{plot}}
 (for \code{add=FALSE}) or \code{\link[graphics]{points}} (for \code{add=TRUE}),
 respectively.}

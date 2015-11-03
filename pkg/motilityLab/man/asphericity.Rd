@@ -4,14 +4,10 @@
 \alias{asphericity}
 \title{Track Aspericity}
 \usage{
-asphericity(x, limits = c(1, nrow(x)))
+asphericity(x)
 }
 \arguments{
 \item{x}{input track, which must have two or more spatial dimensions.}
-
-\item{limits}{vector giving the first and last row of the track. Can be used to avoid
-extracting subtracks, which is exploited e.g. by
-\code{\link{aggregate.tracks}}.}
 }
 \value{
 The track's asphericity, a value between \eqn{0} and \eqn{1}, is

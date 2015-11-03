@@ -11,6 +11,10 @@
 #' @param optional logical. Required for S3 consistency, but 
 #' has no effect: column names are always assigned to the resulting
 #'  data frame regardless of the setting of this option.
+#' @param include.timepoint.column logical. If set to \code{TRUE}, then the resulting
+#'  dataframe will contain a column that consecutively numbers the positions according
+#'  to their time. Note that this information is anyway implicitly present in the time 
+#'  information.
 #' @param ... further arguments to be passed from or to other methods.
 #'
 #' @return a single data frame containing all individual tracks from the input with a 
@@ -19,10 +23,17 @@
 #' @examples
 #' ## Display overall average position of the T cell data
 #' colMeans( as.data.frame( TCells )[-c(1,2)] )
-as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE, ...) {
+as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE, 
+	include.timepoint.column=FALSE, ...) {
 	ids <- rep(names(x), lapply(x,nrow))
-	r <- data.frame(id=ids,  Reduce( 
-		rbind.data.frame, x ) )
+	if( include.timepoint.column ){
+		timepoint <- ave( ids, ids, FUN=seq_along )
+		r <- data.frame(id=ids, timepoint=timepoint, do.call( 
+			rbind.data.frame, x ) )
+	} else {
+		r <- data.frame(id=ids, do.call( 
+			rbind.data.frame, x ) )
+	}
 	if( !is.null(row.names) && length(row.names)==nrow(r) ){
 		rownames(r) <- row.names
 	} else {
@@ -315,7 +326,7 @@ splitTrack <- function( x, positions, id=NULL, min.length=2 ){
 	return(r)
 }
 
-#' Plot Tracks in 2D Space
+#' Plot Tracks in 2D
 #' 
 #' Plots tracks contained in a "tracks" object into a twodimensional space
 #' pallelel to the data's axes.
@@ -329,10 +340,11 @@ splitTrack <- function( x, positions, id=NULL, min.length=2 ){
 #'  of size \code{length(x)}, where each entry specififes the color for the 
 #'  corresponding track.
 #' @param pch.start point symbol with which to label the first position of the track
-#'  (see \code{\link[graphics]{points}})
+#'  (see \code{\link[graphics]{points}}).
 #' @param pch.end point symbol with which to label the last position of the track
-#' @param ... additional parameters (e.g. xlab, ylab) 
-#' to be passed to \code{\link[graphics]{plot}} 
+#' @param cex point size for positions on the tracks.
+#' @param ... additional parameters (e.g. xlab, ylab).
+#' to be passed to \code{\link[graphics]{plot}}
 #' (for \code{add=FALSE}) or \code{\link[graphics]{points}} (for \code{add=TRUE}), 
 #' respectively.
 #' @details One dimension of the data (by default \eqn{y}) is plotted against 
@@ -343,7 +355,8 @@ splitTrack <- function( x, positions, id=NULL, min.length=2 ){
 #' to \code{TRUE}.
 #' @seealso \code{\link{plot3d}}
 plot.tracks <- function(x, dims=c('x','y'), add=F,
-		col=order(names(x)), pch.start=1, pch.end=NULL, ... ) {
+		col=order(names(x)), pch.start=1, pch.end=NULL, 
+		cex=.5, ... ) {
 	args <- list(...)
 
 	ids <- names(x)
@@ -353,9 +366,9 @@ plot.tracks <- function(x, dims=c('x','y'), add=F,
 	dim2 <- unlist( lapply(x,'[', , dims[2]) )
 
 	if (add==T) {
-		points( dim1, dim2, col=pcol, cex=.5, ... )
+		points( dim1, dim2, col=pcol, cex=cex, ... )
 	} else {
-		plot( dim1, dim2, col=pcol, cex=.5, ...)
+		plot( dim1, dim2, col=pcol, cex=cex, ...)
 	}
   
 	if( !is.null(pch.start) ){
@@ -580,7 +593,7 @@ subtracks <- function(x, i, overlap=i-1 ) {
 	if( !is.tracks(x) ){
 		x <- wrapTrack( x )
 	}
-	Reduce(c, lapply(x, 
+	do.call(c, lapply(x, 
   		function(t) .computeSubtracksOfISegments(t, i, overlap )))
 }
 
@@ -721,7 +734,7 @@ clusterTracks <- function(tracks, measures, scale=TRUE, ...) {
 	if (is.function(measures)) {
 		measures <- c(measures)
 	}
-	values <- Reduce(cbind, lapply(measures, function(m) sapply(tracks, m)))
+	values <- do.call(cbind, lapply(measures, function(m) sapply(tracks, m)))
 	if (scale) {
 		values <- scale(values)
 	}
@@ -891,15 +904,38 @@ aggregate.tracks <- function( x, measure, by="subtracks", FUN=mean,
 	if( by == "subtracks" ){
 		# optimized version: avoids making copies of subtracks (relevant especially
 		# for measures like displacement, which actually only consider the track
-		# endpoints)
+		# endpoints). Also pre-computes the diff of the track if needed.
 		if( ( length( intersect(c("x","limits"),names(formals(measure))) ) == 2 )
 			&& !is.function( filter.subtracks ) ){
-			measure.values <- lapply( subtrack.length, 
-				function(i) .ulapply( Filter(function(t) nrow(t)>i, x),
-					function(t) apply( .subtrackIndices(t,i,min(max.overlap,i-1)), 
-						 1, measure, x=t ) ) )
+			if( "xdiff" %in% names(formals(measure)) ){
+				ft <- function(t,i) apply( .subtrackIndices(i,min(max.overlap,i-1),nrow(t)), 
+					1, measure, x=t, xdiff=diff(t) )
+			} else {
+				ft <- function(t,i) apply( .subtrackIndices(i,min(max.overlap,i-1),nrow(t)), 
+					1, measure, x=t )
+			}
+			measure.values <- list()
+			k <- 1
+			xi <- x
+			for( i in sort(subtrack.length) ){
+				xi <- xi[sapply(xi,nrow)>i]
+				measure.values[[k]] <- .ulapply( xi, ft, i=i )
+				k <- k+1
+			}
+		} else if( ( length( intersect(c("x","from","to"),names(formals(measure))) ) == 3 )
+			&& !is.function( filter.subtracks ) ){
+			measure.values <- list()
+			k <- 1
+			xi <- x
+			for( i in sort(subtrack.length) ){
+				xi <- xi[sapply(xi,nrow)>i]
+				xi1 <- do.call( rbind, xi )
+				si <- .subtrackIndices(i,min(max.overlap,i-1),sapply(xi,nrow))
+				measure.values[[k]] <- measure(xi1,si[,1],si[,2])
+				k <- k+1
+			}
 		} else {
-		# unoptimized version: makes copies of all subtracks.
+			# unoptimized version: makes copies of all subtracks.
 			the.subtracks <- list()
 			measure.values <- list()
 			k <- 1
@@ -950,24 +986,23 @@ maxTrackLength <- function(x) {
 #' and the second row the maximum value of any track in the dimension given by 
 #' the column.
 boundingBox <- function(x) {
-  if( !is.tracks(x) ){
-    x <- wrapTrack(x) 
-  }
-  bounding.boxes <- lapply(x, .boundingBoxTrack) 
-  empty <- mat.or.vec(nrow(bounding.boxes[[1]]), ncol(bounding.boxes[[1]]))
-  colnames(empty) <- colnames(bounding.boxes[[1]])
-  rownames(empty) <- rownames(bounding.boxes[[1]])
-  empty[1,] <- Inf
-  empty[2,] <- -Inf
-  return(Reduce(.minMaxOfTwoMatrices, bounding.boxes, empty)) 
+	if( !is.tracks(x) ){
+		x <- wrapTrack(x) 
+	}
+	bounding.boxes <- lapply(x, .boundingBoxTrack) 
+	empty <- mat.or.vec(nrow(bounding.boxes[[1]]), ncol(bounding.boxes[[1]]))
+	colnames(empty) <- colnames(bounding.boxes[[1]])
+	rownames(empty) <- rownames(bounding.boxes[[1]])
+	empty[1,] <- Inf
+	empty[2,] <- -Inf
+	return(Reduce(.minMaxOfTwoMatrices, bounding.boxes, empty)) 
 }
 
-# TODO include ellipse
 #' Test Unbiasedness of Motion
 #' 
-#' Test the null hypothesis that a given set of tracks originates from an unbiased 
-#' type of motion (e.g., a random walk without drift). This is done by testing whether
-#' the mean step vector is equal to the null vector. 
+#' Test the null hypothesis that a given set of tracks originates from an uncorrelated
+#' and unbiased type of motion (e.g., a random walk without drift). This is done by
+#' testing whether the mean step vector is equal to the null vector. 
 #' 
 #' @param tracks the tracks whose biasedness is to be determined.
 #' @param dim vector with the names of the track's 
@@ -976,6 +1011,8 @@ boundingBox <- function(x) {
 #' origin of ordinates (green circle) and the mean of the data points (green 
 #' cross) are to be plotted. (In one dimension also the bounds of the 
 #' condfidence interval are given.) Plot works only in one or two dimensions.
+#' @param add whether to add the plot to the current plot (\code{TRUE}) or create a 
+#" new one (\code{FALSE}).
 #' @param step.spacing How many positions are to be left out between 
 #' the steps that are considered for the test. For persistent motion, subsequent
 #' steps will be correlated, which leads to too low p-values because Hotelling's 
@@ -983,6 +1020,9 @@ boundingBox <- function(x) {
 #' p-value should either be corrected for this dependence (e.g. by adjusting 
 #' the degrees of freedom accordingly), or `step.spacing` should be set to a value
 #' high enough to ensure that the considered steps are approximately independent.
+#' @param ellipse.col color with which to draw the confidence ellipse. Use \code{NA} to
+#'  omit the confidence ellipse.
+#' @param conf.level the desired confidence level for the confidence ellipse.
 #' @param ... further arguments passed on to \code{plot}.
 #' 
 #' @return a list with class \code{htest}, see \code{\link[DescTools]{HotellingsT2Test}}.
@@ -992,9 +1032,8 @@ boundingBox <- function(x) {
 #' (see \code{\link[DescTools]{HotellingsT2Test}}).
 #' 
 #' @examples 
-#' ## Test H_0: T-cells are migrating by random walk on x and y coordinates,
-#' ## and report the p-value
-#' 
+#' ## Test H_0: T-cells migrate by uncorrelated random walk on x and y coordinates,
+#' ## and report the p-value.
 #' if( require( DescTools ) ){
 #'    hotellingsTest( TCells, plot=FALSE )$p.value
 #' }
@@ -1004,55 +1043,73 @@ boundingBox <- function(x) {
 #'  Sinn, Ulrich H. von Andrian and Juergen Westermann (2011),
 #'	Defining the Quantitative Limits of Intravital Two-Photon Lymphocyte Tracking.
 #' \emph{PNAS} \bold{108}(30):12401--12406. doi:10.1073/pnas.1102288108
-
+#'
 hotellingsTest <- function(tracks, dim=c("x", "y"), 
-	step.spacing=0, plot=FALSE, ... ) {
-  if( !requireNamespace("DescTools",quietly=TRUE) ){
-    stop("This function requires the package 'DescTools'.")
-  }
-  stopifnot( !plot || (length(dim) %in% c(1,2) ))
-  Tx <- projectDimensions(tracks, dim)
-  sx <- t(sapply( subtracks(Tx, 1, overlap=-step.spacing), displacementVector ) )
-  if (length(dim) > 1) {
-    if (plot) {
-      plot(sx,...)
-      points(0, 0, col=3)
-      points(mean(sx[, 1:ncol(sx)]), col=2, pch=4, cex=2)
-    }
-  } else {
-    if (plot) {
-      mean.sx <- mean(sx)
-      sd.sx <- sd(sx)
-      plot(0, 0, col=3, xlab = dim[1],...)
-      stripchart(sx, add=TRUE, at=0, pch=1)
-      points(mean.sx, 0, col=2, pch=4, cex=2)
-      points(0, 0, col=3)
-      print(mean.sx -  sd.sx)
-      points(mean.sx - sd.sx / sqrt(length(sx)), 0, pch=3, col=4)
-      points(mean.sx + sd.sx / sqrt(length(sx)), 0, pch=3, col=4)
-    }
-  }
-  return(DescTools::HotellingsT2Test(sx))
+	step.spacing=0, plot=FALSE, add=FALSE, ellipse.col="blue", conf.level=0.95, ... ) {
+	if( !requireNamespace("DescTools",quietly=TRUE) ){
+		stop("This function requires the package 'DescTools'. Please install it.")
+	}
+	stopifnot( !plot || (length(dim) %in% c(1,2) ))
+	Tx <- projectDimensions(tracks, dim)
+	sx <- t(sapply( subtracks(Tx, 1, overlap=-step.spacing), displacementVector ) )
+	if (plot && (length(dim)==2)) {
+		if (plot) {
+			if( add ){
+				points(sx,...)
+			} else {
+				plot(sx,...)
+			}
+			abline(h=0)
+			abline(v=0)
+			cm <- colMeans(sx)
+			if( !is.na(ellipse.col) ){
+				if( !requireNamespace("ellipse",quietly=TRUE) ){
+					warning("Drawing confidence ellipse requires the package 'ellipse'. Please install it.")
+				} else {
+					n <- dim(sx)[1]
+					p <- dim(sx)[2]
+					S <- cov(sx)
+					t <- sqrt(((n-1)*p/(n*(n-p)))*qf(1-conf.level,p,n-p,lower.tail=F))
+					polygon(ellipse::ellipse(S,centre=cm,t=t),
+						col=.setColAlpha(ellipse.col,128),border=NA)
+					points(cm[1],cm[2],col=ellipse.col,pch=20)
+				}
+			}
+		}
+	} else if (plot && (length(dim)==1)) {
+		mean.sx <- mean(sx)
+		sd.sx <- sd(sx)
+		plot(0, 0, col=3, xlab = dim[1],...)
+		stripchart(sx, add=TRUE, at=0, pch=1)
+		points(mean.sx, 0, col=2, pch=4, cex=2)
+		points(0, 0, col=3)
+		print(mean.sx -  sd.sx)
+		points(mean.sx - sd.sx / sqrt(length(sx)), 0, pch=3, col=4)
+		points(mean.sx + sd.sx / sqrt(length(sx)), 0, pch=3, col=4)
+	}
+	return(DescTools::HotellingsT2Test(sx))
 }
 
-#' Extract Tracks Based on User-Defined Properties
+#' Select Tracks by Measure Values
 #' 
 #' Given a tracks object, extract a subset based on upper and lower bounds of a certain
 #' measure. For instance, extract all tracks with a certain minimum length.
 #'
-#' @param tracks the tracks from which subsetting is to be done on 
-#' @param measure the track measure for which the subsetting is to be based on 
-#' @param ll specifies the lower-limit of the allowable measure
-#' @param ul specifies the upper-limit of the allowable measure
-getSubsetOfTracks <- function(tracks,measure,ll,ul){
-  if(class(tracks)=="tracks"){
-    mdat <- sapply(tracks,measure)
-    selection <- tracks[(mdat<=ul & mdat>=ll) == T]
-    return(as.tracks(selection))
-  }else{
-    obj <-deparse(substitute(tracks))
-    warning(sprintf("Obj:%s is not a tracks object",obj))
-  }
+#' @param x the input tracks.
+#' @param measure measure on which the selection is based.
+#' @param lower specifies the lower bound (inclusive) of the allowable measure.
+#' @param upper specifies the upper bound (inclusive) of the allowable measure.
+#' @examples
+#' ## Slower half of T cells
+#' slow.tcells <- selectTracks( TCells, speed, -Inf, median( sapply(TCells,speed) ) )
+selectTracks <- function(x,measure,lower,upper){
+	if(is.tracks(x)){
+		mdat <- sapply(x,measure)
+		return(x[mdat<=upper & mdat>=lower])
+	}else{
+		obj <-deparse(substitute(tracks))
+		warning(sprintf("Obj:%s is not a tracks object",obj))
+	}
 }
 
 #' Plot Tracks in 3D

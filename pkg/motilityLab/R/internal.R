@@ -2,6 +2,10 @@
   unlist(lapply(l,f, ...), use.names=FALSE) 
 }
 
+.setColAlpha <- function( col, alpha=128 ){
+	do.call( rgb, c(split(col2rgb(col),c("red","green","blue")),
+		alpha=alpha,maxColorValue=255) )
+}
 
 .minMaxOfTwoMatrices <- function(a, b, func) {
   #   print("a:")
@@ -25,16 +29,20 @@
   return(min.and.max.per.dim[, 2:ncol(min.and.max.per.dim)])
 }
 
-.subtrackIndices <- function( track, i, overlap ){
-  if (nrow(track) <= i) {
-    return(NA)
-  } 
-  if (overlap > i-1) {
+.subtrackIndices <- function( x, overlap, lengths=nrow(x) ){
+  if (overlap > x-1) {
     warning("Overlap exceeds segment length")
-    overlap <- i-1
+    overlap <- x-1
   }
-  x <- seq(1, (nrow(track)-i),i-overlap)
-  cbind( first=x, last=x+i )
+  xl <- c(0,cumsum(lengths))
+  r <- .ulapply(seq_along(lengths),function(l){
+  	if( xl[l+1]-xl[l] <= x ){
+  		c()
+  	} else {
+  		seq(xl[l]+1,xl[l+1]-x,x-overlap)
+  	}
+  })
+  cbind( first=r, last=r+x )
 }
 
 
@@ -80,7 +88,7 @@
 
 .segmentwiseMeans <- function(measure, ...) {
   return(function(track) {
-    .computeSegmentwiseMeans(track, measure, ...) #TODO DOk: hier fehlt noch die min.length.of.segments!!
+    .computeSegmentwiseMeans(track, measure, ...)
   })
 }
 
@@ -141,6 +149,8 @@
 			circle.scale <- sqrt(1-d[1]^2)
 			d[2:3] <- circ[1:2]*circle.scale
 			return(c( v.free * rot.mat%*%d, t.free))
+		} else {
+			return(c( v.free * d, t.free))
 		}
 	} else if(taxis.mode == 3){
 	 	 # klinotaxis

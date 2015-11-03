@@ -4,14 +4,10 @@
 \alias{maxDisplacement}
 \title{Maximal Displacement}
 \usage{
-maxDisplacement(x, limits = c(1, nrow(x)))
+maxDisplacement(x)
 }
 \arguments{
 \item{x}{the track whose maximal displacement is to be computed.}
-
-\item{limits}{vector giving the first and last row of the track. Can be used to avoid
-computing subtracks explicitly, which is exploited by
-\code{\link{aggregate.tracks}}.}
 }
 \value{
 The maximal displacement, a nonnegative number.
