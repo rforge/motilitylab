@@ -17,7 +17,7 @@
 #'  information.
 #' @param ... further arguments to be passed from or to other methods.
 #'
-#' @return a single data frame containing all individual tracks from the input with a 
+#' @return A single data frame containing all individual tracks from the input with a 
 #' prepended column named "id" containing each track's identifier in `x`.
 #'
 #' @examples
@@ -54,7 +54,7 @@ as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE,
 #' @details The S3 Method corresponding to the class of `x` (usually \code{list})
 #' is called.
 #'  
-#' @return the coerced object of S3 class \code{tracks}.
+#' @return The coerced object of S3 class \code{tracks}.
 as.tracks <- function(x,...) 
   UseMethod("as.tracks")
 
@@ -65,11 +65,6 @@ as.tracks <- function(x,...)
 #' 
 #' @param x the \code{tracks} object to be coerced to a list.
 #' @param ... further arguments to be passed from or to other methods.
-#' 
-#' @details the input \code{tracks} object is coerced to a list.
-#' 
-#' @return \code{x} is returned as a list (containing the
-#' data frames which represent the tracks)
 as.list.tracks <- function(x, ...) 
   structure( x, class="list" )
 
@@ -81,9 +76,6 @@ as.list.tracks <- function(x, ...)
 #' 
 #' @param x the list that is to be converted into a \emph{tracks} object.
 #' @param ... further arguments to be passed from or to other methods.
-#' 
-#' @return the coerced object of S3 class \code{tracks} (i.e., a list 
-#'  containing a matrix for each track)
 as.tracks.list <- function(x,...) 
   structure(x, class="tracks")
 
@@ -95,30 +87,12 @@ as.tracks.list <- function(x,...)
 is.tracks <- function(x)
   inherits(x, "tracks")
 
-#' Get a Subset of Tracks
-#' 
-#' Returns a \code{tracks} object containing only the specified elements of a given
-#' \code{tracks} object.
-#' 
-#' @param x the input tracks object.
-#' @param ids a vector containing the ids of the tracks that shall be chosen.
-#' 
-#' @details the elements given in \code{ids} are chosen from the list that represents
-#' the \code{tracks} object and returned, likewise as a \code{tracks} object.
-#' 
-#' @return the modified \code{tracks} object.
-getTracks <- function(x, ids) {
-	structure(x[ids], class="tracks")
-}
-
 #' Remove Tracks from Tracks Object
 #' 
 #' Returns a \emph{tracks} object from the tracks with the given IDs are removed.
 #'
 #' @param x the input tracks object.
 #' @param ids a vector containing the ids of the tracks that shall be removed.
-#'
-#' @return the modified \code{tracks} object.
 removeTracks <- function(x,ids) {
 	structure(x[!(names(x) %in% ids)], class="tracks")
 }
@@ -131,7 +105,7 @@ removeTracks <- function(x,ids) {
 #' logical value (or a value that can be coerced to a locical).
 #' @param x a tracks object.
 #' @param ... further arguments to be passed on to \code{f}.
-#' @return a \code{tracks} object containing only those tracks from \code{x} for which
+#' @return A \code{tracks} object containing only those tracks from \code{x} for which
 #' \code{f} evaluates to \code{TRUE}.
 #' @examples
 #' ## Remove short tracks from the T cells data
@@ -407,7 +381,7 @@ plot.tracks <- function(x, dims=c('x','y'), add=F,
 #' 
 #' @param x the input track.
 #' 
-#' @return a list of class \code{tracks} containing only the input track \code{x}, which
+#' @return A list of class \code{tracks} containing only the input track \code{x}, which
 #' is assigned the name "1". 
 wrapTrack <- function(x) {
   return(as.tracks(list("1" = x)))
@@ -525,7 +499,7 @@ computeStaggered <- function(track, measure, matrix=FALSE, min.segments=1) {
 #' values are returned in a vector, sorted in ascending order by the 
 #' prefix length.
 #'
-#' @return a function that applies the measure to every prefix of length at 
+#' @return A function that applies the measure to every prefix of length at 
 #' least \code{min.length}.
 #'
 forEveryPrefix <- function(measure, min.length=1) {
@@ -548,7 +522,7 @@ forEveryPrefix <- function(measure, min.length=1) {
 #' @details Subtracts the coodinates and time of the tracks starting point from
 #' every point on the track.
 #' 
-#' @return Retruns the translation of the input track whose starting point is 
+#' @return Returns the translation of the input track whose starting point is 
 #' on the origin of ordinates.
 normalizeTrack <- function(track) {
 	cbind( track[,"t",drop=FALSE], sweep(track[,-1],2,track[1,-1]) )
@@ -629,7 +603,7 @@ prefixes <- function(x,i) {
 #' 
 #' @param measure the measure that should be nomalized.
 #' 
-#' @return a function that computes the input measure for a given track
+#' @return A function that computes the input measure for a given track
 #' and returns the result divided by the track's duration.
 #' 
 #' @examples 
@@ -806,7 +780,7 @@ clusterTracks <- function(tracks, measures, scale=TRUE, ...) {
 #' considered. The input \code{measure} is applied to the subtracks individually, 
 #' and the \code{statistic} is applied to the resulting values. 
 #' 
-#' @return a data frame with one row for every \eqn{i} 
+#' @return A data frame with one row for every \eqn{i} 
 #' specified by \code{subtrack.length}. The first column contains the values 
 #' of \eqn{i} and the remaining columns contain the values of the summary statistic
 #' of the measure values of tracks having exactly \eqn{i} segments.
@@ -968,7 +942,7 @@ aggregate.tracks <- function( x, measure, by="subtracks", FUN=mean,
 #' 
 #' @param x the \code{tracks} object the tracks in which are to be considered.
 #' 
-#' @return the maximum number of rows of a track in \code{x}
+#' @return The maximum number of rows of a track in \code{x}
 maxTrackLength <- function(x) {
   return(max(sapply(x, nrow)))
 }
@@ -1025,7 +999,7 @@ boundingBox <- function(x) {
 #' @param conf.level the desired confidence level for the confidence ellipse.
 #' @param ... further arguments passed on to \code{plot}.
 #' 
-#' @return a list with class \code{htest}, see \code{\link[DescTools]{HotellingsT2Test}}.
+#' @return A list with class \code{htest}, see \code{\link[DescTools]{HotellingsT2Test}}.
 #' 
 #' @details Computes the displacement vectors of all segments in the tracks 
 #' given in \code{tracks}, and performs Hotelling's T-square Test on that vector.
@@ -1156,7 +1130,7 @@ plot3d <- function(x,...){
 #' In reality, at least small fluctuations of the time steps can be expected. This
 #' function provides a means for quality control with respect to the tracking time.
 #'
-#' @return summary statistic of the time intervals between two consecutive positions in a track 
+#' @return Summary statistic of the time intervals between two consecutive positions in a track 
 #' dataset. 
 #'
 #' @examples

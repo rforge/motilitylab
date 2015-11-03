@@ -53,7 +53,7 @@ brownianTrack <- function(nsteps=100, dim=3, mean=0, sd=1) {
 #' cell motion in lymph nodes using least-squares fitting to the mean displacement plot
 #' (Beauchemin et al, 2007).
 #' 
-#' @return a track, i.e., a matrix with \code{t/delta.t} rows and 4 columns. 
+#' @return A track, i.e., a matrix with \code{t/delta.t} rows and 4 columns. 
 #' 
 #' @references 
 #' Catherine Beauchemin, Narendra M. Dixit and Alan S. Perelson (2007), Characterizing 
@@ -154,7 +154,7 @@ beaucheminTrack <- function(sim.time=10,delta.t=1,p.persist=0.5,p.bias=0.9,
 #' @param n number of tracks to be generated. 
 #' @param expr the expression, usually a call, that generates a single track.
 #'
-#' @return a \code{tracks} object containing \code{n} tracks.
+#' @return A \code{tracks} object containing \code{n} tracks.
 #'
 #' @examples
 #' ## Generate 10 tracks, 100 steps each, from a random walk with standard normally
