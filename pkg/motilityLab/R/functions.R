@@ -87,16 +87,6 @@ as.tracks.list <- function(x,...)
 is.tracks <- function(x)
   inherits(x, "tracks")
 
-#' Remove Tracks from Tracks Object
-#' 
-#' Returns a \emph{tracks} object from the tracks with the given IDs are removed.
-#'
-#' @param x the input tracks object.
-#' @param ids a vector containing the ids of the tracks that shall be removed.
-removeTracks <- function(x,ids) {
-	structure(x[!(names(x) %in% ids)], class="tracks")
-}
-
 #' Filter Tracks 
 #'
 #' Extracts subtracks based on a given function.
@@ -140,14 +130,11 @@ sort.tracks <- function(x, decreasing=FALSE, ...) {
 #' Concatenates several \emph{tracks} objects.
 #' 
 #' @param ... the \emph{tracks} objects that are to be concatenated.
-
-#' @details Joins the tracks (given as data frames) in the given \emph{tracks} 
+#'
+#' @details Joins the tracks  in the given \emph{tracks} 
 #' objects into one tracks object, preserving the names of list elements and 
 #' the ordering of the input objects as well as of the individual tracks in 
 #' them.
-#' 
-#' @return A \emph{tracks} object containing all the tracks given in any of 
-#' the input \emph{tracks} objects.
 c.tracks <- function(...) {
 	args <- lapply(list(...), as.list)
 	as.tracks(do.call(c, args))
@@ -394,7 +381,7 @@ wrapTrack <- function(x) {
 #' all subtracks (of any length) of the track.
 #' 
 #' @param measure the measure that shall be computed in a staggered fashion.
-#' @param ... further parameters passed on to \code{\link{computeStaggered}}.
+#' @param ... further parameters passed on to \code{\link{applyStaggered}}.
 #' 
 #' @details This is a wrapper mainly designed to provide a convenient interface
 #' for track-based staggered computations with \code{lapply}, see example.
@@ -412,7 +399,7 @@ wrapTrack <- function(x) {
 #' hist( sapply( TCells, staggered( displacement ) ) )
 #'
 staggered <- function(measure, ...){
-  return( function(track) computeStaggered(track, measure, ...) )
+	return( function(x) applyStaggered(x, measure, ...) )
 }
 
 
@@ -421,7 +408,7 @@ staggered <- function(measure, ...){
 #' Computes a measure on all subtracks of a track and return them either
 #' as a matrix or return their mean.
 #' 
-#' @param track the track for which the measure is to be computed.
+#' @param x the track for which the measure is to be computed.
 #' @param measure the measure that is to be computed.
 #' @param matrix a logical indicating whether the whole matrix of values for 
 #' the measure for each of the input track's subtracks is to be returned. 
@@ -454,36 +441,36 @@ staggered <- function(measure, ...){
 #' @examples 
 #' ## Compute the staggered matrix for overallAngle applied to all long enough 
 #' ## subtracks of the first T cell track
-#' computeStaggered(TCells[[1]], overallAngle, matrix=TRUE, min.segments = 2)
-computeStaggered <- function(track, measure, matrix=FALSE, min.segments=1) {
-  if (matrix) {
-	mat <- matrix(nrow=nrow(track), ncol=nrow(track), 0)
-	diag(mat) <- NA
-  } else {
-    stag.meas <- c()
-  }
-  if (!matrix) {
-    segMeans <- .computeSegmentwiseMeans(track, measure, min.segments)  
-    n.before <- length(segMeans)
-    segMeans <- segMeans[!is.nan(segMeans)]   # es entstehen NaNs, wenn die Zelle mehrere Zeitschritte an derselben stelle bleibt -> diese werden ignoriert; Parameter?
-    n <- length(segMeans)
-    if (n.before!=n) {
-      warning("NaNs have been removed.")
-    }
-    weights <- seq(n, 1)
-    weights <- weights[!is.nan(segMeans)]
-    ret <- weighted.mean(segMeans, weights)
-    return(ret)
-  } else {
-    for (i in (min.segments):(nrow(track) - 2)) {
-      subtracks <- subtracks(track, i)
-      val <- sapply(subtracks, measure)
-      diag(mat[-1:-i,]) <- val
-    }
-    mat[nrow(track), 1] <- sapply(subtracks(track, (nrow(track)-1)), measure)
-    mat <- mat + t(mat)
-    return(mat)
-    }                                        
+#' applyStaggered(TCells[[1]], overallAngle, matrix=TRUE, min.segments = 2)
+applyStaggered <- function(x, measure, matrix=FALSE, min.segments=1) {
+	if (matrix) {
+		mat <- matrix(nrow=nrow(x), ncol=nrow(x), 0)
+		diag(mat) <- NA
+	} else {
+		stag.meas <- c()
+	}
+	if (!matrix) {
+		segMeans <- .computeSegmentwiseMeans(x, measure, min.segments)
+		n.before <- length(segMeans)
+		segMeans <- segMeans[!is.nan(segMeans)]
+		n <- length(segMeans)
+		if (n.before!=n) {
+		  warning("NaNs have been removed.")
+		}
+		weights <- seq(n, 1)
+		weights <- weights[!is.nan(segMeans)]
+		ret <- weighted.mean(segMeans, weights)
+		return(ret)
+	} else {
+		for (i in (min.segments):(nrow(x) - 2)) {
+			subtracks <- subtracks(x, i)
+			val <- sapply(subtracks, measure)
+			diag(mat[-1:-i,]) <- val
+		}
+		mat[nrow(x), 1] <- sapply(subtracks(x, (nrow(x)-1)), measure)
+		mat <- mat + t(mat)
+		return(mat)
+	}
 }
 
 
@@ -720,7 +707,7 @@ clusterTracks <- function(tracks, measures, scale=TRUE, ...) {
 #' 
 #' Computes a given measure on subtracks of a given track set, applies a summary 
 #' statistic for each subtrack length, and returns the results in a convenient form.
-#' This is the main workhorse function that facilitates the most common motility analyses 
+#' This important workhorse function facilitates many common motility analyses 
 #' such as mean square displacement, turning angle, and autocorrelation plots.
 #' 
 #' @param x the tracks object whose subtracks are to be considered. 
@@ -745,10 +732,10 @@ clusterTracks <- function(tracks, measures, scale=TRUE, ...) {
 #'  \eqn{mean + sd} as upper bound}
 #'  \item{"mean.se"}{ Outputs the mean and \eqn{mean - se} as lower and 
 #'  \eqn{mean + se} as upper bound}
-#'  \item{"mean.ci.95"}{ Outputs the mean and upper and lower bound of the 
-#'  symmetric 95 percent confidence intervall}. 
-#'  \item{"mean.ci.99"}{ Outputs the mean and upper and lower bound of the 
-#'  symmetric 95 percent confidence intervall}. 
+#'  \item{"mean.ci.95"}{ Outputs the mean and upper and lower bound of a 
+#'  parametric 95 percent confidence intervall}. 
+#'  \item{"mean.ci.99"}{ Outputs the mean and upper and lower bound of a 
+#'  parametric 95 percent confidence intervall}. 
 #'  \item{"iqr"}{ Outputs the interquartile range, that is, the median, and the 
 #'  25-percent-quartile as a lower and and the 75-percent-quartile as an 
 #'  upper bound}
@@ -996,21 +983,20 @@ boundingBox <- function(x) {
 #' high enough to ensure that the considered steps are approximately independent.
 #' @param ellipse.col color with which to draw the confidence ellipse. Use \code{NA} to
 #'  omit the confidence ellipse.
+#' @param ellipse.border color of the confidence ellipse border. Use \code{NA} to omit
+#'  the border.
 #' @param conf.level the desired confidence level for the confidence ellipse.
 #' @param ... further arguments passed on to \code{plot}.
 #' 
-#' @return A list with class \code{htest}, see \code{\link[DescTools]{HotellingsT2Test}}.
+#' @return A list with class \code{htest}.
 #' 
 #' @details Computes the displacement vectors of all segments in the tracks 
 #' given in \code{tracks}, and performs Hotelling's T-square Test on that vector.
-#' (see \code{\link[DescTools]{HotellingsT2Test}}).
 #' 
 #' @examples 
 #' ## Test H_0: T-cells migrate by uncorrelated random walk on x and y coordinates,
 #' ## and report the p-value.
-#' if( require( DescTools ) ){
-#'    hotellingsTest( TCells, plot=FALSE )$p.value
-#' }
+#' hotellingsTest( TCells )$p.value
 #'
 #' @references
 #' Johannes Textor, Antonio Peixoto, Sarah E. Henrickson, Mathieu
@@ -1019,13 +1005,27 @@ boundingBox <- function(x) {
 #' \emph{PNAS} \bold{108}(30):12401--12406. doi:10.1073/pnas.1102288108
 #'
 hotellingsTest <- function(tracks, dim=c("x", "y"), 
-	step.spacing=0, plot=FALSE, add=FALSE, ellipse.col="blue", conf.level=0.95, ... ) {
-	if( !requireNamespace("DescTools",quietly=TRUE) ){
-		stop("This function requires the package 'DescTools'. Please install it.")
+	step.spacing=0, plot=FALSE, add=FALSE, ellipse.col="blue", 
+	ellipse.border="black", conf.level=0.95, ... ) {
+	if( plot && !(length(dim) %in% c(1,2) ) ){
+		stop("Plotting is only supported for 1D and 2D")
 	}
-	stopifnot( !plot || (length(dim) %in% c(1,2) ))
 	Tx <- projectDimensions(tracks, dim)
-	sx <- t(sapply( subtracks(Tx, 1, overlap=-step.spacing), displacementVector ) )
+	sx <- sapply( subtracks(Tx, 1, overlap=-step.spacing), displacementVector )
+	if( length(dim) > 1 ){
+		sx <- t(sx)
+	} else {
+		sx <- matrix(sx,ncol=1)
+	}
+	n <- dim(sx)[1]
+	p <- dim(sx)[2]
+	df.1 <- p
+	df.2 <- n-p
+	S <- cov(sx)
+	mX <- colMeans(sx)
+	A <- solve(S)
+	T2 <- n * t(mX) %*% A %*% mX
+	p.value <- 1-pf(T2*df.2/df.1/(n-1), df.1, df.2)
 	if (plot && (length(dim)==2)) {
 		if (plot) {
 			if( add ){
@@ -1035,33 +1035,35 @@ hotellingsTest <- function(tracks, dim=c("x", "y"),
 			}
 			abline(h=0)
 			abline(v=0)
-			cm <- colMeans(sx)
 			if( !is.na(ellipse.col) ){
 				if( !requireNamespace("ellipse",quietly=TRUE) ){
 					warning("Drawing confidence ellipse requires the package 'ellipse'. Please install it.")
 				} else {
-					n <- dim(sx)[1]
-					p <- dim(sx)[2]
-					S <- cov(sx)
-					t <- sqrt(((n-1)*p/(n*(n-p)))*qf(1-conf.level,p,n-p,lower.tail=F))
-					polygon(ellipse::ellipse(S,centre=cm,t=t),
-						col=.setColAlpha(ellipse.col,128),border=NA)
-					points(cm[1],cm[2],col=ellipse.col,pch=20)
+					t <- sqrt(((n-1)*df.1/(n*df.2))*qf(1-conf.level,df.1,df.2,lower.tail=F))
+					polygon(ellipse::ellipse(S,centre=mX,t=t),
+						col=.setColAlpha(ellipse.col,128),border=ellipse.border)
+					points(mX[1],mX[2],col=ellipse.col,pch=20)
 				}
 			}
 		}
 	} else if (plot && (length(dim)==1)) {
-		mean.sx <- mean(sx)
 		sd.sx <- sd(sx)
-		plot(0, 0, col=3, xlab = dim[1],...)
+		plot(0, 0, col=3, xlab = dim[1], ylim=c(-1,1), ...)
 		stripchart(sx, add=TRUE, at=0, pch=1)
-		points(mean.sx, 0, col=2, pch=4, cex=2)
-		points(0, 0, col=3)
-		print(mean.sx -  sd.sx)
-		points(mean.sx - sd.sx / sqrt(length(sx)), 0, pch=3, col=4)
-		points(mean.sx + sd.sx / sqrt(length(sx)), 0, pch=3, col=4)
+		abline(v=0)
+		t <- sqrt(((n-1)*df.1/(n*df.2))*qf(1-conf.level,df.1,df.2,lower.tail=F))
+		polygon(ellipse::ellipse(rbind(c(S,0),c(0,.1)),centre=c(mX,0),t=t),
+			col=.setColAlpha(ellipse.col,128),border=NA)
+		points(mX[1],0,col=ellipse.col,pch=20)
 	}
-	return(DescTools::HotellingsT2Test(sx))
+	structure(list(statistic=c(T2=T2),
+		p.value=p.value,
+		method="Hotelling's one sample T2-test",
+		parameter=c(df1=df.1,df2=df.2),
+		alternative="two.sided",
+		null.value=c(location=paste0("c(", paste0(rep(0,ncol(sx)), collapse = ","), ")"))
+		),
+		class="htest")
 }
 
 #' Select Tracks by Measure Values

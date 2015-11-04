@@ -7,13 +7,13 @@
 maxDisplacement(x)
 }
 \arguments{
-\item{x}{the track whose maximal displacement is to be computed.}
+\item{x}{the input track.}
 }
 \value{
 The maximal displacement, a nonnegative number.
 }
 \description{
-Computes the maximal distance of any position on the track from the 
-starting position.
+Computes the maximal Euclidean distance of any position on the track from the 
+first position.
 }
 

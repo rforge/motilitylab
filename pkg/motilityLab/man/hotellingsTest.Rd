@@ -5,7 +5,8 @@
 \title{Test Unbiasedness of Motion}
 \usage{
 hotellingsTest(tracks, dim = c("x", "y"), step.spacing = 0, plot = FALSE,
-  add = FALSE, ellipse.col = "blue", conf.level = 0.95, ...)
+  add = FALSE, ellipse.col = "blue", ellipse.border = "black",
+  conf.level = 0.95, ...)
 }
 \arguments{
 \item{tracks}{the tracks whose biasedness is to be determined.}
@@ -31,12 +32,15 @@ condfidence interval are given.) Plot works only in one or two dimensions.}
 \item{ellipse.col}{color with which to draw the confidence ellipse. Use \code{NA} to
 omit the confidence ellipse.}
 
+\item{ellipse.border}{color of the confidence ellipse border. Use \code{NA} to omit
+the border.}
+
 \item{conf.level}{the desired confidence level for the confidence ellipse.}
 
 \item{...}{further arguments passed on to \code{plot}.}
 }
 \value{
-A list with class \code{htest}, see \code{\link[DescTools]{HotellingsT2Test}}.
+A list with class \code{htest}.
 }
 \description{
 Test the null hypothesis that a given set of tracks originates from an uncorrelated
@@ -46,14 +50,11 @@ testing whether the mean step vector is equal to the null vector.
 \details{
 Computes the displacement vectors of all segments in the tracks 
 given in \code{tracks}, and performs Hotelling's T-square Test on that vector.
-(see \code{\link[DescTools]{HotellingsT2Test}}).
 }
 \examples{
 ## Test H_0: T-cells migrate by uncorrelated random walk on x and y coordinates,
 ## and report the p-value.
-if( require( DescTools ) ){
-   hotellingsTest( TCells, plot=FALSE )$p.value
-}
+hotellingsTest( TCells )$p.value
 
 }
 \references{

@@ -67,8 +67,8 @@ displacement <- function( x, from=1, to=nrow(x) ) {
 #' 
 #' Computes the vector between the track endpoints.
 #' 
-#' @param x the track whose displacement vector is to be computed.
-#' @return The displacement vector, which has as many dimensions as the input tracks.
+#' @param x the input track.
+#'
 displacementVector <- function(x) {
   ret <- x[nrow(x),-1] - x[1,-1]
   rownames(ret) <- NULL  
@@ -77,21 +77,21 @@ displacementVector <- function(x) {
 
 #' Maximal Displacement
 #' 
-#' Computes the maximal distance of any position on the track from the 
-#' starting position.
+#' Computes the maximal Euclidean distance of any position on the track from the 
+#' first position.
 #' 
-#' @param x the track whose maximal displacement is to be computed.
+#' @param x the input track.
 #' @return The maximal displacement, a nonnegative number.
 maxDisplacement <- function(x) {
 	limits <- c(1,nrow(x))
 	sqrt(max(rowSums(sweep(x[seq(limits[1],limits[2]),-1],2,x[limits[1],-1])^2)))
 }
 
-#' Square Displacement
+#' Squared Displacement
 #' 
 #' Computes the squared distance between the track's first and final positions.
 #'
-#' @param x the track whose displacement is to be computed.
+#' @param x the input track.
 #' @param from index of first row of the track. 
 #' @param to index of last row of the track. 
 #' Both `from` and `to` can be vectors and are useful to avoid extracting subtracks, 

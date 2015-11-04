@@ -7,10 +7,7 @@
 displacementVector(x)
 }
 \arguments{
-\item{x}{the track whose displacement vector is to be computed.}
-}
-\value{
-The displacement vector, which has as many dimensions as the input tracks.
+\item{x}{the input track.}
 }
 \description{
 Computes the vector between the track endpoints.

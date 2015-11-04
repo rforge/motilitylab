@@ -9,15 +9,11 @@
 \arguments{
 \item{...}{the \emph{tracks} objects that are to be concatenated.}
 }
-\value{
-A \emph{tracks} object containing all the tracks given in any of 
-the input \emph{tracks} objects.
-}
 \description{
 Concatenates several \emph{tracks} objects.
 }
 \details{
-Joins the tracks (given as data frames) in the given \emph{tracks} 
+Joins the tracks  in the given \emph{tracks} 
 objects into one tracks object, preserving the names of list elements and 
 the ordering of the input objects as well as of the individual tracks in 
 them.

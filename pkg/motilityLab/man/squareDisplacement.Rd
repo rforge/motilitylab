@@ -2,12 +2,12 @@
 % Please edit documentation in R/track-measures.R
 \name{squareDisplacement}
 \alias{squareDisplacement}
-\title{Square Displacement}
+\title{Squared Displacement}
 \usage{
 squareDisplacement(x, from = 1, to = nrow(x))
 }
 \arguments{
-\item{x}{the track whose displacement is to be computed.}
+\item{x}{the input track.}
 
 \item{from}{index of first row of the track.}
 

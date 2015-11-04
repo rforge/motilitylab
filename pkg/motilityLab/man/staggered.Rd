@@ -9,7 +9,7 @@ staggered(measure, ...)
 \arguments{
 \item{measure}{the measure that shall be computed in a staggered fashion.}
 
-\item{...}{further parameters passed on to \code{\link{computeStaggered}}.}
+\item{...}{further parameters passed on to \code{\link{applyStaggered}}.}
 }
 \value{
 Returns a function that computes

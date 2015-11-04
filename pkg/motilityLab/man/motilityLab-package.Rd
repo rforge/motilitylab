@@ -53,21 +53,21 @@ track sets are lists, this is achieved simply by using \code{lapply} or
  
 In \emph{step-based} analyses (Beltman et al, 2009), we
 chop each track up into segments of the same length and then apply our measures to those
-segments instead of the whole track. This can help to avoid biases that arise from variations
+segments. This can help to avoid biases that arise from variations
 in track length (which are always present in cell tracking experiments).
 In MotilityLab, step-based analyses are performed by using the \code{\link{subtracks}}
 function. Often we want to perform such step-based analyses for all possible subtrack
 lengths simultaneously, and plot the result as a function of the subtrack length;
 a famous example is the \emph{mean square displacement plot}. This can be 
-achieved by using the \code{\link{aggregate.tracks}} function, which has several options
-to control which subtrack lengths are considered, whether overlapping subtracks are 
-considered etc.
+achieved by using the \code{\link{aggregate.tracks}} function, which has options
+to control which subtrack lengths are considered and whether overlapping subtracks are 
+considered.
 
 In a \emph{staggered} \emph{staggered} analysis (Mokhtari et al, 2013), we analyse all
 subtracks (of any length) of a single track, and typically plot the result as a matrix.
 This can reveal dynamic patterns along a single track,
 e.g. turning behaviour or local slowdowns. Staggered analyses can be performed using the
-\code{\link{computeStaggered}} function.
+\code{\link{applyStaggered}} function.
 
 Lastly, in addition to data analysis, the package contains some function to generate 
 cell tracks by simulation. This is useful to develop and benchmark track analysis 
@@ -120,7 +120,7 @@ plot(aggregate(TCells, squareDisplacement)[,"value"])
 
 ## 'staggered' analysis of displacement over whole track. Reveals that this track
 ## slows down near its beginning and near its end. 
-filled.contour(computeStaggered(TCells[[4]], displacement, matrix=TRUE))
+filled.contour(applyStaggered(TCells[[4]], displacement, matrix=TRUE))
 
 ## a simple hierarchical clustering based on 2D asphericity
 

@@ -34,10 +34,10 @@ If a string is given, it is first matched to the following builtin values:
  \eqn{mean + sd} as upper bound}
  \item{"mean.se"}{ Outputs the mean and \eqn{mean - se} as lower and 
  \eqn{mean + se} as upper bound}
- \item{"mean.ci.95"}{ Outputs the mean and upper and lower bound of the 
- symmetric 95 percent confidence intervall}. 
- \item{"mean.ci.99"}{ Outputs the mean and upper and lower bound of the 
- symmetric 95 percent confidence intervall}. 
+ \item{"mean.ci.95"}{ Outputs the mean and upper and lower bound of a 
+ parametric 95 percent confidence intervall}. 
+ \item{"mean.ci.99"}{ Outputs the mean and upper and lower bound of a 
+ parametric 95 percent confidence intervall}. 
  \item{"iqr"}{ Outputs the interquartile range, that is, the median, and the 
  25-percent-quartile as a lower and and the 75-percent-quartile as an 
  upper bound}
@@ -75,7 +75,7 @@ of the measure values of tracks having exactly \eqn{i} segments.
 \description{
 Computes a given measure on subtracks of a given track set, applies a summary 
 statistic for each subtrack length, and returns the results in a convenient form.
-This is the main workhorse function that facilitates the most common motility analyses 
+This important workhorse function facilitates many common motility analyses 
 such as mean square displacement, turning angle, and autocorrelation plots.
 }
 \details{
