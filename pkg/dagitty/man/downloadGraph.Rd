@@ -2,7 +2,7 @@
 % Please edit documentation in R/dagitty.r
 \name{downloadGraph}
 \alias{downloadGraph}
-\title{Load Graph drom dagitty.net}
+\title{Load Graph from dagitty.net}
 \usage{
 downloadGraph(x = "dagitty.net/mz-Tuw9")
 }
@@ -10,6 +10,6 @@ downloadGraph(x = "dagitty.net/mz-Tuw9")
 \item{x}{dagitty model URL.}
 }
 \description{
-Load Graph drom dagitty.net
+Load Graph from dagitty.net
 }
 

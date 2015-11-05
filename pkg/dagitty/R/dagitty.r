@@ -1,4 +1,5 @@
 #' @import V8 jsonlite
+#' @importFrom boot boot
 NULL
 
 #' Get Bundled Examples
@@ -160,7 +161,7 @@ simulateSEM <- function( x, b.lower=-.6, b.upper=.6, eps=1, N=500 ){
     mdl$ustart[arrows] <- runif( length(arrows), b.lower, b.upper )
     mdl$ustart[residvars] <- eps
     r <- lavaan::simulateData( mdl, sample.nobs=N ) 
-    r[,vars]
+    r[,setdiff(vars,latents(x$g))]
 }
 
 
@@ -224,6 +225,13 @@ exposures <- function( x ){
 #' @export
 outcomes <- function( x ){
 	.nodesWithProperty( x, "target" )
+}
+
+#' Get Latent Variables
+#' @param x the input graph.
+#' @export
+latents <- function( x ){
+	.nodesWithProperty( x, "latentNode" )
 }
 
 #' Names of Variables in Graph
@@ -750,7 +758,7 @@ dagitty <- function(x){
 	structure( r, class="dagitty" )
 }
 
-#' Load Graph drom dagitty.net
+#' Load Graph from dagitty.net
 #'
 #' @param x dagitty model URL.
 #' @export
@@ -764,6 +772,33 @@ downloadGraph <- function(x="dagitty.net/mz-Tuw9"){
 		dagitty( rawToChar( r ) )
 	} else {
 		NULL
+	}
+}
+
+#' Perform Local Tests of Structural Equation Model
+#' @param x the model.
+#' @param data the data.
+#' @param type character indicating which kind of local
+#'  test to perform.
+#' @param R how many bootstrap replicates for estimating tetrad
+#'  distribution.
+#' @export
+localTests <- function(x,data,type="tetrads", R=50){
+	if( type == "tetrads" ){
+		requireNamespace("boot",quietly=TRUE)
+		tetrads <- function( x, i ){
+			M <- cov(x[i,])
+			sapply( seq_len(nrow(tets)), 
+				function(j) det(M[tets[j,c(1,4)],tets[j,c(2,3)]]) )
+		}
+		tets <- vanishingTetrads( x )
+		bo <- boot::boot( data, tetrads, R )
+		cbind( data.frame( row.names=apply( tets, 1, 
+			function(x) paste(x,collapse=",") ),
+			value=tetrads(data, seq_len(nrow(data))) ),
+			t(apply( bo$t, 2, function(x) quantile(x,c(.025,.975)) )) )
+	} else {
+		stop("Local test type '",type,"' not supported!")
 	}
 }
 

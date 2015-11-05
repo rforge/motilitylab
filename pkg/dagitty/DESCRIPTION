@@ -16,7 +16,8 @@ License: GPL-2
 URL: http://www.dagitty.net
 Imports:
   V8,
-  jsonlite
+  jsonlite,
+  boot
 Suggests:
   knitr,
   base64enc (>= 0.1-3),

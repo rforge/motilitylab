@@ -76,15 +76,29 @@ var GraphSerializer = {
 		var ee = g.getEdges(), edgetype, 
 			r = "# Remember to set lavaan's fixed.x appopriately!\n"
 		_.each( ee, function(e){
-			edgetype = "";
+			edgetype = ""
+			reverse = true
 			if( e instanceof Graph.Edge.Directed ){
-				edgetype = " ~ "
+				if( g.isLatentNode( e.v1 ) ){
+					if( g.isLatentNode( e.v2 ) ){
+						edgetype = "~"
+					} else {
+						edgetype = "=~"
+						reverse = false
+					}
+				} else {
+					edgetype = "~"
+				}
 			} else if( e instanceof Graph.Edge.Bidirected ){
 				edgetype = " ~~ "
 			} else {
 				throw( "Unsupported edge for lavaan conversion : ", e.toString() )
 			}
-			r += e.v2.id + edgetype + e.v1.id+ "\n"
+			if( reverse ){
+				r += e.v2.id + edgetype + e.v1.id+ "\n"
+			} else {
+				r += e.v1.id + edgetype + e.v2.id+ "\n"
+			}
 		} )
 		return r
 	},
