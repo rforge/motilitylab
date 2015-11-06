@@ -194,3 +194,23 @@
 	})
 	r
 }
+
+.ri.test <- function( x, ind, conf.level ){
+	f <- as.formula( paste(ind$X,"~",paste(ind$Y,paste(ind$Z,collapse=" + "),sep=" + ") ) )
+	mdl <- lm( f, data=x )
+	c( coef(summary(mdl))[2,c(1,2,4)], confint( mdl, ind$Y, level=conf.level ) )
+}
+
+.tetrads <- function( x, tets, i=seq_len(nrow(x)) ){
+	M <- cov(x[i,])
+	sapply( seq_len(nrow(tets)), 
+		function(j) det(M[tets[j,c(1,4)],tets[j,c(2,3)]]) )
+}
+
+.tetrad.sem <- function( x, M, n ){
+	Msub <- M[x,x]
+	d <- det(Msub)
+	d12 <- det(Msub[c(1,4),c(1,4)])
+	d34 <- det(Msub[c(2,3),c(2,3)])
+	sqrt((d12 * d34 * (n+1) / (n-1) - d)/(n-2))
+}

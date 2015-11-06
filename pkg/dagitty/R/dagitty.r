@@ -779,27 +779,78 @@ downloadGraph <- function(x="dagitty.net/mz-Tuw9"){
 #' @param x the model.
 #' @param data the data.
 #' @param type character indicating which kind of local
-#'  test to perform.
-#' @param R how many bootstrap replicates for estimating tetrad
-#'  distribution.
+#'  test to perform. Supported values are \code{"tetrads"} and 
+#'  \code{"cis"}.
+#' @param R how many bootstrap replicates for estimating confidence
+#'   intervals. If \code{NA}, then confidence intervals are based on normal
+#'   approximation. For tetrads, the normal approximation is only valid in 
+#'   large samples even if the data are normally distributed.
+#' @param conf.level determines the size of confidence intervals for test
+#'   statistics.
 #' @export
-localTests <- function(x,data,type="tetrads", R=50){
+localTests <- function(x,data,type="tetrads",conf.level=.95,R=NA){
+	w <- (1-conf.level)/2
 	if( type == "tetrads" ){
-		requireNamespace("boot",quietly=TRUE)
-		tetrads <- function( x, i ){
-			M <- cov(x[i,])
-			sapply( seq_len(nrow(tets)), 
-				function(j) det(M[tets[j,c(1,4)],tets[j,c(2,3)]]) )
-		}
 		tets <- vanishingTetrads( x )
-		bo <- boot::boot( data, tetrads, R )
-		cbind( data.frame( row.names=apply( tets, 1, 
-			function(x) paste(x,collapse=",") ),
-			value=tetrads(data, seq_len(nrow(data))) ),
-			t(apply( bo$t, 2, function(x) quantile(x,c(.025,.975)) )) )
+		if( length(tets) == 0 ){
+			return(data.frame())
+		}
+		M <- cov(data)
+		n <- nrow(data)
+		tetrad.values <- .tetrads(data,tets)
+		tetrad.sample.sds <- sapply(seq_len(nrow(tets)),
+			function(i) .tetrad.sem(tets[i,],M,n))
+		r <- data.frame(
+				row.names=apply( tets, 1, 
+					function(x) paste(x,collapse=",") ),
+				estimate=tetrad.values,
+				std.error=tetrad.sample.sds,
+				p.value=2*pnorm(abs(tetrad.values/tetrad.sample.sds),
+					lower.tail=FALSE)
+			)
+		if( is.finite(R) ){
+			requireNamespace("boot",quietly=TRUE)
+			bo <- boot::boot( data,
+				function(data,i) .tetrads(data,tets,i),
+				R )
+			r <- cbind( r, t(apply( bo$t, 2,
+				function(x) quantile(x,c((1-conf.level)/2,1-(1-conf.level)/2)) )) )
+		} else {
+			conf <- cbind( tetrad.values+qnorm(w)*tetrad.sample.sds,
+				tetrad.values+qnorm(1-w)*tetrad.sample.sds )
+				colnames(conf) <- c(paste0(100*w,"%"),paste0(100*(1-w),"%"))
+			r <- cbind( r, conf )
+		}
+	} else if( type == "cis" ){
+		if( is.finite(R) ){
+			stop("Bootstrapping for regressional independence is not yet implemented.")
+		}
+		cis <- impliedConditionalIndependencies( x )
+		if( length(cis) == 0 ){
+			return(data.frame())
+		}
+		r <- as.data.frame(
+			row.names=sapply(cis,as.character),
+			t(sapply( cis, function(i) .ri.test(data,i,conf.level) ))
+		)
 	} else {
 		stop("Local test type '",type,"' not supported!")
 	}
+	colnames(r) <- c("estimate","std.error","p.value",
+		paste0(100*w,"%"),paste0(100*(1-w),"%"))
+	return(r)
+}
+
+#' @export
+plotLocalTestResults <- function(x,xlab="test statistic (95% CI)",
+	xlim=c(min(x[,c(4,5)]),max(x[,c(4,5)])),...){
+	y <- seq_len(nrow(x))
+	plot( x[,1], y,xlab=xlab,xlim=xlim, yaxt="n", ylab="", ... )
+	axis( 2, at=y, labels=rownames(x), las=1 )
+	segments( x[,4], y, x[,5], y )
+	#segments( seq_len(nrow(x))+.1, x[,1]-2*x[,2], 
+	#	y1=x[,1]+2*x[,2], col=2 )
+	abline( v=0 )
 }
 
 #' @export
