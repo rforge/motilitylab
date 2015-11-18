@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions.R
 \name{wrapTrack}
 \alias{wrapTrack}
-\title{Create Track Dataset from Single Track}
+\title{Create Track Object from Single Track}
 \usage{
 wrapTrack(x)
 }

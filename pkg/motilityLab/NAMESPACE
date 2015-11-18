@@ -14,3 +14,4 @@ importFrom("stats", "aggregate", "approx", "ave", "cov", "diffinv", "dist",
 		 "hclust", "median", "qf", "quantile", "rnorm", "runif",
 		 "sd", "spline", "t.test", "weighted.mean")
 importFrom("utils", "head", "read.table", "tail")
+importFrom("ellipse", "ellipse")

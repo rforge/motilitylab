@@ -1,9 +1,27 @@
-#' Extract Subset of Dimensions
+
+#' Normalize Tracks
 #' 
-#' Projects tracks onto the given dimensions.
+#' Translates each track in a given set of tracks such that the 
+#' first position is the origin. 
+#' 
+#' @param x the input \code{tracks} object.
+#'
+#' @examples
+#' ## normalization of Neutrophil data reveals upward motion
+#' plot( normalizeTracks( Neutrophils ) )
+normalizeTracks <- function(x){
+	as.tracks(lapply(x, .normalizeTrack))
+}
+
+
+#' Extract Spatial Dimensions
+#' 
+#' Projects tracks onto the given spatial dimensions.
 #' 
 #' @param x the input tracks object.
-#' @param dims a character vector giving the dimensions to extract from each track.
+#' @param dims a character vector (for column names) or an integer vector (for column
+#'  indices) giving the dimensions to extract from each track.
+#'  The time dimension (i.e., the first column of all tracks) is always included.
 #' 
 #' @return A tracks object is returned that contains only those dimensions 
 #' of the input \code{tracks} that are given in \code{dims}.
@@ -14,24 +32,47 @@
 #' speed.3D <- mean( sapply( TCells, speed ) )
 #' 
 projectDimensions <- function(x, dims=c("x","y")) {
-	as.tracks(lapply(x, function(t) {
-		t[, c("t",dims)]
-	}))
+	if( class(x) != "tracks" ){
+		x <- as.tracks(x)
+	}
+	if( length(x) == 0 ){
+		return(x)
+	}
+	if( class(dims) == "character" ){
+		.dims <- match(dims,colnames(x[[1]]))
+		if( any(is.na(.dims)) ){
+			stop("dimensions not found: ",dims[is.na(.dims)])
+		}
+		as.tracks(lapply(x, function(t) {
+			t[, c(1,.dims)]
+		}))
+	} else if( class(dims) == "numeric" ){
+		as.tracks(lapply(x, function(t) {
+			t[, c(1,dims)]
+		}))
+	} else {
+		stop("'dims' must be a character or integer vector!")
+	}
 }
 
 #' Process Tracks Containing Gaps
 #'
+#' Many common motility analyses, such as mean square displacement plots, assume that
+#' object positions are recorded at constant time intervals. For some application domains,
+#' such as intravital imaging, this may not always be the case. This function can be 
+#' used to pre-process data imaged at nonconstant intervals, provided the deviations are
+#' not too extreme.
 #'
 #' @param x the input tracks object.
 #' @param how string specifying what do with tracks that contain gaps. Possible
 #'   values are:
 #' \itemize{
-#'  \item{"drop"}{The simplest option -- discard all tracks that contain gaps.}
-#'  \item{"split"}{Split tracks around the gaps, e.g. a track for which the step
+#'  \item{"drop":}{ the simplest option -- discard all tracks that contain gaps.}
+#'  \item{"split":}{ split tracks around the gaps, e.g. a track for which the step
 #'  between the 3rd and 4th positions is too long or too short is split into one
 #'  track corresponding to positions 1 to 3 and another track corresponding to
 #'  position 3 onwards.}
-#'  \item{"interpolate"}{Approximate the track positions using linear
+#'  \item{"interpolate":}{ approximate the track positions using linear
 #'  interpolation (see \code{\link{interpolateTrack}}). The result is a tracks
 #'  object with constant step durations.
 #'  }

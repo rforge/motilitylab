@@ -11,9 +11,7 @@ timeStep(x, FUN = median, na.rm = FALSE)
 
 \item{FUN}{the summary statistic to be applied.}
 
-\item{na.rm}{logical, indicates 
-whether to remove missing values before
-applying FUN.}
+\item{na.rm}{logical, indicates whether to remove missing values before applying FUN.}
 }
 \value{
 Summary statistic of the time intervals between two consecutive positions in a track 

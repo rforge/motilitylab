@@ -15,26 +15,23 @@
 #' @return A data frame  containing in cell track with \code{nsteps} steps in 
 #' \code{dim} dimensions is returned.
 brownianTrack <- function(nsteps=100, dim=3, mean=0, sd=1) {
+	if( dim < 1 ){
+		stop("1 or more spatial dimensions required!")
+	}
 	m <- cbind( 0:nsteps, replicate(dim, diffinv(rnorm(nsteps,mean=mean,sd=sd))))
-	colnames(m) <- c("t", "x", "y", "z")
+	if( dim <= 3 ){
+		colnames(m) <- c("t", "x", "y", "z")[1:(dim+1)]
+	} else {
+		colnames(m) <- c("t", paste0( "x", 1:dim ) )
+	}
 	m
 }
 
 #' Simulate a 3D Cell Track Using the Beauchemin Model
-#'  
+#' 
 #' The Beauchemin model is a simple, particle-based description of T cell motion in lymph
 #' node in the absence of antigen, which is similar to a random walk (Beauchemin et al, 
 #' 2007). 
-#'
-#' In the Beauchemin model, cells move into a fixed direction for a fixed time \code{t.free}
-#' at a fixed speed \code{v.free}. They then switch to a different direction, which is 
-#' sampled at uniform from a sphere. The change of direction takes a fixed time \code{t.pause},
-#' during which the cell does not move. Thus, the Beauchemin model is identical to the 
-#' freely jointed chain model of polymer physics, except for the explicit "pause phase" 
-#' between subsequent steps. 
-#' 
-#' This function implements an extended version of the Beauchemin model, which can also 
-#' simulate directionally biased motion. For details, see Textor et al (2013).
 #'
 #' @param sim.time specifies the duration of the track to be generated
 #' @param delta.t change in time between each timepoint.
@@ -49,12 +46,24 @@ brownianTrack <- function(nsteps=100, dim=3, mean=0, sd=1) {
 #' @param t.pause time that it takes the cell to adjust movement to new direction.
 #' @param bias.dir a 3D vector indicating the direction along which there is a 
 #' preference for movement.
-#' @details The default parameters were found to most accurately describe 'default' T
-#' cell motion in lymph nodes using least-squares fitting to the mean displacement plot
-#' (Beauchemin et al, 2007).
-#' 
+#'
 #' @return A track, i.e., a matrix with \code{t/delta.t} rows and 4 columns. 
 #' 
+#' @details In the Beauchemin model, cells move into a fixed direction for a fixed time \code{t.free}
+#' at a fixed speed \code{v.free}. They then switch to a different direction, which is 
+#' sampled at uniform from a sphere. The change of direction takes a fixed time \code{t.pause},
+#' during which the cell does not move. Thus, the Beauchemin model is identical to the 
+#' freely jointed chain model of polymer physics, except for the explicit "pause phase" 
+#' between subsequent steps.
+#' 
+#' The default parameters implemented in this function 
+#' were found to most accurately describe 'default' T
+#' cell motion in lymph nodes using least-squares fitting to the mean displacement plot
+#' (Beauchemin et al, 2007). 
+#' 
+#' This function implements an extended version of the Beauchemin model, which can also 
+#' simulate directionally biased motion. For details, see Textor et al (2013).
+#'
 #' @references 
 #' Catherine Beauchemin, Narendra M. Dixit and Alan S. Perelson (2007), Characterizing 
 #' T cell movement within lymph nodes in the absence of antigen. \emph{Journal of Immunology}
@@ -75,8 +84,7 @@ brownianTrack <- function(nsteps=100, dim=3, mean=0, sd=1) {
 #'   bias.dir=c(-1,1,0),p.bias=10,taxis.mode = 2,
 #'   p.persist = 0.1,delta.t = 1) )
 #' plot( out )
-
-beaucheminTrack <- function(sim.time=10,delta.t=1,p.persist=0.5,p.bias=0.9,
+beaucheminTrack <- function(sim.time=10,delta.t=1,p.persist=0.0,p.bias=0.9,
 	bias.dir=c(0,0,0),taxis.mode=1,t.free=2,v.free=18.8,t.pause=0.5){  
 	# Parameter checks
 	if(p.persist < 0 || p.persist > 1){
@@ -95,8 +103,8 @@ beaucheminTrack <- function(sim.time=10,delta.t=1,p.persist=0.5,p.bias=0.9,
 	if(delta.t <= 0){
 		stop("delta.t must be a value larger than 0")
 	}
-	if(t.pause <= 0){
-		stop("t.pause must be a value larger than 0")
+	if(t.pause < 0){
+		stop("t.pause must be a nonnegative value")
 	}
 	if(t.free <= 0){
 		stop("t.free must be a value larger than 0")
@@ -127,8 +135,10 @@ beaucheminTrack <- function(sim.time=10,delta.t=1,p.persist=0.5,p.bias=0.9,
 		pos <- rbind( pos, c(t,p), c(tnew,pnew) )
 		t <- tnew + t.pause
 		p <- pnew
-		d <- .beaucheminPickNewDirection( d,p.bias,0,bias.dir,taxis.mode,
+		if( p.persist == 0 || runif(1) > p.persist ){
+			d <- .beaucheminPickNewDirection( d,p.bias,0,bias.dir,taxis.mode,
 					t.free,v.free,rot.mat )
+		}
 	}
 	pnew <- p+d[4]*d[-4]
 	tnew <- t+d[4]
@@ -141,7 +151,7 @@ beaucheminTrack <- function(sim.time=10,delta.t=1,p.persist=0.5,p.bias=0.9,
 	pos <- cbind( t, pos.interpolated )
 	colnames(pos) <- c("t","x","y","z")
 
-	return(normalizeTrack(pos))
+	return(.normalizeTrack(pos))
 }
 
 

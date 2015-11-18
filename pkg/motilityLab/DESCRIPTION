@@ -1,8 +1,8 @@
 Package: MotilityLab
 Type: Package
-Title: Quantitative Motion Analysis
-Version: 0.2-3
-Date: 2015-11-04
+Title: Quantitative Analysis of Motion
+Version: 0.2-4
+Date: 2015-11-17
 Author: Katharina Dannenberg, Jeffrey Berry, Johannes Textor
 Maintainer: Johannes Textor <johannes.textor@gmx.de>
 Description: Statistics to quantify tracks of moving things (x-y-z-t data),
@@ -15,10 +15,11 @@ Imports:
     stats,
     grDevices,
     graphics,
-    utils
+    utils,
+    ellipse
 Suggests:
     pracma,
     scatterplot3d,
     fractaldim,
-    ellipse
+    testthat
 RoxygenNote: 5.0.0

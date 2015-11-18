@@ -170,3 +170,7 @@
 	which(r)
 }
 
+.normalizeTrack <- function(track) {
+	cbind( track[,1,drop=FALSE], sweep(track[,-1],2,track[1,-1]) )
+}
+

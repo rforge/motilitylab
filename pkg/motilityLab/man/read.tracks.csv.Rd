@@ -42,7 +42,7 @@ to be separated by one or more blank lines in the input file instead of being
 designated by a track ID column. In this case, numerical track IDs are automatically
 generated.}
 
-\item{...}{Further arguments to be passed to \code{read.csv}, for instance 
+\item{...}{further arguments to be passed to \code{read.csv}, for instance 
 \code{sep="\t"} can be useful for tab-separated files.}
 }
 \value{

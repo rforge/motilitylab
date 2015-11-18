@@ -9,7 +9,8 @@ clusterTracks(tracks, measures, scale = TRUE, ...)
 \arguments{
 \item{tracks}{the tracks that are to be clustered.}
 
-\item{measures}{a function, or a vector of functions. Each function is expected to 
+\item{measures}{a function, or a vector of functions (see \link{TrackMeasures}). 
+Each function is expected to 
 return a single number given a single track.}
 
 \item{scale}{logical indicating whether the measures values shall be scaled

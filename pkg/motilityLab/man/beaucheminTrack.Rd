@@ -2,15 +2,11 @@
 % Please edit documentation in R/simulate-tracks.R
 \name{beaucheminTrack}
 \alias{beaucheminTrack}
-\title{Simulate a 3D Cell Track Using the Beauchemin Model
- 
-The Beauchemin model is a simple, particle-based description of T cell motion in lymph
-node in the absence of antigen, which is similar to a random walk (Beauchemin et al, 
-2007).}
+\title{Simulate a 3D Cell Track Using the Beauchemin Model}
 \usage{
-beaucheminTrack(sim.time = 10, delta.t = 1, p.persist = 0.5,
-  p.bias = 0.9, bias.dir = c(0, 0, 0), taxis.mode = 1, t.free = 2,
-  v.free = 18.8, t.pause = 0.5)
+beaucheminTrack(sim.time = 10, delta.t = 1, p.persist = 0, p.bias = 0.9,
+  bias.dir = c(0, 0, 0), taxis.mode = 1, t.free = 2, v.free = 18.8,
+  t.pause = 0.5)
 }
 \arguments{
 \item{sim.time}{specifies the duration of the track to be generated}
@@ -39,20 +35,25 @@ preference for movement.}
 A track, i.e., a matrix with \code{t/delta.t} rows and 4 columns.
 }
 \description{
+The Beauchemin model is a simple, particle-based description of T cell motion in lymph
+node in the absence of antigen, which is similar to a random walk (Beauchemin et al, 
+2007).
+}
+\details{
 In the Beauchemin model, cells move into a fixed direction for a fixed time \code{t.free}
 at a fixed speed \code{v.free}. They then switch to a different direction, which is 
 sampled at uniform from a sphere. The change of direction takes a fixed time \code{t.pause},
 during which the cell does not move. Thus, the Beauchemin model is identical to the 
 freely jointed chain model of polymer physics, except for the explicit "pause phase" 
 between subsequent steps.
-}
-\details{
+
+The default parameters implemented in this function 
+were found to most accurately describe 'default' T
+cell motion in lymph nodes using least-squares fitting to the mean displacement plot
+(Beauchemin et al, 2007). 
+
 This function implements an extended version of the Beauchemin model, which can also 
 simulate directionally biased motion. For details, see Textor et al (2013).
-
-The default parameters were found to most accurately describe 'default' T
-cell motion in lymph nodes using least-squares fitting to the mean displacement plot
-(Beauchemin et al, 2007).
 }
 \examples{
 ## Create track with model parameters and return matrix of positions

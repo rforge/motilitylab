@@ -29,8 +29,9 @@ condfidence interval are given.) Plot works only in one or two dimensions.}
 
 \item{add}{whether to add the plot to the current plot (\code{TRUE}) or create a}
 
-\item{ellipse.col}{color with which to draw the confidence ellipse. Use \code{NA} to
-omit the confidence ellipse.}
+\item{ellipse.col}{color with which to draw the confidence ellipse of the mean (for
+1D, this corresponds to the confidence interval of the mean). 
+Use \code{NA} to omit the confidence ellipse.}
 
 \item{ellipse.border}{color of the confidence ellipse border. Use \code{NA} to omit
 the border.}

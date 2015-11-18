@@ -4,10 +4,10 @@
 \alias{normalizeToDuration}
 \title{Normalize a Measure to Track Duration}
 \usage{
-normalizeToDuration(measure)
+normalizeToDuration(x)
 }
 \arguments{
-\item{measure}{the measure that should be nomalized.}
+\item{x}{a track measure (see \link{TrackMeasures}).}
 }
 \value{
 A function that computes the input measure for a given track

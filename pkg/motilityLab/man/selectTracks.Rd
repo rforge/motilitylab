@@ -9,7 +9,7 @@ selectTracks(x, measure, lower, upper)
 \arguments{
 \item{x}{the input tracks.}
 
-\item{measure}{measure on which the selection is based.}
+\item{measure}{measure on which the selection is based (see \link{TrackMeasures}).}
 
 \item{lower}{specifies the lower bound (inclusive) of the allowable measure.}
 

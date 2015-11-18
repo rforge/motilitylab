@@ -7,7 +7,7 @@
 staggered(measure, ...)
 }
 \arguments{
-\item{measure}{the measure that shall be computed in a staggered fashion.}
+\item{measure}{a track measure (see \link{TrackMeasures}).}
 
 \item{...}{further parameters passed on to \code{\link{applyStaggered}}.}
 }

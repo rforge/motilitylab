@@ -44,20 +44,14 @@ as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE,
 
 `[.tracks` <- function(x,y) as.tracks(as.list(x)[y])
 
-#' Convert to Tracks
-#' 
-#' Coerces \code{x} to a \code{tracks} object.
-#' 
-#' @param x the object to be coerced.
-#' @param ... further arguments to be passed on to the respective method.
-#'
-#' @details The S3 Method corresponding to the class of `x` (usually \code{list})
-#' is called.
-#'  
-#' @return The coerced object of S3 class \code{tracks}.
-as.tracks <- function(x,...) 
-  UseMethod("as.tracks")
 
+#' @rdname tracks
+as.tracks.list <- function(x, ...) 
+  structure(x, class="tracks")
+
+#' @rdname tracks
+as.tracks <- function(x, ...) 
+  UseMethod("as.tracks")
 
 #' Convert from Tracks to List
 #' 
@@ -69,21 +63,7 @@ as.list.tracks <- function(x, ...)
   structure( x, class="list" )
 
 
-#' Convert from List to Tracks
-#' 
-#' "Converts" a list into a \code{tracks} object by settings its 
-#' S3 class to \code{tracks}.
-#' 
-#' @param x the list that is to be converted into a \emph{tracks} object.
-#' @param ... further arguments to be passed from or to other methods.
-as.tracks.list <- function(x,...) 
-  structure(x, class="tracks")
-
-#' Check for Class Tracks
-#'
-#' Verifies whether the input object inherits from S3 class \code{"tracks"}.
-#'
-#' @param x the input object.
+#' @rdname tracks
 is.tracks <- function(x)
   inherits(x, "tracks")
 
@@ -124,17 +104,7 @@ sort.tracks <- function(x, decreasing=FALSE, ...) {
 	as.tracks(lapply(x, function(d) d[order(d[,"t"],decreasing=decreasing),,drop=FALSE] ))
 }
 
-
-#' Join Track Datasets
-#' 
-#' Concatenates several \emph{tracks} objects.
-#' 
-#' @param ... the \emph{tracks} objects that are to be concatenated.
-#'
-#' @details Joins the tracks  in the given \emph{tracks} 
-#' objects into one tracks object, preserving the names of list elements and 
-#' the ordering of the input objects as well as of the individual tracks in 
-#' them.
+#' @rdname tracks
 c.tracks <- function(...) {
 	args <- lapply(list(...), as.list)
 	as.tracks(do.call(c, args))
@@ -190,7 +160,7 @@ c.tracks <- function(...) {
 #' designated by a track ID column. In this case, numerical track IDs are automatically
 #' generated.
 #'
-#' @param ... Further arguments to be passed to \code{read.csv}, for instance 
+#' @param ... further arguments to be passed to \code{read.csv}, for instance 
 #' \code{sep="\t"} can be useful for tab-separated files.
 #' 
 #' @return An object of class \emph{tracks} is returned, which is a list of 
@@ -362,7 +332,7 @@ plot.tracks <- function(x, dims=c('x','y'), add=F,
 	segments(x0, y0, x1, y1, col=lcol)
 }
 
-#' Create Track Dataset from Single Track
+#' Create Track Object from Single Track
 #' 
 #' Makes a \code{tracks} object containing the given track.
 #' 
@@ -380,7 +350,7 @@ wrapTrack <- function(x) {
 #' computing the measure on the whole track, the measure is averaged over
 #' all subtracks (of any length) of the track.
 #' 
-#' @param measure the measure that shall be computed in a staggered fashion.
+#' @param measure a track measure (see \link{TrackMeasures}).
 #' @param ... further parameters passed on to \code{\link{applyStaggered}}.
 #' 
 #' @details This is a wrapper mainly designed to provide a convenient interface
@@ -473,7 +443,6 @@ applyStaggered <- function(x, measure, matrix=FALSE, min.segments=1) {
 	}
 }
 
-
 #' Measure for Every Prefix of a Track
 #' 
 #' @param measure the measure that is to be computed.
@@ -498,36 +467,6 @@ forEveryPrefix <- function(measure, min.length=1) {
 	  return(res)
   }
 }
-
-#' Normalize a Track
-#' 
-#' Translates a track such that its starting point is in the origin of ordinates.
-#' 
-#' @param track the track that is to be translated, given in a data frame with 
-#' columns \eqn{t}, \eqn{x} and possibly \eqn{y}, and \eqn{z}.
-#' 
-#' @details Subtracts the coodinates and time of the tracks starting point from
-#' every point on the track.
-#' 
-#' @return Returns the translation of the input track whose starting point is 
-#' on the origin of ordinates.
-normalizeTrack <- function(track) {
-	cbind( track[,"t",drop=FALSE], sweep(track[,-1],2,track[1,-1]) )
-}
-
-
-#' Normalize Tracks
-#' 
-#' Normalizes list of tracks (given in a \code{tracks} object) such that the 
-#' starting point of each track is in the origin of ordinates.
-#' 
-#' @param tracks the \code{tracks} object that is to be normalized.
-#' 
-#' @details The function \code{\link{normalizeTrack}} is applied to each track.
-#' 
-#' @return A \emph{tracks} object with the tracks from the input object translated 
-#' such that their starting point is in the origin of ordinates.
-normalizeTracks <- function(tracks) as.tracks(lapply(tracks, normalizeTrack))
 
 #' Decompose Track(s) into Subtracks
 #' 
@@ -582,13 +521,12 @@ prefixes <- function(x,i) {
 	)
 }
 
-
 #' Normalize a Measure to Track Duration
 #' 
 #' Returns a measure that divides the input measure by the duration of its 
 #' input track.
 #' 
-#' @param measure the measure that should be nomalized.
+#' @param x a track measure (see \link{TrackMeasures}).
 #' 
 #' @return A function that computes the input measure for a given track
 #' and returns the result divided by the track's duration.
@@ -597,38 +535,35 @@ prefixes <- function(x,i) {
 #' ## normalizeToDuration(displacement) can be used as an indicator 
 #' ## for the motion's efficiency
 #' sapply(TCells, normalizeToDuration(displacement))
-normalizeToDuration <- function(measure) {
+normalizeToDuration <- function(x) {
   function(track) {
-    measure(track) / duration(track)
+    x(track) / duration(track)
   }
 }
 
 
 
-#' Bivariate Scatterplot of Two Given Track Measures
+#' Bivariate Scatterplot of Track Measures
 #' 
-#' Plots the values of two measures applied on given tracks against each 
+#' Plots the values of two measures applied on the given tracks against each 
 #' other.
 #' 
-#' @param measurex the measure to be shown on the X axis.
-#' @param measurey the measure to be shown on the Y axis.
-#' @param x the argument which the measures shall be applied to. Either this 
-#' must be of a type which \code{measurex} and \code{measurey} can directly
-#' be applied to, or, if measurex and measurey are applicable to single tracks,
-#' the argument can be a \emph{tracks} object, which the measures will be 
-#' applied to using \code{sapply} before plotting the result.
+#' @param measure.x the measure to be shown on the X axis (see \link{TrackMeasures}).
+#' @param measure.y the measure to be shown on the Y axis.
+#' @param x the input \code{tracks} object.
 #' @param add a logical indicating whether the tracks are to be added to an 
 #' existing plot via \code{\link[graphics]{points}}.
 #' @param xlab label of the x-axis. By default the name of the input function 
-#' \code{measurex}.
+#' \code{measure.x}.
 #' @param ylab label of the y-axis. By default the name of the input function 
-#' \code{measurey}.
+#' \code{measure.y}.
 #' @param ... additional parameters to be passed to \code{\link[graphics]{plot}} 
-#' (in case add=False) or \code{\link[graphics]{points}} (in case add=True), 
-#' respectively.
+#' (in case \code{add=FALSE}) or \code{\link[graphics]{points}} (\code{add=TRUE}).
+# For ellipse documentation:
+#' @inheritParams hotellingsTest
 #' 
 #' @details Plots the value of \code{measurey} applied to \code{x} against the
-#' value of  \code{measurey} applied to \code{y}. This is useful for "FACS-like"
+#' value of \code{measurey} applied to \code{y}. This is useful for "FACS-like"
 #' motility analysis, where clusters of cell tracks are identified based on their
 #' motility parameters (Moreau et al, 2012; Textor et al, 2014).
 #'
@@ -644,19 +579,43 @@ normalizeToDuration <- function(measure) {
 #' \emph{PLoS Computational Biology} \bold{10}(8), e1003752.
 #' doi:10.1371/journal.pcbi.1003752
 #'
-plotTrackMeasures <- function(x, measurex, measurey, add=FALSE, 
-                              xlab=deparse(substitute(measurex)), 
-                              ylab=deparse(substitute(measurey)), ...) {
+#' @examples
+#' ## Compare speed and straightness of 3 example population tracks.
+#' ## To make the comparison fair, analyze subtracks of fixed length.
+#' plotTrackMeasures( subtracks(TCells,4,0), speed, straightness, ellipse.col="black" )
+#' plotTrackMeasures( subtracks(BCells,4,0), speed, straightness,
+#'   col=2, ellipse.col=2, pch=2, add=TRUE )
+#' plotTrackMeasures( subtracks(Neutrophils,4,0), speed, straightness, 
+#'   col=3, ellipse.col=3, pch=3, add=TRUE )
+plotTrackMeasures <- function(x, measure.x, measure.y, add=FALSE, 
+                              xlab=deparse(substitute(measure.x)), 
+                              ylab=deparse(substitute(measure.y)), 
+                              ellipse.col="red", ellipse.border="black",
+                              conf.level=0.95, ...) {
 	if( !is.tracks(x) ){
-		x <- wrapTrack( x )
+		x <- as.tracks( x )
 	}
-    if(add) {
-      points(sapply(y,measurey) ~ sapply(x,measurey), ...)
-    } else {
-      plot(sapply(y,measurey) ~ sapply(x,measurey), xlab=xlab, ylab=ylab, ...)
-    }
+	mx <- sapply(x,measure.x)
+	my <- sapply(x,measure.y)
+	if(add) {
+		points(mx, my, ...)
+	} else {
+		plot(sapply(x,measure.x), sapply(x,measure.y), xlab=xlab, ylab=ylab, ...)
+	}
+	if( !is.na(ellipse.col) ){
+		n <- length(mx)
+		p <- 1
+		df.1 <- p
+		df.2 <- n-p
+		d <- cbind( mx, my )
+		S <- cov( d )
+		t <- sqrt(((n-1)*df.1/(n*df.2))*qf(1-conf.level,df.1,df.2,lower.tail=F))
+		polygon( ellipse::ellipse( S, centre=colMeans(d),
+			t=t ),
+			border=ellipse.border,
+			col=.setColAlpha(ellipse.col,128) )
+	}
 }
-  
 
 #' Cluster Tracks
 #' 
@@ -664,7 +623,8 @@ plotTrackMeasures <- function(x, measurex, measurey, add=FALSE,
 #' of track measures.
 #' 
 #' @param tracks the tracks that are to be clustered.
-#' @param measures a function, or a vector of functions. Each function is expected to 
+#' @param measures a function, or a vector of functions (see \link{TrackMeasures}). 
+#' Each function is expected to 
 #' return a single number given a single track.
 #' @param scale logical indicating whether the measures values shall be scaled
 #' using the function \code{\link[base]{scale}} before the clustering. 
@@ -701,7 +661,6 @@ clusterTracks <- function(tracks, measures, scale=TRUE, ...) {
 	}
 	hclust(dist(values), ...)
 }
-
 
 #' Compute Summary Statistics of Subtracks
 #' 
@@ -796,7 +755,7 @@ aggregate.tracks <- function( x, measure, by="subtracks", FUN=mean,
     filter.subtracks=NULL, ... ){
     if( class( x ) != "tracks" ){
     	if( class( x ) %in% c("data.frame","matrix" ) ){
-    		tracks <- wrapTrack( x )
+    		x <- wrapTrack( x )
     	} else {
     		stop("Cannot coerce argument 'tracks' to tracks object" )
     	}
@@ -981,8 +940,9 @@ boundingBox <- function(x) {
 #' p-value should either be corrected for this dependence (e.g. by adjusting 
 #' the degrees of freedom accordingly), or `step.spacing` should be set to a value
 #' high enough to ensure that the considered steps are approximately independent.
-#' @param ellipse.col color with which to draw the confidence ellipse. Use \code{NA} to
-#'  omit the confidence ellipse.
+#' @param ellipse.col color with which to draw the confidence ellipse of the mean (for
+#'  1D, this corresponds to the confidence interval of the mean). 
+#'  Use \code{NA} to omit the confidence ellipse.
 #' @param ellipse.border color of the confidence ellipse border. Use \code{NA} to omit
 #'  the border.
 #' @param conf.level the desired confidence level for the confidence ellipse.
@@ -1036,14 +996,10 @@ hotellingsTest <- function(tracks, dim=c("x", "y"),
 			abline(h=0)
 			abline(v=0)
 			if( !is.na(ellipse.col) ){
-				if( !requireNamespace("ellipse",quietly=TRUE) ){
-					warning("Drawing confidence ellipse requires the package 'ellipse'. Please install it.")
-				} else {
-					t <- sqrt(((n-1)*df.1/(n*df.2))*qf(1-conf.level,df.1,df.2,lower.tail=F))
-					polygon(ellipse::ellipse(S,centre=mX,t=t),
-						col=.setColAlpha(ellipse.col,128),border=ellipse.border)
-					points(mX[1],mX[2],col=ellipse.col,pch=20)
-				}
+				t <- sqrt(((n-1)*df.1/(n*df.2))*qf(1-conf.level,df.1,df.2,lower.tail=F))
+				polygon(ellipse::ellipse(S,centre=mX,t=t),
+					col=.setColAlpha(ellipse.col,128),border=ellipse.border)
+				points(mX[1],mX[2],col=ellipse.col,pch=20)
 			}
 		}
 	} else if (plot && (length(dim)==1)) {
@@ -1072,7 +1028,7 @@ hotellingsTest <- function(tracks, dim=c("x", "y"),
 #' measure. For instance, extract all tracks with a certain minimum length.
 #'
 #' @param x the input tracks.
-#' @param measure measure on which the selection is based.
+#' @param measure measure on which the selection is based (see \link{TrackMeasures}).
 #' @param lower specifies the lower bound (inclusive) of the allowable measure.
 #' @param upper specifies the upper bound (inclusive) of the allowable measure.
 #' @examples
@@ -1122,9 +1078,7 @@ plot3d <- function(x,...){
 #' 
 #' @param x the input tracks.
 #' @param FUN the summary statistic to be applied.
-#' @param na.rm logical, indicates 
-#'  whether to remove missing values before
-#'  applying FUN.
+#' @param na.rm logical, indicates whether to remove missing values before applying FUN.
 #'
 #' @details Most track quantification depends on the assumption that track positions are
 #' recorded at constant time intervals. If this is not the case, then most of the statistics
@@ -1171,6 +1125,81 @@ interpolateTrack <- function( x, t, how="linear" ){
 	r <- cbind( t, pos.interpolated )
 	colnames(r) <- colnames(x)
 	return(r)
+}
+
+#' Tracks Objects
+#'
+#' The function \code{tracks} is used to create tracks objects. \code{as.tracks} coerces
+#' its argument to a tracks object, and \code{is.tracks} tests for tracks objects.
+#' \code{c} can be used to combine (concatenate) tracks objects.
+#'
+#' @param x an object to be coerced or tested.
+#'
+#' @param ... for \code{tracks}, numeric matrices or objects that can be coerced to 
+#'  numeric matrices. Each
+#'  matrix contains the data of one track. The first column is the time, and the remaining
+#'  columns define a spatial position. Every given matrix has to contain the same number
+#'  of columns, and at least two columns are necessary.
+#'
+#'  For \code{c}, tracks objects to be combined.
+#'
+#'  For \code{as.tracks}, further arguments passed to methods (currently not used).
+#'
+#' @details Tracks objects are lists of matrices. Each matrix contains at least two 
+#' columns; the first column is time, and the remaining columns are a spatial coordinate.
+#' The following naming conventions are used (and enforced by \code{tracks}): The time
+#' column has the name `t`, and spatial coordinate columns have names `x`,`y`,`z` if there
+#' are three or less coordinates, and `x1`,...,`xk` if there are \eqn{k \ge 4} 
+#' coordinates. All tracks in an object must have the same number of dimensions. The
+#' positions in a track are expected to be sorted by time (and the constructor 
+#' \code{tracks} enforces this).
+#'
+#' @examples
+#' ## A single 1D track
+#' x <- tracks( matrix(c(0, 8,  
+#' 10, 9, 
+#' 20, 7, 
+#' 30, 7,
+#' 40, 6, 
+#' 50, 5), ncol=2, byrow=TRUE ) )
+#'
+#' ## Three 3D tracks
+#' x2 <- tracks( rbind(
+#'  c(0,5,0), c(1,5,3), c(2,1,3), c(3,5,6) ),
+#'  rbind( c(0,1,1),c(1,1,4),c(2,5,4),c(3,5,1),c(4,-3,1) ),
+#'  rbind( c(0,7,0),c(1,7,2),c(2,7,4),c(3,7,7) ) )
+tracks <- function( ... ){
+	tlist <- lapply( list(...), data.matrix )
+	if( !all( sapply( tlist , is.numeric ) ) ){
+		stop("Track time/position information must be numeric!")
+	}
+	tdims <- sapply( tlist, ncol )
+	if( any( tdims < 2 ) ){
+		stop("At least time and one spatial dimension are needed!")
+	}
+	if( length(tlist) == 0 ){
+		return( as.tracks(tlist) ) 
+	}
+	if( length(tlist) > 0 &&
+		diff( range( tdims ) ) > 0 ){
+		stop("All tracks must have the same number of dimensions!")
+	}
+	r <- tlist[[1]]
+	if( ncol(r) <= 5 ){
+		cls <- c("t",c("x","y","z")[seq_len(ncol(r)-1)])
+		for( i in seq_along(tlist) ){
+			colnames(tlist[[i]]) <- cls
+		}
+	} else {
+		cls <- c("t",paste0("x",seq_len(ncol(r)-1)))
+		for( i in seq_along(tlist) ){
+			colnames(tlist[[i]]) <- cls
+		}
+	}
+	if( is.null(names(tlist)) ){
+		names(tlist) <- seq_along(tlist)
+	}
+	sort(as.tracks(tlist))
 }
 
 #' Subsample Track by Constant Factor

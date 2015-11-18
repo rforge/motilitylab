@@ -2,45 +2,59 @@
 % Please edit documentation in R/functions.R
 \name{plotTrackMeasures}
 \alias{plotTrackMeasures}
-\title{Bivariate Scatterplot of Two Given Track Measures}
+\title{Bivariate Scatterplot of Track Measures}
 \usage{
-plotTrackMeasures(x, measurex, measurey, add = FALSE,
-  xlab = deparse(substitute(measurex)),
-  ylab = deparse(substitute(measurey)), ...)
+plotTrackMeasures(x, measure.x, measure.y, add = FALSE,
+  xlab = deparse(substitute(measure.x)),
+  ylab = deparse(substitute(measure.y)), ellipse.col = "red",
+  ellipse.border = "black", conf.level = 0.95, ...)
 }
 \arguments{
-\item{x}{the argument which the measures shall be applied to. Either this 
-must be of a type which \code{measurex} and \code{measurey} can directly
-be applied to, or, if measurex and measurey are applicable to single tracks,
-the argument can be a \emph{tracks} object, which the measures will be 
-applied to using \code{sapply} before plotting the result.}
+\item{x}{the input \code{tracks} object.}
 
-\item{measurex}{the measure to be shown on the X axis.}
+\item{measure.x}{the measure to be shown on the X axis (see \link{TrackMeasures}).}
 
-\item{measurey}{the measure to be shown on the Y axis.}
+\item{measure.y}{the measure to be shown on the Y axis.}
 
 \item{add}{a logical indicating whether the tracks are to be added to an 
 existing plot via \code{\link[graphics]{points}}.}
 
 \item{xlab}{label of the x-axis. By default the name of the input function 
-\code{measurex}.}
+\code{measure.x}.}
 
 \item{ylab}{label of the y-axis. By default the name of the input function 
-\code{measurey}.}
+\code{measure.y}.}
+
+\item{ellipse.col}{color with which to draw the confidence ellipse of the mean (for
+1D, this corresponds to the confidence interval of the mean). 
+Use \code{NA} to omit the confidence ellipse.}
+
+\item{ellipse.border}{color of the confidence ellipse border. Use \code{NA} to omit
+the border.}
+
+\item{conf.level}{the desired confidence level for the confidence ellipse.}
 
 \item{...}{additional parameters to be passed to \code{\link[graphics]{plot}} 
-(in case add=False) or \code{\link[graphics]{points}} (in case add=True), 
-respectively.}
+(in case \code{add=FALSE}) or \code{\link[graphics]{points}} (\code{add=TRUE}).}
 }
 \description{
-Plots the values of two measures applied on given tracks against each 
+Plots the values of two measures applied on the given tracks against each 
 other.
 }
 \details{
 Plots the value of \code{measurey} applied to \code{x} against the
-value of  \code{measurey} applied to \code{y}. This is useful for "FACS-like"
+value of \code{measurey} applied to \code{y}. This is useful for "FACS-like"
 motility analysis, where clusters of cell tracks are identified based on their
 motility parameters (Moreau et al, 2012; Textor et al, 2014).
+}
+\examples{
+## Compare speed and straightness of 3 example population tracks.
+## To make the comparison fair, analyze subtracks of fixed length.
+plotTrackMeasures( subtracks(TCells,4,0), speed, straightness, ellipse.col="black" )
+plotTrackMeasures( subtracks(BCells,4,0), speed, straightness,
+  col=2, ellipse.col=2, pch=2, add=TRUE )
+plotTrackMeasures( subtracks(Neutrophils,4,0), speed, straightness, 
+  col=3, ellipse.col=3, pch=3, add=TRUE )
 }
 \references{
 Moreau HD, Lemaitre F, Terriac E, Azar G, Piel M, Lennon-Dumenil AM,

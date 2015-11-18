@@ -2,21 +2,23 @@
 % Please edit documentation in R/track-set-transformations.R
 \name{projectDimensions}
 \alias{projectDimensions}
-\title{Extract Subset of Dimensions}
+\title{Extract Spatial Dimensions}
 \usage{
 projectDimensions(x, dims = c("x", "y"))
 }
 \arguments{
 \item{x}{the input tracks object.}
 
-\item{dims}{a character vector giving the dimensions to extract from each track.}
+\item{dims}{a character vector (for column names) or an integer vector (for column
+indices) giving the dimensions to extract from each track.
+The time dimension (i.e., the first column of all tracks) is always included.}
 }
 \value{
 A tracks object is returned that contains only those dimensions 
 of the input \code{tracks} that are given in \code{dims}.
 }
 \description{
-Projects tracks onto the given dimensions.
+Projects tracks onto the given spatial dimensions.
 }
 \examples{
 ## Compare 2D and 3D speeds

@@ -12,12 +12,12 @@ repairGaps(x, how = "split", tol = 0.05, split.min.length = 2)
 \item{how}{string specifying what do with tracks that contain gaps. Possible
   values are:
 \itemize{
- \item{"drop"}{The simplest option -- discard all tracks that contain gaps.}
- \item{"split"}{Split tracks around the gaps, e.g. a track for which the step
+ \item{"drop":}{ the simplest option -- discard all tracks that contain gaps.}
+ \item{"split":}{ split tracks around the gaps, e.g. a track for which the step
  between the 3rd and 4th positions is too long or too short is split into one
  track corresponding to positions 1 to 3 and another track corresponding to
  position 3 onwards.}
- \item{"interpolate"}{Approximate the track positions using linear
+ \item{"interpolate":}{ approximate the track positions using linear
  interpolation (see \code{\link{interpolateTrack}}). The result is a tracks
  object with constant step durations.
  }
@@ -34,7 +34,11 @@ discards all resulting tracks shorter than
 this many positions.}
 }
 \description{
-Process Tracks Containing Gaps
+Many common motility analyses, such as mean square displacement plots, assume that
+object positions are recorded at constant time intervals. For some application domains,
+such as intravital imaging, this may not always be the case. This function can be 
+used to pre-process data imaged at nonconstant intervals, provided the deviations are
+not too extreme.
 }
 \examples{
 ## The Neutrophil data are imaged at rather nonconstant intervals
