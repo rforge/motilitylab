@@ -15,3 +15,4 @@ importFrom("stats", "aggregate", "approx", "ave", "cov", "diffinv", "dist",
 		 "sd", "spline", "t.test", "weighted.mean")
 importFrom("utils", "head", "read.table", "tail")
 importFrom("ellipse", "ellipse")
+importFrom("stats", "pf")
