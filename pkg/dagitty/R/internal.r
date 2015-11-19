@@ -201,8 +201,27 @@
 	c( coef(summary(mdl))[2,c(1,2,4)], confint( mdl, ind$Y, level=conf.level ) )
 }
 
-.tetrads <- function( x, tets, i=seq_len(nrow(x)) ){
+.ci.test.covmat <- function( sample.cov, sample.nobs,
+	ind, conf.level ){
+	sample.cov <- sample.cov[c(ind$X,ind$Y,ind$Z),c(ind$X,ind$Y,ind$Z)]
+	M <- MASS::ginv(sample.cov)
+	pcor <- -M[1,2] / sqrt( M[1,1] * M[2,2] )
+	pcor.z <- atanh( pcor )
+	pcor.z.sem <- 1 / sqrt( sample.nobs - length(ind$Z) - 3 )
+	pcor.stat <- pcor.z / pcor.z.sem
+	crit <- qnorm( (1-conf.level)/2, lower.tail=FALSE )
+	c( pcor, atan(pcor.z.sem), 2 * pnorm( abs(pcor.stat), lower.tail=FALSE ),
+		atan( pcor.z-crit*pcor.z.sem ),
+		atan( pcor.z+crit*pcor.z.sem ) )
+}
+
+.tetradsFromData <- function( x, tets, i=seq_len(nrow(x)) ){
 	M <- cov(x[i,])
+	sapply( seq_len(nrow(tets)), 
+		function(j) det(M[tets[j,c(1,4)],tets[j,c(2,3)]]) )
+}
+
+.tetradsFromCov <- function( M, tets ){
 	sapply( seq_len(nrow(tets)), 
 		function(j) det(M[tets[j,c(1,4)],tets[j,c(2,3)]]) )
 }

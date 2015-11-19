@@ -1,5 +1,6 @@
 #' @import V8 jsonlite
 #' @importFrom boot boot
+#' @importFrom MASS ginv
 NULL
 
 #' Get Bundled Examples
@@ -777,29 +778,47 @@ downloadGraph <- function(x="dagitty.net/mz-Tuw9"){
 
 #' Perform Local Tests of Structural Equation Model
 #' @param x the model.
-#' @param data the data.
+#' @param data matrix or data frame containing the data.
+#' @param sample.cov the sample covariance matrix; ignored if \code{data} is supplied.
+#' Either \code{data} or \code{sample.cov} and \code{sample.nobs} must be supplied.
+#' @param sample.nobs number of observations; ignored if \code{data} is supplied.
 #' @param type character indicating which kind of local
 #'  test to perform. Supported values are \code{"tetrads"} and 
 #'  \code{"cis"}.
 #' @param R how many bootstrap replicates for estimating confidence
-#'   intervals. If \code{NA}, then confidence intervals are based on normal
+#'   intervals. If \code{NULL}, then confidence intervals are based on normal
 #'   approximation. For tetrads, the normal approximation is only valid in 
 #'   large samples even if the data are normally distributed.
 #' @param conf.level determines the size of confidence intervals for test
 #'   statistics.
 #' @export
-localTests <- function(x,data,type="tetrads",conf.level=.95,R=NA){
+localTests <- function(x, data=NULL, type="tetrads",
+	sample.cov=NULL,sample.nobs=NULL,
+	conf.level=.95,R=NULL){
+	if( !is.null(sample.cov) && is.null(sample.nobs) ){
+		stop("Please provide sample size (sample.nobs)!")
+	}
+	if( !is.null(R) && is.null(data) ){
+		stop("Bootstrapping requires raw data!")
+	}
+	if( is.null(data) && is.null(sample.cov) ){
+		stop("Please provide either data or sample covariance matrix!")
+	}
 	w <- (1-conf.level)/2
 	if( type == "tetrads" ){
 		tets <- vanishingTetrads( x )
 		if( length(tets) == 0 ){
 			return(data.frame())
 		}
-		M <- cov(data)
-		n <- nrow(data)
-		tetrad.values <- .tetrads(data,tets)
+		if( is.null( sample.cov ) ){
+			sample.cov <- cov(data)
+		}
+		if( is.null( sample.nobs ) ){
+			sample.nobs <- nrow(data)
+		}
+		tetrad.values <- .tetradsFromCov(sample.cov,tets)
 		tetrad.sample.sds <- sapply(seq_len(nrow(tets)),
-			function(i) .tetrad.sem(tets[i,],M,n))
+			function(i) .tetrad.sem(tets[i,],sample.cov,sample.nobs))
 		r <- data.frame(
 				row.names=apply( tets, 1, 
 					function(x) paste(x,collapse=",") ),
@@ -807,12 +826,11 @@ localTests <- function(x,data,type="tetrads",conf.level=.95,R=NA){
 				std.error=tetrad.sample.sds,
 				p.value=2*pnorm(abs(tetrad.values/tetrad.sample.sds),
 					lower.tail=FALSE)
-			)
-		if( is.finite(R) ){
+		)
+		if( !is.null(R) ){
 			requireNamespace("boot",quietly=TRUE)
 			bo <- boot::boot( data,
-				function(data,i) .tetrads(data,tets,i),
-				R )
+				function(data,i) .tetradsFromData(data,tets,i), R )
 			r <- cbind( r, t(apply( bo$t, 2,
 				function(x) quantile(x,c((1-conf.level)/2,1-(1-conf.level)/2)) )) )
 		} else {
@@ -822,17 +840,26 @@ localTests <- function(x,data,type="tetrads",conf.level=.95,R=NA){
 			r <- cbind( r, conf )
 		}
 	} else if( type == "cis" ){
-		if( is.finite(R) ){
-			stop("Bootstrapping for regressional independence is not yet implemented.")
+		if( !is.null(R) ){
+			stop("Bootstrapping for conditional independence is not yet implemented.")
 		}
 		cis <- impliedConditionalIndependencies( x )
 		if( length(cis) == 0 ){
 			return(data.frame())
 		}
-		r <- as.data.frame(
-			row.names=sapply(cis,as.character),
-			t(sapply( cis, function(i) .ri.test(data,i,conf.level) ))
-		)
+		if( !is.null(data) ){
+			r <- as.data.frame(
+				row.names=sapply(cis,as.character),
+				t(sapply( cis, function(i) 
+					.ri.test(data,i,conf.level) ))
+			)
+		} else {
+			r <- as.data.frame(
+				row.names=sapply(cis,as.character),
+				t(sapply( cis, function(i) 
+					.ci.test.covmat(sample.cov,sample.nobs,i,conf.level) ))
+			)
+		}
 	} else {
 		stop("Local test type '",type,"' not supported!")
 	}
@@ -841,6 +868,18 @@ localTests <- function(x,data,type="tetrads",conf.level=.95,R=NA){
 	return(r)
 }
 
+#' Plot Results of Local Tests
+#'
+#' Generates a summary plot of the results of local tests
+#' (see \link{localTests}). For each test, a test statistic and
+#' the confidence interval are shown.
+#'
+#' @param x data frame; results of the local tests as returned by 
+#' \link{localTests}. 
+#' @param xlab X axis label.
+#' @param xlim numerical vector with 2 elements; range of X axis.
+#' @param ... further arguments ot be passed on to \code{\link{plot}}.
+#'
 #' @export
 plotLocalTestResults <- function(x,xlab="test statistic (95% CI)",
 	xlim=c(min(x[,c(4,5)]),max(x[,c(4,5)])),...){
