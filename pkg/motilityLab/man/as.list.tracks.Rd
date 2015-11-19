@@ -12,6 +12,6 @@
 \item{...}{further arguments to be passed from or to other methods.}
 }
 \description{
-Coerces a \code{tracks} object to a list
+Coerces a \code{tracks} object to a list.
 }
 

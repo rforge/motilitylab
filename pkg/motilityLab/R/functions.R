@@ -1,3 +1,48 @@
+#' Tracks Objects
+#'
+#' The function \code{tracks} is used to create tracks objects. \code{as.tracks} coerces
+#' its argument to a tracks object, and \code{is.tracks} tests for tracks objects.
+#' \code{c} can be used to combine (concatenate) tracks objects.
+#'
+#' @param x an object to be coerced or tested.
+#'
+#' @param ... for \code{tracks}, numeric matrices or objects that can be coerced to 
+#'  numeric matrices. Each
+#'  matrix contains the data of one track. The first column is the time, and the remaining
+#'  columns define a spatial position. Every given matrix has to contain the same number
+#'  of columns, and at least two columns are necessary.
+#'
+#'  For \code{c}, tracks objects to be combined.
+#'
+#'  For \code{as.tracks}, further arguments passed to methods (currently not used).
+#'
+#' @details Tracks objects are lists of matrices. Each matrix contains at least two 
+#' columns; the first column is time, and the remaining columns are a spatial coordinate.
+#' The following naming conventions are used (and enforced by \code{tracks}): The time
+#' column has the name `t`, and spatial coordinate columns have names `x`,`y`,`z` if there
+#' are three or less coordinates, and `x1`,...,`xk` if there are \eqn{k \ge 4} 
+#' coordinates. All tracks in an object must have the same number of dimensions. The
+#' positions in a track are expected to be sorted by time (and the constructor 
+#' \code{tracks} enforces this).
+#'
+#' @examples
+#' ## A single 1D track
+#' x <- tracks( matrix(c(0, 8,  
+#' 10, 9, 
+#' 20, 7, 
+#' 30, 7,
+#' 40, 6, 
+#' 50, 5), ncol=2, byrow=TRUE ) )
+#'
+#' ## Three 3D tracks
+#' x2 <- tracks( rbind(
+#'  c(0,5,0), c(1,5,3), c(2,1,3), c(3,5,6) ),
+#'  rbind( c(0,1,1),c(1,1,4),c(2,5,4),c(3,5,1),c(4,-3,1) ),
+#'  rbind( c(0,7,0),c(1,7,2),c(2,7,4),c(3,7,7) ) )
+#'
+#' @name tracks
+NULL
+
 #' Convert Tracks to Data Frame
 #' 
 #' Converts tracks from the list-of-matrices format, which is good
@@ -44,18 +89,18 @@ as.data.frame.tracks <- function(x, row.names = NULL, optional = FALSE,
 
 `[.tracks` <- function(x,y) as.tracks(as.list(x)[y])
 
+#' @rdname tracks
+as.tracks <- function(x, ...) 
+  UseMethod("as.tracks")
 
 #' @rdname tracks
 as.tracks.list <- function(x, ...) 
   structure(x, class="tracks")
 
-#' @rdname tracks
-as.tracks <- function(x, ...) 
-  UseMethod("as.tracks")
 
 #' Convert from Tracks to List
 #' 
-#' Coerces a \code{tracks} object to a list
+#' Coerces a \code{tracks} object to a list.
 #' 
 #' @param x the \code{tracks} object to be coerced to a list.
 #' @param ... further arguments to be passed from or to other methods.
@@ -443,31 +488,6 @@ applyStaggered <- function(x, measure, matrix=FALSE, min.segments=1) {
 	}
 }
 
-#' Measure for Every Prefix of a Track
-#' 
-#' @param measure the measure that is to be computed.
-#' @param min.length minimal number of points in a prefix the measure is to be 
-#' applied to. Default is \eqn{1}.
-#' 
-#' @details The resulting 
-#' function applies \code{measure} to every prefix of the input track, starting
-#' with the prefix that consists of \code{min.length} positions. The resulting 
-#' values are returned in a vector, sorted in ascending order by the 
-#' prefix length.
-#'
-#' @return A function that applies the measure to every prefix of length at 
-#' least \code{min.length}.
-#'
-forEveryPrefix <- function(measure, min.length=1) {
-  function(track) {
-	  res <- c()
-	  for (i in (min.length:nrow(track))) {
-		res <- c(res, measure(track[1:i,,drop=FALSE]))
-	  }
-	  return(res)
-  }
-}
-
 #' Decompose Track(s) into Subtracks
 #' 
 #' Creates a \emph{tracks} object consisting of all subtracks of `x`
@@ -745,6 +765,14 @@ clusterTracks <- function(tracks, measures, scale=TRUE, ...) {
 #' plot( aggregate( BCells, overallAngle, subtrack.length=1:10, 
 #'   filter.subtracks=check )[,2], type='l' )
 #'
+#' ## Compare 3 different variants of a mean displacement plot
+#' # 1. average over all subtracks
+#' plot( aggregate( TCells, displacement ), type='l' )
+#' # 2. average over all non-overlapping subtracks
+#' lines( aggregate( TCells, displacement, max.overlap=0 ), col=2 )
+#' # 3. average over all subtracks starting at 1st position
+#' lines( aggregate( TCells, displacement, by="prefixes" ), col=3 )
+#'
 #' @references
 #' Joost B. Beltman, Athanasius F.M. Maree and Rob. J. de Boer (2009),
 #' Analysing immune cell migration. \emph{Nature Reviews Immunology} \bold{9},
@@ -896,18 +924,25 @@ maxTrackLength <- function(x) {
 
 #' Bounding Box of a Tracks Object
 #' 
-#' Computes the minimum and maximum coordinates per dimension for all positions in a
-#' given list of tracks. Assumes that all tracks have the same number of dimensions. 
+#' Computes the minimum and maximum coordinates per dimension (including time) 
+#' for all positions in a given list of tracks.
 #' 
-#' @param x the \code{tracks} object whose bounding box is to be computed.
+#' @param x the input \code{tracks} object.
 #'  
-#' @return Returns a matrix with two rows and \eqn{d} columns, where \eqn{d} is 
-#' the number of dimensions of the tracks. The first row contains the minimum 
+#' @return Returns a matrix with two rows and \eqn{d+1} columns, where \eqn{d} is 
+#' the number of spatial dimensions of the tracks. The first row contains the minimum 
 #' and the second row the maximum value of any track in the dimension given by 
 #' the column.
+#'
+#' @examples
+#' ## Use bounding box to set up plot window
+#' bb <- boundingBox(c(TCells,BCells,Neutrophils))
+#' plot( Neutrophils, xlim=bb[,"x"], ylim=bb[,"y"], col=1 )
+#' plot( BCells, col=2, add=TRUE )
+#' plot( TCells, col=3, add=TRUE )
 boundingBox <- function(x) {
 	if( !is.tracks(x) ){
-		x <- wrapTrack(x) 
+		x <- as.tracks(x) 
 	}
 	bounding.boxes <- lapply(x, .boundingBoxTrack) 
 	empty <- mat.or.vec(nrow(bounding.boxes[[1]]), ncol(bounding.boxes[[1]]))
@@ -1116,6 +1151,12 @@ timeStep <- function( x, FUN=median, na.rm=FALSE ){
 #' \code{"linear"} (which uses \code{\link[stats]{approx}} with default values) and
 #' \code{"spline"} (which uses \code{\link[stats]{spline}} with default values). 
 #'
+#' @examples
+#' ## Compare interpolated and non-interpolated versions of a track
+#' bb <- boundingBox( TCells[2] )
+#' plot( TCells[2] )
+#' t2i <- interpolateTrack(TCells[[2]], seq(bb[1,"t"],bb[2,"t"],length.out=100),"spline")
+#' plot( tracks( t2i ), add=TRUE, col=2 )
 interpolateTrack <- function( x, t, how="linear" ){
 	f=approx
 	if( how=="spline" ){
@@ -1127,47 +1168,7 @@ interpolateTrack <- function( x, t, how="linear" ){
 	return(r)
 }
 
-#' Tracks Objects
-#'
-#' The function \code{tracks} is used to create tracks objects. \code{as.tracks} coerces
-#' its argument to a tracks object, and \code{is.tracks} tests for tracks objects.
-#' \code{c} can be used to combine (concatenate) tracks objects.
-#'
-#' @param x an object to be coerced or tested.
-#'
-#' @param ... for \code{tracks}, numeric matrices or objects that can be coerced to 
-#'  numeric matrices. Each
-#'  matrix contains the data of one track. The first column is the time, and the remaining
-#'  columns define a spatial position. Every given matrix has to contain the same number
-#'  of columns, and at least two columns are necessary.
-#'
-#'  For \code{c}, tracks objects to be combined.
-#'
-#'  For \code{as.tracks}, further arguments passed to methods (currently not used).
-#'
-#' @details Tracks objects are lists of matrices. Each matrix contains at least two 
-#' columns; the first column is time, and the remaining columns are a spatial coordinate.
-#' The following naming conventions are used (and enforced by \code{tracks}): The time
-#' column has the name `t`, and spatial coordinate columns have names `x`,`y`,`z` if there
-#' are three or less coordinates, and `x1`,...,`xk` if there are \eqn{k \ge 4} 
-#' coordinates. All tracks in an object must have the same number of dimensions. The
-#' positions in a track are expected to be sorted by time (and the constructor 
-#' \code{tracks} enforces this).
-#'
-#' @examples
-#' ## A single 1D track
-#' x <- tracks( matrix(c(0, 8,  
-#' 10, 9, 
-#' 20, 7, 
-#' 30, 7,
-#' 40, 6, 
-#' 50, 5), ncol=2, byrow=TRUE ) )
-#'
-#' ## Three 3D tracks
-#' x2 <- tracks( rbind(
-#'  c(0,5,0), c(1,5,3), c(2,1,3), c(3,5,6) ),
-#'  rbind( c(0,1,1),c(1,1,4),c(2,5,4),c(3,5,1),c(4,-3,1) ),
-#'  rbind( c(0,7,0),c(1,7,2),c(2,7,4),c(3,7,7) ) )
+#' @rdname tracks
 tracks <- function( ... ){
 	tlist <- lapply( list(...), data.matrix )
 	if( !all( sapply( tlist , is.numeric ) ) ){

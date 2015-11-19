@@ -35,8 +35,8 @@ for efficiency reasons) whose first column denotes a time interval
 (e.g. seconds elapsed since the beginning
 of the experiment), and whose remaining columns denote a spatial coordinate. A set of
 tracks is stored as a \code{\link{list}} with S3 class \code{tracks}. MotilityLab provides
-some S3 functions for this class, e.g. \code{\link{c.tracks}} to merge track sets and
-\code{\link{plot.tracks}} to visualize them.
+some S3 methods for this class, which are explained in \code{\link{tracks}} as well as 
+\code{\link{plot.tracks}}, \code{\link{sort.tracks}} and \code{\link{as.list.tracks}}.
 
 A wide range of common track measures are included in the package. These are all functions
 that take a single track as an input, and output one or several numbers.

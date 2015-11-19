@@ -11,6 +11,8 @@ Description: Statistics to quantify tracks of moving things (x-y-z-t data),
     and fractal dimension.
 LazyData: true
 License: GPL-2
+Depends:
+	R (>= 3.0.0)
 Imports:
     stats,
     grDevices,

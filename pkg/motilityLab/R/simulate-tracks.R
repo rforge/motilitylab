@@ -14,6 +14,9 @@
 #' 
 #' @return A data frame  containing in cell track with \code{nsteps} steps in 
 #' \code{dim} dimensions is returned.
+#'
+#' ## The Hurst exponent of a 1D Brownian track should be near 0.5
+#' hurstExponent( brownianTrack( 100, 1 ) )
 brownianTrack <- function(nsteps=100, dim=3, mean=0, sd=1) {
 	if( dim < 1 ){
 		stop("1 or more spatial dimensions required!")

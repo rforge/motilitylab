@@ -19,6 +19,9 @@ unbiased Brownian motion and other values for Brownian motion with drift.}
 \value{
 A data frame  containing in cell track with \code{nsteps} steps in 
 \code{dim} dimensions is returned.
+
+## The Hurst exponent of a 1D Brownian track should be near 0.5
+hurstExponent( brownianTrack( 100, 1 ) )
 }
 \description{
 Generates a random track with \code{nsteps} steps in \code{dim} dimensions.

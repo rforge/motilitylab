@@ -7,16 +7,23 @@
 boundingBox(x)
 }
 \arguments{
-\item{x}{the \code{tracks} object whose bounding box is to be computed.}
+\item{x}{the input \code{tracks} object.}
 }
 \value{
-Returns a matrix with two rows and \eqn{d} columns, where \eqn{d} is 
-the number of dimensions of the tracks. The first row contains the minimum 
+Returns a matrix with two rows and \eqn{d+1} columns, where \eqn{d} is 
+the number of spatial dimensions of the tracks. The first row contains the minimum 
 and the second row the maximum value of any track in the dimension given by 
 the column.
 }
 \description{
-Computes the minimum and maximum coordinates per dimension for all positions in a
-given list of tracks. Assumes that all tracks have the same number of dimensions.
+Computes the minimum and maximum coordinates per dimension (including time) 
+for all positions in a given list of tracks.
+}
+\examples{
+## Use bounding box to set up plot window
+bb <- boundingBox(c(TCells,BCells,Neutrophils))
+plot( Neutrophils, xlim=bb[,"x"], ylim=bb[,"y"], col=1 )
+plot( BCells, col=2, add=TRUE )
+plot( TCells, col=3, add=TRUE )
 }
 

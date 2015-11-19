@@ -25,8 +25,7 @@
 }
 
 .boundingBoxTrack <- function(track) {
-  min.and.max.per.dim <- rbind(min = apply(track, 2, min), max = apply(track, 2, max))
-  return(min.and.max.per.dim[, 2:ncol(min.and.max.per.dim)])
+  rbind(min = apply(track, 2, min), max = apply(track, 2, max))
 }
 
 .subtrackIndices <- function( x, overlap, lengths=nrow(x) ){
