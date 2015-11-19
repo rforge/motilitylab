@@ -2,17 +2,18 @@ Package: MotilityLab
 Type: Package
 Title: Quantitative Analysis of Motion
 Version: 0.2-4
-Date: 2015-11-17
+Date: 2015-11-19
 Author: Katharina Dannenberg, Jeffrey Berry, Johannes Textor
 Maintainer: Johannes Textor <johannes.textor@gmx.de>
 Description: Statistics to quantify tracks of moving things (x-y-z-t data),
     such as cells, bacteria or animals. Available measures include mean square
-    displacement, confinement ratio, autocorrelation, asphericity, turning angle,
+    displacement, confinement ratio, autocorrelation, straightness, turning angle,
     and fractal dimension.
 LazyData: true
 License: GPL-2
+URL: http://www.motilitylab.net
 Depends:
-	R (>= 3.0.0)
+    R (>= 3.0.0)
 Imports:
     stats,
     grDevices,
@@ -24,4 +25,4 @@ Suggests:
     scatterplot3d,
     fractaldim,
     testthat
-RoxygenNote: 5.0.0
+RoxygenNote: 5.0.1

@@ -41,11 +41,11 @@
 #' \code{outreachRatio} divides the \code{maxDisplacement} by the \code{trackLength}
 #' (Mokhtari et al, 2013). Both measures return 
 #' values between 0 and 1, where 1 means a perfectly straight track.
-#' If the track has a length of 0, then 1 is returned.
+#' If the track has \code{trackLength} 0, then \code{NaN} is returned.
 #'
 #' \code{straightness} divides the \code{displacement} by the \code{trackLength}.
 #' This gives a number between 0 and 1, with 1 meaning a perfectly straight track. 
-#' If the track has length 0, then 1 is returned.
+#' If the track has \code{trackLength} 0, then \code{NaN} is returned.
 #'
 #' \code{asphericity} is a different appraoch to measure straightness 
 #' (Mokhtari et al, 2013): it computes the asphericity of the set of positions on the 
@@ -55,7 +55,7 @@
 #' back-and-forth motion of the object, so something that bounces between two positions 
 #' will have low \code{straightness} but high \code{asphericity}. We define the 
 #' asphericity of every track with two or fewer positions to be 1. For one-dimensional
-#' tracks, \code{NA} is returned.
+#' tracks with one or more positions, \code{NA} is returned.
 #'
 #' \code{overallAngle} Computes the angle (in radians) between the first and the last 
 #' segment of the given track. Angles are measured symmetrically, thus the return values
@@ -124,11 +124,13 @@ trackLength <- function(x) {
 
 #' @rdname TrackMeasures
 duration <- function(x) {
-  dur <- x[nrow(x), 1] - x[1,1]
-  dur <- unname(dur)
-  return(dur)
+	if( nrow(x) < 2 ){
+		return(0)
+	}
+	dur <- x[nrow(x), 1] - x[1,1]
+	dur <- unname(dur)
+	return(dur)
 }
-
 
 #' @rdname TrackMeasures
 speed <- function(x) {
@@ -137,14 +139,20 @@ speed <- function(x) {
 
 #' @rdname TrackMeasures
 displacement <- function( x, from=1, to=nrow(x) ) {
-  sqrt(.rowSums((x[to, -1, drop=FALSE] - x[from, -1, drop=FALSE])^2,
-  	length(from),ncol(x)-1))
+	if( nrow(x) < 2 ){
+		return(0)
+	}
+	sqrt(.rowSums((x[to, -1, drop=FALSE] - x[from, -1, drop=FALSE])^2,
+		length(from),ncol(x)-1))
 }
 
 #' @rdname TrackMeasures
 squareDisplacement <- function(x, from=1, to=nrow(x)) {
-  .rowSums((x[to, -1, drop=FALSE] - x[from, -1, drop=FALSE])^2,
-  	length(from),ncol(x)-1)
+	if( nrow(x) < 2 ){
+		return(0)
+	}
+	.rowSums((x[to, -1, drop=FALSE] - x[from, -1, drop=FALSE])^2,
+		length(from),ncol(x)-1)
 }
 
 #' @rdname TrackMeasures
@@ -167,7 +175,7 @@ displacementRatio <- function(x) {
   if (dmax > 0) {
     return(displacement(x) / dmax)
   } else {
-    return(1)
+    return(NaN)
   }
 }
 
@@ -177,7 +185,7 @@ outreachRatio <- function(x) {
   if (l > 0) {
     return(maxDisplacement(x) / l)
   } else {
-    return(1)
+    return(NaN)
   }
 }
 
@@ -195,29 +203,36 @@ straightness <- function(x) {
 overallAngle <- function(x, from=1, to=nrow(x), xdiff=diff(x)) {
 	r <- rep(0, length(from))
 	ft <- from<(to-1)
-	a <- xdiff[from[ft],-1,drop=FALSE]
-	b <- xdiff[to[ft]-1,-1,drop=FALSE]
-	a <- a/sqrt(.rowSums(a^2, nrow(a), ncol(a)))
-	b <- b/sqrt(.rowSums(b^2, nrow(b), ncol(b)))
-	rs <- .rowSums(a * b, nrow(a), ncol(a))
-	rs[rs>1] <- 1
-	rs[rs< -1] <- -1
-	r[ft] <- acos(rs)
+	if( sum(ft)>0 ){
+		a <- xdiff[from[ft],-1,drop=FALSE]
+		b <- xdiff[to[ft]-1,-1,drop=FALSE]
+		a <- a/sqrt(.rowSums(a^2, nrow(a), ncol(a)))
+		b <- b/sqrt(.rowSums(b^2, nrow(b), ncol(b)))
+		rs <- .rowSums(a * b, nrow(a), ncol(a))
+		rs[rs>1] <- 1
+		rs[rs< -1] <- -1
+		r[ft] <- acos(rs)
+	}
 	r
 }
 
 #' @rdname TrackMeasures
 meanTurningAngle <- function(x) {
-	mean(sapply(subtracks(x, 2), overallAngle), na.rm=TRUE)
+	if(nrow(x)<2){
+		return(NaN)
+	}
+	mean(sapply(subtracks(x, 2), overallAngle),na.rm=TRUE)
 }
 
 #' @rdname TrackMeasures
 overallDot <- function(x, from=1, to=nrow(x), xdiff=diff(x)) {
 	r <- rep(NaN, length(from))
 	ft <- from<to
-	a <- xdiff[from[ft],-1,drop=FALSE]
-	b <- xdiff[to[ft]-1,-1,drop=FALSE]
-	r[ft] <- .rowSums(a * b, nrow(a), ncol(a))
+	if( sum(ft) > 0 ){
+		a <- xdiff[from[ft],-1,drop=FALSE]
+		b <- xdiff[to[ft]-1,-1,drop=FALSE]
+		r[ft] <- .rowSums(a * b, nrow(a), ncol(a))
+	}
 	r
 }
 

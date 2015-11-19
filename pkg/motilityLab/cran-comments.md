@@ -5,7 +5,7 @@
 * R-forge (linux and windows builds)
 
 ## R CMD check results
-There were no ERRORs, WARNINGs or NOTEs.
-* DONE
+There were no ERRORs, WARNINGs or NOTEs except
+"New submission".
 
 Status: OK

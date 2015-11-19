@@ -98,11 +98,11 @@ on the track from the first position.
 \code{outreachRatio} divides the \code{maxDisplacement} by the \code{trackLength}
 (Mokhtari et al, 2013). Both measures return 
 values between 0 and 1, where 1 means a perfectly straight track.
-If the track has a length of 0, then 1 is returned.
+If the track has \code{trackLength} 0, then \code{NaN} is returned.
 
 \code{straightness} divides the \code{displacement} by the \code{trackLength}.
 This gives a number between 0 and 1, with 1 meaning a perfectly straight track. 
-If the track has length 0, then 1 is returned.
+If the track has \code{trackLength} 0, then \code{NaN} is returned.
 
 \code{asphericity} is a different appraoch to measure straightness 
 (Mokhtari et al, 2013): it computes the asphericity of the set of positions on the 
@@ -112,7 +112,7 @@ Unlike \code{\link{straightness}}, however, asphericity ignores
 back-and-forth motion of the object, so something that bounces between two positions 
 will have low \code{straightness} but high \code{asphericity}. We define the 
 asphericity of every track with two or fewer positions to be 1. For one-dimensional
-tracks, \code{NA} is returned.
+tracks with one or more positions, \code{NA} is returned.
 
 \code{overallAngle} Computes the angle (in radians) between the first and the last 
 segment of the given track. Angles are measured symmetrically, thus the return values
