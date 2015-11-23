@@ -589,58 +589,6 @@ var Graph = Class.extend({
 			s.traversal_info.visited = false
 			return false
 		}
-	},
-	
-	listClosedPaths: function(){
-		var r
-		if( arguments.length == 0 ){
-			this.clearTraversalInfo()
-			if( !this.getSource() || !this.getTarget() ){ throw( "Source and/or target not set!" ) }
-			r = { paths : "", prefix: "", count:0, limit: 100 }
-			try{ 
-				this.listClosedPaths( this.getSource(), this.getTarget(), r, undefined, false )
-			} catch( e ){
-				r.paths += "..."
-			}
-			return r.paths.strip()
-		} else {
-			var s = arguments[0], t = arguments[1],
-				in_edge_inverted = arguments[3],
-				contains_collider = arguments[4]
-			r = arguments[2]
-
-			
-			if( s.traversal_info.visited ){
-				return
-			}
-			
-			if( s == t ){
-				if( contains_collider ){
-					r.paths = r.paths+r.prefix+s.id+"\n"
-					r.count ++
-					if( r.count > r.limit ){
-						throw( "Too many paths!" )
-					}
-				}
-				return
-			}
-			
-			else {
-				s.traversal_info.visited = true
-				var oldprefix = r.prefix
-				r.prefix = oldprefix+s.id+"->"
-				_.each( s.getChildren(), function( n ){
-					this.listClosedPaths( n, t, r, false, contains_collider )
-				}, this )
-				r.prefix = oldprefix+s.id+"<-";
-				_.each( s.getParents(), function( n ){
-					this.listClosedPaths( n, t, r, true, contains_collider || (in_edge_inverted===false) )
-				}, this )
-				r.prefix = oldprefix
-				s.traversal_info.visited = false
-				return
-			}
-		}
 	}
 } ); // Class.create
 

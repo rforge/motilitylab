@@ -463,46 +463,86 @@ var GraphAnalyzer = {
 		.difference( g.getTargets() ).value()
 	},
 	
-	listPaths: function( g ){
-		var r
+	
+	listPaths: function( g, limit, X, Y ){
+		var r=[], gr, visited
 		if( arguments.length == 1 ){
-			if( g.getSources().length == 0 || g.getTargets().length == 0 ){
-				return "";
+			limit=100
+		}
+		if( arguments.length < 4 ){
+			X = g.getSources(); Y = g.getTargets()
+		}
+		if( X.length == 0 || Y.length == 0 ){
+			return ""
+		}
+		
+		gr = new Graph()
+		visited = []
+
+		var listPathsRec = function( u, v ){
+			if( r.length >= limit ){
+				return
 			}
-			r = { paths: "", prefix: "", count : 0, limit: 100 };
-			var myself = this;
-			_.each( g.getSources(), function(u){
-				_.each( g.getTargets(), function(v){
-					myself.listPaths( g, u, v, r );
-				});
-			});
-			
-			try{
-				this.listPaths( this.getSource(), this.getTarget(), r );
-			} catch( e ){
-				r.paths += "\n...";
-			}
-			return r.paths;
-		} else {
-			var s = arguments[0], t = arguments[1]
-			r = arguments[2];
-			if( s == t ){
-				r.paths += (r.paths!=""?"\n":"")+r.prefix+s.id;
-				r.count ++;
-				if( r.count > r.limit ){
-					throw( "limit "+r.limit+" exceeded!" );
-				}
-				return;
+			if( u==v ){
+				r.push(gr.toString())
 			} else {
-				_.each( s.getChildren(), function( n ){
-					var oldpref = r.prefix;
-					r.prefix += s.id + "->";
-					this.listPaths( n, t, r );
-					r.prefix = oldpref;
-				}, this );
-				return;
+				_.each( u.getChildren(), function( v2 ){
+					if( !visited[v2.id] ){
+						visited[v2.id]=1
+						gr.addVertex( new Graph.Vertex(v2) )
+						gr.addEdge( u.id, v2.id, Graph.Edgetype.Directed )
+						listPathsRec( v2, v )
+						gr.deleteVertex( v2.id )
+						visited[v2.id]=0
+					}
+				} )
+				_.each( u.getParents(), function( v2 ){
+					if( !visited[v2.id] ){
+						visited[v2.id]=1
+						gr.addVertex( new Graph.Vertex(v2) )
+						gr.addEdge( v2.id, u.id, Graph.Edgetype.Directed )
+						listPathsRec( v2, v )
+						gr.deleteVertex( v2.id )
+						visited[v2.id]=0
+					}
+				} )
+				_.each( u.getNeighbours(), function( v2 ){
+					if( !visited[v2.id] ){
+						visited[v2.id]=1
+						gr.addVertex( new Graph.Vertex(v2) )
+						gr.addEdge( v2.id, u.id, Graph.Edgetype.Undirected )
+						listPathsRec( v2, v )
+						gr.deleteVertex( v2.id )
+						visited[v2.id]=0
+					}
+				} )
+				_.each( u.getSpouses(), function( v2 ){
+					if( !visited[v2.id] ){
+						visited[v2.id]=1
+						gr.addVertex( new Graph.Vertex(v2) )
+						gr.addEdge( v2.id, u.id, Graph.Edgetype.Bidirected )
+						listPathsRec( v2, v )
+						gr.deleteVertex( v2.id )
+						visited[v2.id]=0
+					}
+				} )
 			}
 		}
+		
+		_.each( X, function(u){
+			_.each( Y, function(v){
+				try{
+					visited[u.id]=1
+					gr.addVertex( new Graph.Vertex(u) )
+					listPathsRec( u, v )
+					gr.deleteVertex( u.id )
+					visited[u.id]=0
+				} catch( e ) {
+					return r
+				}
+			})
+		})
+		return r
 	},
 	
 	closeSeparator : function( g, y, z ){

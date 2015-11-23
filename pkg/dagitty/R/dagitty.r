@@ -985,6 +985,30 @@ plotLocalTestResults <- function(x,xlab="test statistic (95% CI)",
 	abline( v=0 )
 }
 
+#' Show paths
+#'
+#' @param x the input graph.
+#' @param from name(s) of first variable(s).
+#' @param to name(s) of last variable(s).
+#' @param limit maximum amount of paths to show.
+#'
+#' @export
+paths <- function(x,from=NULL,to=NULL,limit=100){
+	if( !is.null(from) ){
+		exposures(x) <- from
+	}
+	if( !is.null(to) ){
+		outcomes(x) <- to
+	}
+	xv <- .getJSVar()
+	tryCatch({
+		.jsassigngraph( xv, x )
+		.jsassign( xv, .jsp("GraphAnalyzer.listPaths(global.",xv,",",limit,")") )
+		r <- .jsget(xv)
+	},finally={.deleteJSVar(xv)})
+	r
+}
+
 #' @export
 print.dagitty.ivs <- function( x, prefix="", ... ){
 	for( i in x ){
