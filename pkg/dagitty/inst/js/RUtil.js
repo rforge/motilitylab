@@ -63,6 +63,18 @@ var DagittyR = {
 		return r
 	},
 	
+	getVertices : function( g, a ){
+		var r = [], v
+		ak = Object.keys( a )
+		for( var i = 0 ; i < a.length ; i ++ ){
+			v = g.getVertex( a[ak[i]] )
+			if( v ){
+				r.push(v)
+			}
+		}
+		return r
+	},
+	
 	findExample : function( s ){
 		'use strict'
 		for( var i = 0 ; i < examples.length ; i++ ){

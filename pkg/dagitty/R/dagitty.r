@@ -9,16 +9,17 @@ NULL
 #'
 #' @param x name of the example, or part thereof. Supported values are:
 #' \itemize{
-#'  \item{"M-bias"}{The M-bias graph}
-#'  \item{"confounding"}{An extended confounding triangle}
-#'  \item{"mediator"}{A small model with a mediator}
-#'  \item{"paths"}{A graph with many variables but few paths}
-#'  \item{"Sebastiani"}{A small part of a genetics study (Sebastiani et al., 2005)}
-#'  \item{"Polzer"}{DAG from a dentistry study (Polzer et al., 2012)}
-#'  \item{"Schipf"}{DAG from a study on diabetes (Schipf et al., 2010)}
-#'  \item{"Shrier"}{DAG from a classic sports medicine example (Shrier & Platt, 2008)}
-#'  \item{"Thoemmes"}{DAG with unobserved variables (communicated by F. Thoemmes, 2013)}
-#'  \item{"Kampen"}{DAG from a psychiatry study (van Kampen, 2014)}
+#'  \item{"M-bias"}{ the M-bias graph.}
+#'  \item{"confounding"}{ an extended confounding triangle.}
+#'  \item{"mediator"}{ a small model with a mediator.}
+#'  \item{"paths"}{ a graph with many variables but few paths}
+#'  \item{"Sebastiani"}{ a small part of a genetics study (Sebastiani et al., 2005)}
+#'  \item{"Polzer"}{ DAG from a dentistry study (Polzer et al., 2012)}
+#'  \item{"Schipf"}{ DAG from a study on diabetes (Schipf et al., 2010)}
+#'  \item{"Shrier"}{ DAG from a classic sports medicine example (Shrier & Platt, 2008)}
+#'  \item{"Thoemmes"}{ DAG with unobserved variables 
+#'	(communicated by Felix Thoemmes, 2013)}.
+#'  \item{"Kampen"}{ DAG from a psychiatry study (van Kampen, 2014)}
 #' }
 #' @references
 #' Sabine Schipf, Robin Haring, Nele Friedrich, Matthias Nauck, Katharina Lau,
@@ -60,49 +61,6 @@ getExample <- function( x ){
 	}
 }
 
-#' Change Status of Variables in Graph
-#'
-#' First removes the given status from all variables in the graph that had it, and then 
-#' gives it to the given variables.
-#' For instance, if  \code{status="exposure"}  and \code{var.names="X"} are given, then
-#' \code{X} will be the only exposure in the resulting graph.
-#'
-#' @param x the input graph.
-#' @param var.names names of variables to change.
-#' @param status character, one of "exposure" or "outcome".
-#' @export
-setVariableStatus <- function( x, var.names, status ) {
-	allowed.statuses <-  c("exposure","outcome")
-	if( !(status %in% allowed.statuses) ){
-		stop( "Status must be one of ", allowed.statuses )
-	}
-	
-	xv <- .getJSVar()
-	vv <- .getJSVar()
-	tryCatch({
-		.jsassign( xv, as.character(x) )
-		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
-		if( status == "exposure" ){
-			.jseval( paste0( "global.",xv,".removeAllSources()" ) )
-			for( n in var.names ){
-				.jsassign( vv, n )
-				.jseval( paste0( "global.",xv,".addSource(global.",vv,")" ) )
-			}
-		} else if (status == "outcome" ){
-			.jseval( paste0( "global.",xv,".removeAllTargets()" ) )
-			for( n in var.names ){
-				.jsassign( vv, n )
-				.jseval( paste0( "global.",xv,".addTarget(",vv,")" ) )
-			}
-		}
-		r <- .jsget( paste0( xv,".toString()" ) )
-	},finally={ 
-		.deleteJSVar(vv)
-		.deleteJSVar(xv)
-	})
-	structure(r,class="dagitty")
-}
-
 #' Simulate Data from Structural Equation Model
 #'
 #' Interprets the input graph as a structural equation model, generates random path 
@@ -113,7 +71,7 @@ setVariableStatus <- function( x, var.names, status ) {
 #' use the lavaan package or similar facilities in other packages.
 #'
 #' @details Data are generated in the following manner. 
-#. Each directed arrow is assigned a path coefficient chosen uniformly
+#' Each directed arrow is assigned a path coefficient chosen uniformly
 #' at random from the interval given by \code{b.lower} and \code{b.upper} (inclusive; set
 #' both parameters to the same value for constant path coefficients). Each bidirected 
 #' arrow a <-> b is replaced by a substructure  a <- L -> b, where L is an exogenous latent
@@ -128,7 +86,7 @@ setVariableStatus <- function( x, var.names, status ) {
 #' @param b.upper upper bound for path coefficients.
 #' @param eps residual variance.
 #' 
-#' @return a data frame containing \code{N} values for each variable in \code{x}.
+#' @return Returns a data frame containing \code{N} values for each variable in \code{x}.
 #' 
 #' @examples
 #' ## Simulate data with pre-defined path coefficients of -.6
@@ -144,7 +102,7 @@ simulateSEM <- function( x, b.lower=-.6, b.upper=.6, eps=1, N=500 ){
 		stop("This function requires the 'lavaan' package!")
 	}
     vars <- names( x )
-    x <- canonicalGraph( x )
+    x <- canonicalize( x )
     mdl <- lavaan::lavaanify( toString(x$g,"lavaan"), fixed.x=FALSE )
     for( l in x$L ){
     	b <- runif( 1, b.lower, b.upper )
@@ -165,74 +123,198 @@ simulateSEM <- function( x, b.lower=-.6, b.upper=.6, eps=1, N=500 ){
     r[,setdiff(vars,latents(x$g))]
 }
 
-
-#' Get Graphical Descendants
+#' Ancestral Relations
 #'
-#' Finds all variables that are reachable from \eqn{v} via a directed path. By definition,
-#' this includes \eqn{v} itself.
+#' Retrieve the names of all variables in a given graph that are in the specified 
+#' ancestral relationship to the input variable \code{v}.
 #'
 #' @param x the input graph.
-#' @param v character, name of a variable. 
+#' @param v name(s) of variable(s).
+#'
+#' \code{descendants(x,v)} retrieves variables that are are reachable from \code{v} via 
+#' a directed path.
+#'
+#' \code{ancestors(x,v)} retrieves variables from which \code{v} is reachable via a 
+#' directed path.
+#'
+#' \code{children(x,v)} finds all variables \code{w} connected to \code{v} 
+#' by an edge \eqn{v} -> \eqn{w}.
+#'
+#' \code{parents(x,v)} finds all variables \code{w} connected to \code{v} 
+#' by an edge \eqn{w} -> \eqn{v}.
+#'
+#' By convention, \code{descendants(x,v)} and \code{ancestors(x,v)} include 
+#' \code{v} but \code{children(x,v)} and \code{parents(x,v)} do not. 
+#' 
+#' @name AncestralRelations
+#' 
+NULL
+
+#' @rdname AncestralRelations
 #' @export
 descendants <- function( x, v ){
 	.kins( x, v, "descendants" )
 }
 
-#' Get Graphical Ancestors
-#'
-#' Finds all variables from which \eqn{v} is reachable via a directed path. 
-#' By definition, this includes \eqn{v} itself.
-#'
-#' @param x the input graph.
-#' @param v character, name of a variable. 
+#' @rdname AncestralRelations
 #' @export
 ancestors <- function( x, v ){
 	.kins( x, v, "ancestors" )
 }
 
-#' Get Graphical Children
-#'
-#' Finds all variables \eqn{w} that are connected to \eqn{v} 
-#' by an edge \eqn{v} -> \eqn{w}. 
-#'
-#' @param x the input graph.
-#' @param v character, name of a variable.
+#' @rdname AncestralRelations
 #' @export
 children <- function( x, v ){
 	.kins( x, v, "children" )
 }
 
-#' Get Graphical Parents
-#'
-#' Finds all variables \eqn{w} to which \eqn{v} is connected
-#' by an edge \eqn{w} -> \eqn{v}. 
-#'
-#' @param x the input graph.
-#' @param v character, name of a variable.
+#' @rdname AncestralRelations
 #' @export
 parents <- function( x, v ){
 	.kins( x, v, "parents" )
 }
 
-#' Get Exposure Variables
+#' Moral Graph
+#'
 #' @param x the input graph.
+#' 
+#' @export
+moralize <- function( x ){
+	.graphTransformer( x, "moralGraph" )
+}
+
+#' Ancestor Graph
+#'
+#' Creates the induced subgraph containing only the vertices
+#' in \code{v}, their ancestors, and the edges between them. All
+#' other vertices and edges are discarded.
+#'
+#' @param x the input graph.
+#' @param v variable names.
+#' 
+#' @export
+ancestorGraph <- function( x, v=NULL ){
+	x <- as.dagitty(x)
+	if( is.null(v) ){
+		v <- c(exposures(x),outcomes(x),adjustedNodes(x))
+	}
+	xv <- .getJSVar()
+	xv2 <- .getJSVar()
+	r <- NULL
+	tryCatch({
+		.jsassigngraph( xv, x )
+		.jsassign( xv2, v )
+		.jsassign( xv2, .jsp("DagittyR.getVertices(global.",xv,",global.",xv2,")") )
+		.jsassign( xv, .jsp("GraphTransformer.ancestorGraph(global.",xv,",global.",xv2,")") )
+		r <- .jsgetgraph( xv )
+	}, 
+	error=function(e) stop(e),
+	finally={.deleteJSVar(xv);.deleteJSVar(xv2)})
+	r
+}
+
+#' Variable Statuses
+#'
+#' Get or set variables with a given status in a graph. Variables in dagitty graphs can
+#' have one of several statuses. Variables with _exposure_ and _outcome_ status are 
+#' important when determining causal effects via the functions \code{\link{adjustmentSets}}
+#' and \code{\link{instrumentalVariables}}. Variables with status _latent_ are assumed 
+#' to be unobserved variables or latent constructs, and they are not considered when deriving
+#' testable implications of a graph via the functions 
+#' \code{\link{impliedConditionalIndependencies}} or \code{\link{vanishingTetrads}}.
+#'
+#' \code{setVariableStatus} first removes the given status from all variables in the graph
+#' that had it, and then gives it to the given variables.
+#' For instance, if  \code{status="exposure"}  and \code{value="X"} are given, then
+#' \code{X} will be the only exposure in the resulting graph.
+#'
+#' @param x the input graph.
+#' @param value character vector; names of variables to receive the given status.
+#' @param status character, one of "exposure", "outcome" or "latent".
+#'
+#' @name VariableStatus
+#'
+NULL
+
+#' @rdname VariableStatus
 #' @export
 exposures <- function( x ){
 	.nodesWithProperty( x, "source" )
 }
+#' @rdname VariableStatus
+#' @export
+'exposures<-' <- function( x, value ){
+	setVariableStatus(x, "exposure", value )
+}
 
-#' Get Outcome Variables
-#' @param x the input graph.
+#' @rdname VariableStatus
 #' @export
 outcomes <- function( x ){
 	.nodesWithProperty( x, "target" )
 }
+#' @rdname VariableStatus
+#' @export
+'outcomes<-' <- function( x, value ){
+	setVariableStatus(x, "outcome", value )
+}
 
-#' Get Latent Variables
-#' @param x the input graph.
+#' @rdname VariableStatus
 #' @export
 latents <- function( x ){
 	.nodesWithProperty( x, "latentNode" )
+}
+#' @rdname VariableStatus
+#' @export
+'latents<-' <- function( x, value ){
+	setVariableStatus(x, "latent", value )
+}
+
+#' @rdname VariableStatus
+#' @export
+adjustedNodes <- function( x ){
+	.nodesWithProperty( x, "adjustedNode" )
+}
+#' @rdname VariableStatus
+#' @export
+'adjustedNodes<-' <- function( x, value ){
+	setVariableStatus(x, "adjustedNode", value )
+}
+
+
+#' @rdname VariableStatus
+#' @export
+setVariableStatus <- function( x, status, value ) {
+	allowed.statuses <-  c("exposure","outcome","latent","adjustedNode")
+	if( !(status %in% allowed.statuses) ){
+		stop( "Status must be one of: ", paste(allowed.statuses,collapse=", ") )
+	}
+	
+	xv <- .getJSVar()
+	vv <- .getJSVar()
+	tryCatch({
+		.jsassign( xv, as.character(x) )
+		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		if( status == "exposure" ){
+			jsstatname <- "Source"
+		} else if (status == "outcome" ){
+			jsstatname <- "Target"
+		} else if (status == "latent" ){
+			jsstatname <- "Latent"
+		} else if (status == "adjustedNode" ){
+			jsstatname <- "AdjustedNode"
+		}
+		.jseval( paste0( "global.",xv,".removeAll",jsstatname,"s()" ) )
+		for( n in value ){
+			.jsassign( vv, n )
+			.jseval( paste0( "global.",xv,".add",jsstatname,"(global.",vv,")" ) )
+		}
+		
+		r <- .jsget( paste0( xv,".toString()" ) )
+	},finally={ 
+		.deleteJSVar(vv)
+		.deleteJSVar(xv)
+	})
+	structure(r,class="dagitty")
 }
 
 #' Names of Variables in Graph
@@ -353,7 +435,7 @@ coordinates <- function( x ){
 #' } 
 #' 
 #' @export
-canonicalGraph <- function( x ){
+canonicalize <- function( x ){
 	x <- as.dagitty(x)
 	xv <- .getJSVar()
 	xv2 <- .getJSVar()
@@ -364,7 +446,6 @@ canonicalGraph <- function( x ){
 		.jsassign( xv, .jsp("GraphTransformer.canonicalGraph(global.",xv,")") )
 		.jsassign( xv2, .jsp("global.",xv,".g.toString()") )
 		g <- .jsget( xv2 )
-		.jsassign( xv2, .jsp("global.",xv,".g.toString()") )
 		.jsassign( xv2, .jsp("_.pluck(",xv,".L,'id')") )
 		L <- .jsget( xv2 )
 		.jsassign( xv2, .jsp("_.pluck(",xv,".S,'id')") )
@@ -383,15 +464,15 @@ canonicalGraph <- function( x ){
 #' @param x the input graph.
 #' @return a data frame with the following variables:
 #' \itemize{
-#'  \item{v}{Name of the start node.}
-#'  \item{w}{Name of the end node. For symmetric edges (bidirected and undirected), the
+#'  \item{v}{ name of the start node.}
+#'  \item{w}{ name of the end node. For symmetric edges (bidirected and undirected), the
 #'  order of start and end node is arbitrary.}
-#'  \item{e}{Type of edge. Can be one of \code{"->"}, \code{"<->"} and \code{"--"}}
-#'  \item{x}{X coordinate for a control point. If this is not \code{NA}, then the edge
+#'  \item{e}{ type of edge. Can be one of \code{"->"}, \code{"<->"} and \code{"--"}.}
+#'  \item{x}{ X coordinate for a control point. If this is not \code{NA}, then the edge
 #'  is drawn as an \code{\link{xspline}} through the start point, this control point, 
 #'  and the end point. This is especially important for cases where there is more than
 #'  one edge between two variables (for instance, both a directed and a bidirected edge).}
-#'  \item{y}{Y coordinate for a control point.}
+#'  \item{y}{ Y coordinate for a control point.}
 #' }
 #'
 #' @examples
@@ -453,10 +534,10 @@ graphLayout <- function( x, method="spring" ){
 	structure( r, class="dagitty" )
 }
 
-#' Plotting Graph
+#' Plot Graph
 #'
 #' A simple plot method to quickly visualize a graph. This is intended mainly for 
-#' validation purposes and is not yet meant to become a full-fledged graph drawing
+#' validation purposes and is not meant to become a full-fledged graph drawing
 #' function.
 #'
 #' @param x the input graph.
@@ -560,10 +641,10 @@ plot.dagitty <- function( x, ... ){
 adjustmentSets <- function( x, exposure=NULL, outcome=NULL, effect="total" ){
 
 	if( !is.null( exposure ) ){
-		x <- setVariableStatus( x, exposure, "exposure" )
+		exposures(x) <- exposure
 	}
 	if( !is.null( outcome ) ){
-		x <- setVariableStatus( x, outcome, "outcome" )
+		outcomes(x) <- outcome
 	}
 
 	xv <- .getJSVar()
@@ -619,13 +700,13 @@ instrumentalVariables <- function( x, exposure=NULL, outcome=NULL ){
 		if( length( exposure ) > 1 ){
 			stop("IV identification only supported for single exposures!")
 		}
-		x <- setVariableStatus( x, exposure, "exposure" )
+		x <- setVariableStatus( x, "exposure", exposure )
 	}
 	if( !is.null( outcome ) ){
 		if( length( outcome ) > 1 ){
 			stop("IV identification only supported for single outcomes!")
 		}
-		x <- setVariableStatus( x, outcome, "outcome" )
+		x <- setVariableStatus( x, "outcome", outcome )
 	}
 
 	xv <- .getJSVar()
@@ -720,12 +801,21 @@ as.dagitty.data.frame <- function( x, ... ){
 #' @export
 toString.dagitty <- function( x, format="dagitty", ... ){
 	x <- as.dagitty( x )
-	if( !format %in% c("dagitty","tikz","lavaan") ){
+	if( !format %in% c("dagitty","tikz","lavaan","dagitty.old") ){
 		stop( "Unsupported export format: ", format )
 	}
 	r <- NULL
 	if( format == "dagitty" ){
 		r <- as.character( x )
+	} else if( format == "dagitty.old" ){
+		xv <- .getJSVar()
+		tryCatch({
+			.jsassigngraph( xv, x )
+			.jsassign( xv, .jsp("global.",xv,".oldToString()") )
+			r <- as.character( .jsget(xv) )
+		}, error=function(e){
+			stop( e )
+		},finally={.deleteJSVar(xv)})
 	} else if( format %in% c("lavaan","tikz") ){
 		xv <- .getJSVar()
 		tryCatch({
@@ -742,6 +832,9 @@ toString.dagitty <- function( x, format="dagitty", ... ){
 } 
 
 #' Parse Dagitty Graph
+#'
+#' Constructs a \code{dagitty} graph object from a textual description. 
+#'
 #' @param x character, string describing a graphical model in dagitty syntax.
 #' @export
 dagitty <- function(x){

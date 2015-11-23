@@ -132,6 +132,16 @@
         ...)
 }
 
+.jsassigngraph <- function( xv, x ){
+	.jsassign( xv, as.character(x) )
+	.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+}
+
+.jsgetgraph <- function( xv ){
+	r <- .jsget(paste0("GraphSerializer.toDot(global.",xv,")"))
+	structure(r,class="dagitty")
+}
+
 .jsglobals <-function (){
 	setdiff( .getJSContext()$get("Object.keys(global)"),
 		c("console","print","global","ArrayBuffer","Int8Array","Uint8Array","Int16Array",
@@ -233,3 +243,20 @@
 	d34 <- det(Msub[c(2,3),c(2,3)])
 	sqrt((d12 * d34 * (n+1) / (n-1) - d)/(n-2))
 }
+
+.graphTransformer <- function( x, method="moralGraph" ){
+	x <- as.dagitty(x)
+	xv <- .getJSVar()
+	r <- NULL
+	tryCatch({
+		.jsassign( xv, as.character(x) )
+		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		.jsassign( xv, .jsp("GraphTransformer.",method,"(global.",xv,")") )
+		.jsassign( xv, .jsp("global.",xv,".toString()") )
+		r <- .jsget( xv )
+	}, 
+	error=function(e) stop(e),
+	finally={.deleteJSVar(xv)})
+	structure(r,class="dagitty")
+}
+
