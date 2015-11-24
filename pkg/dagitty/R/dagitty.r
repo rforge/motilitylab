@@ -174,6 +174,24 @@ parents <- function( x, v ){
 	.kins( x, v, "parents" )
 }
 
+#' @rdname AncestralRelations
+#' @export
+neighbours <- function( x, v ){
+	.kins( x, v, "neighbours" )
+}
+
+#' @rdname AncestralRelations
+#' @export
+spouses <- function( x, v ){
+	.kins( x, v, "spouses" )
+}
+
+#' @rdname AncestralRelations
+#' @export
+adjacentNodes <- function( x, v ){
+	.kins( x, v, "adjacentNodes" )
+}
+
 #' Moral Graph
 #'
 #' @param x the input graph.
@@ -181,6 +199,15 @@ parents <- function( x, v ){
 #' @export
 moralize <- function( x ){
 	.graphTransformer( x, "moralGraph" )
+}
+
+#' Back-Door Graph
+#'
+#' @param x the input graph.
+#' 
+#' @export
+backDoorGraph <- function( x ){
+	.graphTransformer( x, "backDoorGraph" )
 }
 
 #' Ancestor Graph
@@ -266,7 +293,7 @@ latents <- function( x ){
 #' @rdname VariableStatus
 #' @export
 'latents<-' <- function( x, value ){
-	setVariableStatus(x, "latent", value )
+	setVariableStatus(x, "latentNode", value )
 }
 
 #' @rdname VariableStatus
@@ -990,7 +1017,9 @@ plotLocalTestResults <- function(x,xlab="test statistic (95% CI)",
 #' @param x the input graph.
 #' @param from name(s) of first variable(s).
 #' @param to name(s) of last variable(s).
-#' @param limit maximum amount of paths to show.
+#' @param limit maximum amount of paths to show. In general, the number of paths grows
+#' exponentially with the number of variables in the graph, such that path inspection
+#' is not useful except for the most simple models.
 #'
 #' @export
 paths <- function(x,from=NULL,to=NULL,limit=100){
@@ -1003,7 +1032,8 @@ paths <- function(x,from=NULL,to=NULL,limit=100){
 	xv <- .getJSVar()
 	tryCatch({
 		.jsassigngraph( xv, x )
-		.jsassign( xv, .jsp("GraphAnalyzer.listPaths(global.",xv,",",limit,")") )
+		.jsassign( xv, .jsp("DagittyR.paths2r(GraphAnalyzer.listPaths(global.",
+			xv,",false,",limit,"))") )
 		r <- .jsget(xv)
 	},finally={.deleteJSVar(xv)})
 	r

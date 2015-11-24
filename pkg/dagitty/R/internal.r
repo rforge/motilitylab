@@ -160,7 +160,7 @@
 
 .kins <- function( x, v, type="descendants" ){
 	supported <- c("descendants","ancestors","neighbours","posteriors","anteriors",
-		"children","parents")
+		"children","parents","spouses","adjacentNodes")
 	if( ! type %in% supported ){
 		stop("Supported kinship types : ",paste(supported,collapse=", ") )
 	}

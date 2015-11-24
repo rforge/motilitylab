@@ -139,14 +139,19 @@ var Graph = Class.extend({
 		return this
 	},
 	
-	clone : function(){
+	clone : function( include_edges ){
+		if( arguments.length == 0 ){
+			include_edges = true
+		}
 		var g2 = new Graph()
 		_.each( this.getVertices(), function( v ){
 			g2.addVertex( v.cloneWithoutEdges() )
 		} )
-		_.each( this.edges, function( e ){
-			g2.addEdge( e.v1.id, e.v2.id, e.directed )
-		} )
+		if( include_edges ){
+			_.each( this.edges, function( e ){
+				g2.addEdge( e.v1.id, e.v2.id, e.directed )
+			} )
+		}
 		this.copyAllVertexPropertiesTo(g2)
 		return g2
 	},
@@ -260,7 +265,39 @@ var Graph = Class.extend({
 			})
 		})
 		return rh.values()
-	},    
+	},
+	
+	spousesOf : function( vertex_array ){
+		var vh = new Hash()
+		_.each( vertex_array, function(v){
+			vh.set( v.id, v )
+		})
+		var rh = new Hash()
+		_.each( vertex_array, function(v){
+			_.each( v.getSpouses(), function(w){
+				if( !vh.get( w.id ) ){
+					rh.set(w.id,w)
+				}
+			})
+		})
+		return rh.values()
+	},
+	
+	adjacentNodesOf : function( vertex_array ){
+		var vh = new Hash()
+		_.each( vertex_array, function(v){
+			vh.set( v.id, v )
+		})
+		var rh = new Hash()
+		_.each( vertex_array, function(v){
+			_.each( v.getAdjacentNodes(), function(w){
+				if( !vh.get( w.id ) ){
+					rh.set(w.id,w)
+				}
+			})
+		})
+		return rh.values()
+	},
 	
 	nodesOnCausalPaths : function(){
 		return _.intersection( this.descendantsOf( this.getSources() ),
@@ -622,7 +659,8 @@ Graph.Vertex = Class.extend({
 	/**
 		*      see below for meaning of this generic function 
 		*/
-	getKinship : function( inverse_direction, consider_undirected_edges, consider_bidirected_edges ){
+	getKinship : function( inverse_direction, consider_undirected_edges, 
+			consider_bidirected_edges ){
 		var r = [], n = this
 		if( consider_undirected_edges ){
 			_.each( 
@@ -635,8 +673,7 @@ Graph.Vertex = Class.extend({
 			n.adjacentBidirectedEdges, function( e ){
 				r.push( e.v1 === n ? e.v2 : e.v1 )
 			} )
-		}
-		else if( !inverse_direction ){
+		} else if( !inverse_direction ){
 			_.each( 
 			n.outgoingEdges, function( e ){
 				r.push( e.v2 )
@@ -666,6 +703,25 @@ Graph.Vertex = Class.extend({
 	},
 	getParents : function(){
 		return this.getKinship( true, false, false )
+	},
+	getAdjacentNodes : function(){
+		return (this.getChildrenAndNeighbours().
+			concat(this.getParents()).
+			concat(this.getSpouses()))
+	},
+	degree : function(){
+		if( arguments.length >= 1 ){
+			switch( arguments[0] ){
+				case Graph.Edgetype.Bidirected :
+					return this.getSpouses().length
+				case Graph.Edgetype.Undirected :
+					return this.getNeighbours().length
+				case Graph.Edgetype.Directed :
+					return this.getChildren().length+this.getParents().length
+			}
+		} else {
+			return this.getAdjacentNodes().length
+		}
 	},
 	cloneWithoutEdges : function(){
 		var r = new Graph.Vertex( this );

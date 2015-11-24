@@ -72,6 +72,49 @@ var GraphSerializer = {
 		return edgestat.join("\n")
 	},
 
+	/** Assumes that g contains only a single path that starts at a source 
+	    and converts it to DOT syntax.
+	 **/
+	pathToDot : function( g ){
+		var vids = g.vertices.keys(), v, i, j,
+			visited, vn, r = "", arrows
+		if( vids.length == 0 ){
+			return ""
+		}
+		if( g.getSources().length != 1 ){
+			return ""
+		}
+		visited = {}
+		v = g.getSources()[0]
+		visited[v.id] = 1
+		r = v.id
+		arrows = ["->","<-","--","<->"]
+		while( v ){
+			vn = {
+				"->" : v.getChildren(),
+				"<-" : v.getParents(),
+				"--" : v.getNeighbours(),
+				"<->" : v.getSpouses()
+			}
+			out:
+			for( j = 0 ; j < 4 ; j ++ ){
+				for( i = 0 ; i < vn[arrows[j]].length ; i ++ ){
+					if( !visited[vn[arrows[j]][i].id] ){
+						break out
+					}
+				}
+			}
+			if( j==4 ){
+				v = null
+			} else { 
+				v = vn[arrows[j]][i]
+				r += " "+arrows[j]+" "+encodeURIComponent(v.id)
+				visited[v.id]=1
+			}
+		}
+		return r
+	},
+
 	toLavaan : function( g ){
 		var ee = g.getEdges(), edgetype, 
 			r = "# Remember to set lavaan's fixed.x appopriately!\n"

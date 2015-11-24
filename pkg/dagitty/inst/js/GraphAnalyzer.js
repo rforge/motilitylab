@@ -266,12 +266,12 @@ var GraphAnalyzer = {
 		var gam = GraphTransformer.moralGraph( 
 			GraphTransformer.ancestorGraph( 
 			GraphTransformer.backDoorGraph(g) ) )
-		
+				
 		if( must )
 			adjusted_nodes = adjusted_nodes.concat( must )
 		if( must_not )
 			latent_nodes = latent_nodes.concat( must_not )
-				
+		
 		return this.listMinimalSeparators( gam, adjusted_nodes, latent_nodes )
 	},
 	
@@ -398,8 +398,9 @@ var GraphAnalyzer = {
 		X and Y are optional, the exposures and outcomes defined in g are 
 		taken by default.
 	 */	
-	properCausalPaths : function( g, X, Y ){
-		var i, in_X = [], in_Y = [], visited = {}, reaches_target = {}, r = []
+	properPossibleCausalPaths : function( g, X, Y ){
+		var i, in_X = [], in_Y = [], visited = {}, reaches_target = {}, r = [],
+			possible = true // this should become a parameter
 		if( arguments.length == 1 ){
 			X = g.getSources()
 			Y = g.getTargets()
@@ -418,6 +419,10 @@ var GraphAnalyzer = {
 					reaches_target[v.id] = true
 				} else {
 					var children = _.reject(v.getChildren(),function(v){return in_X[v.id]})
+					if( possible ){
+						children = children.concat( 
+							_.reject(v.getNeighbours(),function(v){return in_X[v.id]}) )
+					}
 					if( _.any( children.map( visit ) ) ){
 						r.push(v)
 						reaches_target[v.id] = true
@@ -440,7 +445,7 @@ var GraphAnalyzer = {
 			X = g.getSources()
 			Y = g.getTargets()
 		}
-		return g.descendantsOf( _.difference( this.properCausalPaths( g, X, Y ), 
+		return g.descendantsOf( _.difference( this.properPossibleCausalPaths( g, X, Y ), 
 			g.getSources() ) )
 	},
 	
@@ -451,7 +456,7 @@ var GraphAnalyzer = {
 	nodesThatViolateAdjustmentCriterionWithoutIntermediates : function( g ){
 		var is_on_causal_path = [];
 		var set_causal =  function(v){ is_on_causal_path[v.id]=true }
-		_.each( this.properCausalPaths(g), set_causal )
+		_.each( this.properPossibleCausalPaths(g), set_causal )
 		var is_violator = function(v){ return g.isAdjustedNode( v ) && !is_on_causal_path[v.id] }
 		return _.filter( this.dpcp(g), is_violator )
 	},
@@ -463,20 +468,27 @@ var GraphAnalyzer = {
 		.difference( g.getTargets() ).value()
 	},
 	
-	
-	listPaths: function( g, limit, X, Y ){
+	/** 
+	    Find all simple paths between X (default exposure) and Y (default outcome) in the
+        given graph. Returns results as an array of graphs, each on the same node set as
+        the original graph.
+	 */ 
+	listPaths: function( g, directed, limit, X, Y ){
 		var r=[], gr, visited
-		if( arguments.length == 1 ){
+		if( arguments.length < 2 ){
+			directed = true
+		}
+		if( arguments.length < 3 ){
 			limit=100
 		}
-		if( arguments.length < 4 ){
+		if( arguments.length < 6 ){
 			X = g.getSources(); Y = g.getTargets()
 		}
 		if( X.length == 0 || Y.length == 0 ){
 			return ""
 		}
 		
-		gr = new Graph()
+		gr = g.clone(false)
 		visited = []
 
 		var listPathsRec = function( u, v ){
@@ -484,25 +496,23 @@ var GraphAnalyzer = {
 				return
 			}
 			if( u==v ){
-				r.push(gr.toString())
+				r.push(gr.clone())
 			} else {
 				_.each( u.getChildren(), function( v2 ){
 					if( !visited[v2.id] ){
 						visited[v2.id]=1
-						gr.addVertex( new Graph.Vertex(v2) )
 						gr.addEdge( u.id, v2.id, Graph.Edgetype.Directed )
 						listPathsRec( v2, v )
-						gr.deleteVertex( v2.id )
+						gr.deleteEdge( u.id, v2.id, Graph.Edgetype.Directed )
 						visited[v2.id]=0
 					}
 				} )
 				_.each( u.getParents(), function( v2 ){
 					if( !visited[v2.id] ){
 						visited[v2.id]=1
-						gr.addVertex( new Graph.Vertex(v2) )
 						gr.addEdge( v2.id, u.id, Graph.Edgetype.Directed )
 						listPathsRec( v2, v )
-						gr.deleteVertex( v2.id )
+						gr.deleteEdge( v2.id, u.id, Graph.Edgetype.Directed )
 						visited[v2.id]=0
 					}
 				} )
@@ -528,7 +538,7 @@ var GraphAnalyzer = {
 				} )
 			}
 		}
-		
+
 		_.each( X, function(u){
 			_.each( Y, function(v){
 				try{
@@ -542,6 +552,7 @@ var GraphAnalyzer = {
 				}
 			})
 		})
+
 		return r
 	},
 	

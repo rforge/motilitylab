@@ -63,9 +63,18 @@ var DagittyR = {
 		return r
 	},
 	
+	paths2r : function( ga, Z ){
+		var i = 0, r = { path : [], open : [] }
+		for( ; i < ga.length ; i ++ ){
+			r.path.push( GraphSerializer.pathToDot( ga[i] ) )
+			r.open.push( !GraphAnalyzer.dSeparated( ga[i], 
+				ga[i].getSources(), ga[i].getTargets(), [] ) )
+		}
+		return r
+	},
+	
 	getVertices : function( g, a ){
-		var r = [], v
-		ak = Object.keys( a )
+		var r = [], v, ak = Object.keys( a )
 		for( var i = 0 ; i < a.length ; i ++ ){
 			v = g.getVertex( a[ak[i]] )
 			if( v ){
