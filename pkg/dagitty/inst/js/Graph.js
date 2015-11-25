@@ -68,6 +68,8 @@ var Graph = Class.extend({
 			return this.vertices.get(v)
 		} else if( v instanceof Graph.Vertex ){
 			return this.vertices.get(v.id)
+		} else if( v instanceof Array ){
+			return v.map(function(vi){return this.vertices.get(vi)},this)
 		} else {
 			throw( "Illegal value passed to getVertex : " + v )
 		}

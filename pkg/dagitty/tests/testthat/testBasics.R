@@ -26,3 +26,20 @@ test_that("ancestor moral graph", {
 		"A 1\nS E\nT O\n\nA S\nS A T\nT S")
 	expect_equal(nrow(edges(moralize(dagitty("graph{ a -> x <-> z <- b}")))),6)
 })
+
+test_that("path tracing", {
+	expect_equal( paths( mixed, "a", "b" )$paths, "a -- x -> b" )
+	expect_equal( paths( mixed, "c", "d" )$paths, "c <-> x <- d" )
+
+	expect_equal( paths( mixed, "a", c("b","c","d") )$open, rep(TRUE,3) )
+	expect_equal( paths( mixed, "b", c("c","d") )$open, rep(TRUE,2) )
+	expect_equal( paths( mixed, "c", "d" )$open, FALSE )
+
+	expect_equal( paths( mixed, "a", c("b","c","d"), "x" )$open, rep(FALSE,3) )
+	expect_equal( paths( mixed, "b", c("c","d"), "x" )$open, rep(FALSE,2) )
+	expect_equal( paths( mixed, "c", "d", "x" )$open, TRUE )
+	
+	expect_equal( sort(dconnected( mixed, "d" )), c("a","b","d","x") )
+	expect_equal( sort(dseparated( mixed, "d" )), c("c","f") )
+
+})

@@ -116,7 +116,7 @@ simulateSEM <- function( x, b.lower=-.6, b.upper=.6, eps=1, N=500 ){
     	mdl$ustart[(mdl$op == "~") & (mdl$rhs == l)] <- c( b, b2 )
     }
     arrows <- which( (mdl$op == "~") & !(mdl$rhs %in% x$L) )
-    residvars <- which( mdl$op == "~~" )
+    residvars <- which( mdl$op == "~~" & (mdl$rhs == mdl$lhs) )
     mdl$ustart[arrows] <- runif( length(arrows), b.lower, b.upper )
     mdl$ustart[residvars] <- eps
     r <- lavaan::simulateData( mdl, sample.nobs=N ) 
@@ -1014,29 +1014,74 @@ plotLocalTestResults <- function(x,xlab="test statistic (95% CI)",
 
 #' Show paths
 #'
+#' Returns a list with two compontents: \code{path} gives the actual
+#' paths, and \code{open} shows whether each path is open (d-connected)
+#' or closed (d-separated).
+#'
 #' @param x the input graph.
-#' @param from name(s) of first variable(s).
-#' @param to name(s) of last variable(s).
+#' @param from name(s) of first variable(s). 
+#' @param to name(s) of last variable(s). 
+#' @param Z names of variables to condition on for determining open
+#' paths.
 #' @param limit maximum amount of paths to show. In general, the number of paths grows
 #' exponentially with the number of variables in the graph, such that path inspection
 #' is not useful except for the most simple models.
+#' @param directed logical; should only directed (i.e., causal) paths 
+#' be shown?
 #'
 #' @export
-paths <- function(x,from=NULL,to=NULL,limit=100){
-	if( !is.null(from) ){
-		exposures(x) <- from
-	}
-	if( !is.null(to) ){
-		outcomes(x) <- to
-	}
+paths <- function(x,from=exposures(x),to=outcomes(x),Z=list(),limit=100,directed=FALSE){
 	xv <- .getJSVar()
+	xv2 <- .getJSVar()
+	exposures(x) <- from
+	outcomes(x) <- to
 	tryCatch({
 		.jsassigngraph( xv, x )
+		.jsassign( xv2, as.list(Z) )
 		.jsassign( xv, .jsp("DagittyR.paths2r(GraphAnalyzer.listPaths(global.",
-			xv,",false,",limit,"))") )
+			xv,",",tolower(directed),",",limit,"),",xv2,")") )
 		r <- .jsget(xv)
-	},finally={.deleteJSVar(xv)})
+	},finally={.deleteJSVar(xv);.deleteJSVar(xv2)})
 	r
+}
+
+#' d-Separation
+#'
+#' @param x the input graph.
+#' @param X vector of variable names.
+#' @param Y vector of variable names.
+#' @param Z vector of variable names.
+#'
+#' @export
+dconnected <- function(x,X,Y=list(),Z=list()){
+	xv <- .getJSVar()
+	Xv <- .getJSVar()
+	Yv <- .getJSVar()
+	Zv <- .getJSVar()
+	tryCatch({
+		.jsassigngraph( xv, x )
+		.jsassign( Xv, as.list(X) )
+		.jsassign( Yv, as.list(Y) )
+		.jsassign( Zv, as.list(Z) )
+		.jsassign( xv, .jsp("DagittyR.dconnected(",xv,",",Xv,",",Yv,",",Zv,")") )
+		r <- .jsget(xv)
+	},finally={
+		.deleteJSVar(xv)
+		.deleteJSVar(Xv)
+		.deleteJSVar(Yv)
+		.deleteJSVar(Zv)
+	})
+	r
+}
+
+#' @rdname dconnected
+#' @export
+dseparated <- function(x,X,Y=list(),Z=list()){
+	if( length(Y) > 0 ){
+		!dconnected(x,X,Y,Z)
+	} else {
+		setdiff(names(x),dconnected(x,X,Y,Z))
+	}
 }
 
 #' @export

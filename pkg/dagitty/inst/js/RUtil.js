@@ -45,7 +45,7 @@ var DagittyR = {
 	
 	edge2r : function( g ){
 		'use strict'
-		var r = { v : [], w : [], e : [], x : [], y : [] }, j=1, rk
+		var r = { v : [], w : [], e : [], x : [], y : [] }
 		_.each(g.edges, function( e ){
 			r.v.push( e.v1.id )
 			r.w.push( e.v2.id )
@@ -64,15 +64,17 @@ var DagittyR = {
 	},
 	
 	paths2r : function( ga, Z ){
-		var i = 0, r = { path : [], open : [] }
+		var i = 0, r = { paths : [], open : [] }
 		for( ; i < ga.length ; i ++ ){
-			r.path.push( GraphSerializer.pathToDot( ga[i] ) )
-			r.open.push( !GraphAnalyzer.dSeparated( ga[i], 
-				ga[i].getSources(), ga[i].getTargets(), [] ) )
+			r.paths.push( GraphSerializer.pathToDot( ga[i] ) )
+			r.open.push( GraphAnalyzer.dConnected( ga[i], 
+				ga[i].getSources(), ga[i].getTargets(), 
+				ga[i].getVertex( Z )
+			) )
 		}
 		return r
 	},
-	
+
 	getVertices : function( g, a ){
 		var r = [], v, ak = Object.keys( a )
 		for( var i = 0 ; i < a.length ; i ++ ){
@@ -82,6 +84,19 @@ var DagittyR = {
 			}
 		}
 		return r
+	},
+	
+	dconnected : function( g, X, Y, Z ){
+		var r = GraphAnalyzer.dConnected( g, 
+			g.getVertex(X), 
+			g.getVertex(Y), 
+			g.getVertex(Z) )
+		if( Y.length > 0 ){
+			return r
+		} else {
+			return _.difference( _.pluck(r,'id'),
+				_.pluck(g.S,'id'), _.pluck(g.L,'id') )
+		}
 	},
 	
 	findExample : function( s ){

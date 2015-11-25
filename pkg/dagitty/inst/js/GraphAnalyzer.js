@@ -490,6 +490,24 @@ var GraphAnalyzer = {
 		
 		gr = g.clone(false)
 		visited = []
+		
+		var followEdges = function( u, v, kin, edgetype, reverse ){
+			var st = []
+			_.each( u[kin](), function( v2 ){
+				if( !visited[v2.id] ){
+					if( reverse ){
+						st=[v2.id,u.id]
+					} else {
+						st=[u.id,v2.id]
+					}
+					visited[v2.id]=1
+					gr.addEdge( st[0], st[1], Graph.Edgetype[edgetype] )
+					listPathsRec( v2, v )
+					gr.deleteEdge( st[0], st[1], Graph.Edgetype[edgetype] )
+					visited[v2.id]=0
+				}
+			} )
+		}
 
 		var listPathsRec = function( u, v ){
 			if( r.length >= limit ){
@@ -498,44 +516,12 @@ var GraphAnalyzer = {
 			if( u==v ){
 				r.push(gr.clone())
 			} else {
-				_.each( u.getChildren(), function( v2 ){
-					if( !visited[v2.id] ){
-						visited[v2.id]=1
-						gr.addEdge( u.id, v2.id, Graph.Edgetype.Directed )
-						listPathsRec( v2, v )
-						gr.deleteEdge( u.id, v2.id, Graph.Edgetype.Directed )
-						visited[v2.id]=0
-					}
-				} )
-				_.each( u.getParents(), function( v2 ){
-					if( !visited[v2.id] ){
-						visited[v2.id]=1
-						gr.addEdge( v2.id, u.id, Graph.Edgetype.Directed )
-						listPathsRec( v2, v )
-						gr.deleteEdge( v2.id, u.id, Graph.Edgetype.Directed )
-						visited[v2.id]=0
-					}
-				} )
-				_.each( u.getNeighbours(), function( v2 ){
-					if( !visited[v2.id] ){
-						visited[v2.id]=1
-						gr.addVertex( new Graph.Vertex(v2) )
-						gr.addEdge( v2.id, u.id, Graph.Edgetype.Undirected )
-						listPathsRec( v2, v )
-						gr.deleteVertex( v2.id )
-						visited[v2.id]=0
-					}
-				} )
-				_.each( u.getSpouses(), function( v2 ){
-					if( !visited[v2.id] ){
-						visited[v2.id]=1
-						gr.addVertex( new Graph.Vertex(v2) )
-						gr.addEdge( v2.id, u.id, Graph.Edgetype.Bidirected )
-						listPathsRec( v2, v )
-						gr.deleteVertex( v2.id )
-						visited[v2.id]=0
-					}
-				} )
+				followEdges( u, v, "getChildren", "Directed", false )
+				if( !directed ){
+					followEdges( u, v, "getParents", "Directed", true )
+					followEdges( u, v, "getNeighbours", "Undirected", false )
+					followEdges( u, v, "getSpouses", "Bidirected", false )
+				}
 			}
 		}
 
@@ -543,11 +529,10 @@ var GraphAnalyzer = {
 			_.each( Y, function(v){
 				try{
 					visited[u.id]=1
-					gr.addVertex( new Graph.Vertex(u) )
 					listPathsRec( u, v )
-					gr.deleteVertex( u.id )
 					visited[u.id]=0
 				} catch( e ) {
+					console.log( e )
 					return r
 				}
 			})
@@ -606,14 +591,19 @@ var GraphAnalyzer = {
 		return r
 	},
 	
-	/** d-Separation test via Shachter's "Bayes-Ball" BFS
+	/** d-Separation test via Shachter's "Bayes-Ball" BFS.
+	 * (actually, implements m-separation which is however not guaranteed to be meaningful
+	 * in all mixed graphs).
+	 * If Y is nonempty, returns true iff X and Z are d-separated given Z.
+	 * If Y is empty ([]), return the set of vertices that are d-connected 
+	 * to X given Z.
 	 */
-	dSeparated : function( g, X, Y, Z ){
+	dConnected : function( g, X, Y, Z ){
 		var forward_queue = []
 		var backward_queue = []
-		var forward_visited =[]
-		var backward_visited =[]
-		var i, Y_ids = [], Z_ids = [], v, vv
+		var forward_visited ={}
+		var backward_visited = {}
+		var i, Y_ids = {}, Z_ids = {}, v, vv
 		for( i = 0 ; i < X.length ; i ++ ){
 			backward_queue.push( X[i] )
 		}
@@ -626,17 +616,17 @@ var GraphAnalyzer = {
 		while( forward_queue.length + backward_queue.length > 0 ){
 			if( forward_queue.length > 0 ){
 				v = forward_queue.pop()
-				forward_visited[vv.id]=1
-				if( Y_ids[v.id] ) return false
+				forward_visited[v.id]=1
+				if( Y_ids[v.id] ) return true
 				if( Z_ids[v.id] ){
-					vv = g.parentsOf( [v] )
+					vv = _.union( v.getParents(), v.getSpouses() )
 					for( i = 0 ; i < vv.length ; i ++ ){
 						if( !backward_visited[vv[i].id] ){
 							backward_queue.push( vv[i] )
 						}
 					}
 				} else {
-					vv = g.childrenOf( [v] )
+					vv = _.union( v.getChildren(), v.getNeighbours() )
 					for( i = 0 ; i < vv.length ; i ++ ){
 						if( !forward_visited[vv[i].id] ){
 							forward_queue.push( vv[i] )
@@ -647,16 +637,15 @@ var GraphAnalyzer = {
 			if( backward_queue.length > 0 ){
 				v = backward_queue.pop()
 				backward_visited[v.id]=1
-				if( Y_ids[v.id] ) return false
+				if( Y_ids[v.id] ) return true
 				if( Z_ids[v.id] ) continue
-				vv = g.childrenOf( [v] )
+				vv = _.union( v.getChildren(), v.getSpouses() )
 				for( i = 0 ; i < vv.length ; i ++ ){
 					if( !forward_visited[vv[i].id] ){
 						forward_queue.push( vv[i] )
-						
 					}
 				}
-				vv = g.parentsOf( [v] )
+				vv = _.union( v.getParents(), v.getNeighbours() )
 				for( i = 0 ; i < vv.length ; i ++ ){
 					if( !backward_visited[vv[i].id] ){
 						backward_queue.push( vv[i] )
@@ -664,7 +653,13 @@ var GraphAnalyzer = {
 				}
 			}
 		}
-		return true
+		if( Y.length > 0 ){
+			return false
+		} else {
+			return g.getVertex(
+				_.union( Object.keys( forward_visited ), Object.keys( backward_visited ) ) 
+			)
+		}
 	},
 	
 	ancestralInstrument : function( g, x, y, z, 
@@ -680,7 +675,7 @@ var GraphAnalyzer = {
 		if( W === false ){ return false }
 		if( _.intersection( W, de_y ).length > 0 ){ return false }
 		if( _.intersection( W, [x] ).length === 1 ){ return false }
-		if( GraphAnalyzer.dSeparated( g_bd, [x], [z], W ) ){
+		if( !GraphAnalyzer.dConnected( g_bd, [x], [z], W ) ){
 			return false			
 		} else {
 			return W.map( function(v){return g.getVertex(v.id)} )
