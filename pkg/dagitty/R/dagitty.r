@@ -293,7 +293,7 @@ latents <- function( x ){
 #' @rdname VariableStatus
 #' @export
 'latents<-' <- function( x, value ){
-	setVariableStatus(x, "latentNode", value )
+	setVariableStatus(x, "latent", value )
 }
 
 #' @rdname VariableStatus
@@ -326,7 +326,7 @@ setVariableStatus <- function( x, status, value ) {
 		} else if (status == "outcome" ){
 			jsstatname <- "Target"
 		} else if (status == "latent" ){
-			jsstatname <- "Latent"
+			jsstatname <- "LatentNode"
 		} else if (status == "adjustedNode" ){
 			jsstatname <- "AdjustedNode"
 		}
