@@ -16,7 +16,7 @@ test_that("relationships", {
 	expect_equal(parents(mixed,"x"),("d"))
 	expect_equal(children(mixed,"x"),("b"))
 	expect_equal(sort(adjacentNodes(mixed,"x")),c("a","b","c","d"))
-	expect_equal(adjacentNodes(mixed,"f"),list())
+	expect_equal(adjacentNodes(mixed,"f"),character())
 })
 
 test_that("ancestor moral graph", {

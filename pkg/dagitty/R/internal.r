@@ -174,7 +174,7 @@
 		.deleteJSVar(xv)
 		.deleteJSVar(vv)
 	})
-	r
+	as.character(r)
 }
 
 .capitalizeFirst <- function(s){
