@@ -1181,7 +1181,8 @@ var GraphAnalyzer = {
 		}
 		if( gtype == "pdag" ){
 			g = GraphTransformer.cgToRcg( g )
-		}
+		}	
+		if( !g ){ return [] }
 	
 		if(GraphAnalyzer.violatesAdjustmentCriterion(g)){ return [] }
 		var adjusted_nodes = g.getAdjustedNodes()
@@ -1207,6 +1208,7 @@ var GraphAnalyzer = {
 		if( gtype == "pdag" ){
 			g = GraphTransformer.cgToRcg( g )
 		}
+		if( !g ){ return [] }
 
 		var adjusted_nodes = g.getAdjustedNodes()
 		var de_y = g.descendantsOf( _.intersection( g.descendantsOf( g.getSources() ),
