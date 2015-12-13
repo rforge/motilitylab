@@ -91,7 +91,7 @@ getExample <- function( x ){
 #' @examples
 #' ## Simulate data with pre-defined path coefficients of -.6
 #' if( require(lavaan) ){
-#'   g <- dagitty('graph{z <-> x -> y}')
+#'   g <- dagitty('dag{z <-> x -> y}')
 #'   x <- simulateSEM( g, -.6, -.6 )
 #'   coef(sem(toString(g,"lavaan"),x,fixed.x=FALSE))
 #' }
@@ -101,6 +101,7 @@ simulateSEM <- function( x, b.lower=-.6, b.upper=.6, eps=1, N=500 ){
 	if( !requireNamespace( "lavaan", quietly=TRUE ) ){
 		stop("This function requires the 'lavaan' package!")
 	}
+	x <- as.dagitty( x )
     vars <- names( x )
     x <- canonicalize( x )
     mdl <- lavaan::lavaanify( toString(x$g,"lavaan"), fixed.x=FALSE )
@@ -190,6 +191,17 @@ spouses <- function( x, v ){
 #' @export
 adjacentNodes <- function( x, v ){
 	.kins( x, v, "adjacentNodes" )
+}
+
+#' Orient undirected edges in PDAG.
+#'
+#' Orients as many edges as possible in a PDAG by converting induced subgraphs
+#' X -> Y -- Z to X -> Y -> Z.
+#'
+#' @param x the input graph, a PDAG.
+#' @export
+orientPDAG <- function( x ){
+	.graphTransformer( x, "cgToRcg" )
 }
 
 #' Moral Graph
@@ -360,8 +372,7 @@ names.dagitty <- function( x ){
 	ct <- .getJSContext()
 	xv <- .getJSVar()
 	tryCatch({
-		.jsassign( xv, as.character(x) )
-		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		.jsassigngraph( xv, x )
 		.jsassign( xv, .jsp("global.",xv,".vertices.keys()") )
 		r <- .jsget(xv)},
 	finally={.deleteJSVar(xv)})
@@ -405,8 +416,8 @@ coordinates <- function( x ){
 	xv <- .getJSVar()
 	yv <- .getJSVar()
 	tryCatch({
-		.jsassign( xv, as.character(x) )
-		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,").vertices.values()") )
+		.jsassigngraph( xv, x )
+		.jsassign( xv, .jsp("global.",xv,".getVertices()") )
 		.jsassign( yv, .jsp("_.pluck(global.",xv,",'id')") )
 		labels <- .jsget(yv)
 		.jsassign( yv, .jsp("_.pluck(global.",xv,",'layout_pos_x')") )
@@ -428,8 +439,7 @@ coordinates <- function( x ){
 	xv <- .getJSVar()
 	xv2 <- .getJSVar()
 	tryCatch({
-		.jsassign( xv, as.character(x) )
-		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		.jsassigngraph( xv, x )
 		for( n in intersect( names(value$x), names(x) ) ){
 			.jsassign( xv2, as.character(n) )
 			.jseval(.jsp("global.",xv,".vertices.get(",xv2,").layout_pos_x=",
@@ -468,9 +478,8 @@ canonicalize <- function( x ){
 	xv2 <- .getJSVar()
 	r <- NULL
 	tryCatch({
-		.jsassign( xv, as.character(x) )
-		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
-		.jsassign( xv, .jsp("GraphTransformer.canonicalGraph(global.",xv,")") )
+		.jsassigngraph( xv, x )
+		.jsassign( xv, .jsp("GraphTransformer.canonicalDag(global.",xv,")") )
 		.jsassign( xv2, .jsp("global.",xv,".g.toString()") )
 		g <- .jsget( xv2 )
 		.jsassign( xv2, .jsp("_.pluck(",xv,".L,'id')") )
@@ -507,10 +516,10 @@ canonicalize <- function( x ){
 #' levels( edges( getExample("Shrier") )$e )
 #' @export 
 edges <- function( x ){
+	x <- as.dagitty( x )
 	xv <- .getJSVar()
 	tryCatch({
-		.jsassign( xv, as.character(x) )
-		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		.jsassigngraph( xv, x )
 		.jsassign( xv, .jsp("DagittyR.edge2r(global.",xv,")") )
 		r <- .jsget(xv)
 	}, finally={.deleteJSVar(xv)})
@@ -544,16 +553,13 @@ is.dagitty <- function(x) inherits(x,"dagitty")
 #'
 #' @export
 graphLayout <- function( x, method="spring" ){
+	x <- as.dagitty( x )
 	if( !(method %in% c("spring")) ){
 		stop("Layout method ",method," not supported!")
 	}
-	if( !is.dagitty( x ) ){
-		stop("Expecting a graph as input x!")
-	}
 	xv <- .getJSVar()
 	tryCatch({
-		.jsassign( xv, as.character(x) )
-		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		.jsassigngraph( xv, x )
 		.jseval( paste0("(new GraphLayouter.Spring(global.",xv,")).layout()") )
 		.jsassign( xv, .jsp("global.",xv,".toString()") )
 		r <- .jsget(xv)
@@ -572,9 +578,7 @@ graphLayout <- function( x, method="spring" ){
 #'
 #' @export
 plot.dagitty <- function( x, ... ){	
-	if( !is.dagitty( x ) ){
-		stop("Expecting a graph as input x!")
-	}
+	x <- as.dagitty( x )
 	coords <- coordinates( x )
 	labels <- names(coords$x)
 	plot.new()
@@ -666,6 +670,7 @@ plot.dagitty <- function( x, ... ){
 #' graphical model), direct effects are simply the path coefficients.
 #' @export
 adjustmentSets <- function( x, exposure=NULL, outcome=NULL, effect="total" ){
+	x <- as.dagitty( x )
 
 	if( !is.null( exposure ) ){
 		exposures(x) <- exposure
@@ -697,10 +702,13 @@ adjustmentSets <- function( x, exposure=NULL, outcome=NULL, effect="total" ){
 #' this many results have been found. Use \code{Inf} to generate them all.
 #' @export
 impliedConditionalIndependencies <- function( x, max.results=100 ){
+	x <- as.dagitty( x )
+
 	xv <- .getJSVar()
 	tryCatch({
 		.jsassign( xv, as.character(x) )
 		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+
 		if( is.finite( max.results ) ){
 			.jsassign( xv, .jsp("GraphAnalyzer.listMinimalImplications(global.",xv,",",
 				as.numeric(max.results),")"))
@@ -723,6 +731,8 @@ impliedConditionalIndependencies <- function( x, max.results=100 ){
 #' Only a single outcome variable is supported.
 #' @export
 instrumentalVariables <- function( x, exposure=NULL, outcome=NULL ){
+	x <- as.dagitty( x )
+
 	if( !is.null( exposure ) ){
 		if( length( exposure ) > 1 ){
 			stop("IV identification only supported for single exposures!")
@@ -738,8 +748,7 @@ instrumentalVariables <- function( x, exposure=NULL, outcome=NULL ){
 
 	xv <- .getJSVar()
 	tryCatch({
-		.jsassign( xv, as.character(x) )
-		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		.jsassigngraph( xv, x )
 		.jsassign( xv, .jsp("GraphAnalyzer.conditionalInstruments(global.",xv,")") )
 		.jsassign( xv, .jsp("DagittyR.iv2r(global.",xv,")") )
 		r <- structure( .jsget(xv), class="dagitty.ivs" )
@@ -751,10 +760,11 @@ instrumentalVariables <- function( x, exposure=NULL, outcome=NULL ){
 #' @param x the input graph.
 #' @export
 vanishingTetrads <- function( x ){
+	x <- as.dagitty( x )
+
 	xv <- .getJSVar()
 	tryCatch({
-		.jsassign( xv, as.character(x) )
-		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		.jsassigngraph( xv, x )
 		.jsassign( xv, .jsp("GraphAnalyzer.vanishingTetrads(global.",xv,")") )
 		r <- .jsget(xv)
 	}, finally={.deleteJSVar(xv)})
@@ -1074,6 +1084,7 @@ dconnected <- function(x,X,Y=list(),Z=list()){
 	r
 }
 
+
 #' @rdname dconnected
 #' @export
 dseparated <- function(x,X,Y=list(),Z=list()){
@@ -1083,6 +1094,7 @@ dseparated <- function(x,X,Y=list(),Z=list()){
 		setdiff(names(x),dconnected(x,X,Y,Z))
 	}
 }
+
 
 #' @export
 print.dagitty.ivs <- function( x, prefix="", ... ){

@@ -42,7 +42,7 @@ residual variances are set to \code{eps}.
 \examples{
 ## Simulate data with pre-defined path coefficients of -.6
 if( require(lavaan) ){
-  g <- dagitty('graph{z <-> x -> y}')
+  g <- dagitty('dag{z <-> x -> y}')
   x <- simulateSEM( g, -.6, -.6 )
   coef(sem(toString(g,"lavaan"),x,fixed.x=FALSE))
 }

@@ -161,8 +161,7 @@
 	xv <- .getJSVar()
 	vv <- .getJSVar()
 	tryCatch({
-		.jsassign( xv, as.character(x) )
-		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		.jsassigngraph( xv, x )
 		
 		for( w in v ){
 			.jsassign( vv, as.character(w) )
@@ -242,8 +241,7 @@
 	xv <- .getJSVar()
 	r <- NULL
 	tryCatch({
-		.jsassign( xv, as.character(x) )
-		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
+		.jsassigngraph( xv, x )
 		.jsassign( xv, .jsp("GraphTransformer.",method,"(global.",xv,")") )
 		.jsassign( xv, .jsp("global.",xv,".toString()") )
 		r <- .jsget( xv )

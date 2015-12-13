@@ -29,14 +29,14 @@ also shows how the tasks implemented in that program can be solved using the dag
 package.
 
 ```{r}
-g1 <- dagitty( "graph {
+g1 <- dagitty( "dag {
 	W1 -> Z1 -> X -> Y
 	Z1 <- V -> Z2
 	W2 -> Z2 -> Y
 	X <-> W1 <-> W2 <-> Y
 }")
 
-g2 <- dagitty( "graph {
+g2 <- dagitty( "dag {
 	Y <- X <- Z1 <- V -> Z2 -> Y
 	Z1 <- W1 <-> W2 -> Z2
 	X <- W1 -> Y

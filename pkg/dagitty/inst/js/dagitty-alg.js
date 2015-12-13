@@ -1,20 +1,22 @@
 
-/* Simple Hash implementation.
-   Copyright (C) 2015 Johannes Textor
+/*  DAGitty - a browser-based software for causal modelling and analysis
+ *  Copyright (C) 2010-2015 Johannes Textor, Benito van der Zander
+ * 
+ *   This program is free software; you can redistribute it and/or
+ *   modify it under the terms of the GNU General Public License
+ *   as published by the Free Software Foundation; either version 2
+ *   of the License, or (at your option) any later version.
+ * 
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ * 
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. */
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. */
+/* Simple Hash implementation. */
 
 /* globals _ */
 
@@ -27,13 +29,13 @@ _.extend( Hash.prototype, {
 		return this.kv.hasOwnProperty( key )
 	},
 	get : function( key ){
-		return this.kv[key];
+		return this.kv[key]
 	},
 	set : function( key, value ){
-		this.kv[key] = value;
+		this.kv[key] = value
 	},
 	unset : function( key ){
-		delete this.kv[key];
+		delete this.kv[key]
 	},
 	values : function(){
 		return Object.keys( this.kv ).map( function(k){
@@ -43,7 +45,7 @@ _.extend( Hash.prototype, {
 	keys : function(){
 		return Object.keys( this.kv )
 	},
-    size : function(){
+	size : function(){
 		return Object.keys( this.kv ).length
 	}
 } )
@@ -53,65 +55,66 @@ _.extend( Hash.prototype, {
  * MIT Licensed.
  */
 // Inspired by base2 and Prototype
-;(function(){
-  var initializing = false, fnTest = /xyz/.test(function(){xyz;}) ? /\b_super\b/ : /.*/;
- 
-  // The base Class implementation (does nothing)
-  this.Class = function(){};
- 
-  // Create a new Class that inherits from this class
-  Class.extend = function(prop) {
-    var _super = this.prototype;
-   
-    // Instantiate a base class (but only create the instance,
-    // don't run the init constructor)
-    initializing = true;
-    var prototype = new this();
-    initializing = false;
-   
-    // Copy the properties over onto the new prototype
-    for (var name in prop) {
-      // Check if we're overwriting an existing function
-      prototype[name] = typeof prop[name] == "function" &&
-        typeof _super[name] == "function" && fnTest.test(prop[name]) ?
-        (function(name, fn){
-          return function() {
-            var tmp = this._super;
-           
-            // Add a new ._super() method that is the same method
-            // but on the super-class
-            this._super = _super[name];
-           
-            // The method only need to be bound temporarily, so we
-            // remove it when we're done executing
-            var ret = fn.apply(this, arguments);        
-            this._super = tmp;
-           
-            return ret;
-          };
-        })(name, prop[name]) :
-        prop[name];
-    }
-   
-    // The dummy class constructor
-    function Class() {
-      // All construction is actually done in the init method
-      if ( !initializing && this.initialize )
-        this.initialize.apply(this, arguments);
-    }
-   
-    // Populate our constructed prototype object
-    Class.prototype = prototype;
-   
-    // Enforce the constructor to be what we expect
-    Class.prototype.constructor = Class;
- 
-    // And make this class extendable
-    Class.extend = arguments.callee;
-   
-    return Class;
-  };
-})();/* This class provides a basic Graph datastructure. Graphs can contain 
+;(function(){ // eslint-disable-line
+	var initializing = false, 
+		fnTest = /xyz/.test(function(){xyz}) ? /\b_super\b/ : /.*/ //eslint-disable-line
+
+	// The base Class implementation (does nothing)
+	this.Class = function(){}
+
+	// Create a new Class that inherits from this class
+	this.Class.extend = function(prop) {
+		var _super = this.prototype
+
+		// Instantiate a base class (but only create the instance,
+		// don't run the init constructor)
+		initializing = true
+		var prototype = new this()
+		initializing = false
+
+		// Copy the properties over onto the new prototype
+		for (var name in prop) {
+			// Check if we're overwriting an existing function
+			prototype[name] = typeof prop[name] == "function" &&
+			typeof _super[name] == "function" && fnTest.test(prop[name]) ?
+			(function(name, fn){
+				return function() {
+					var tmp = this._super
+
+					// Add a new ._super() method that is the same method
+					// but on the super-class
+					this._super = _super[name]
+
+					// The method only need to be bound temporarily, so we
+					// remove it when we're done executing
+					var ret = fn.apply(this, arguments)      
+					this._super = tmp
+
+					return ret
+				}
+			})(name, prop[name]) :
+			prop[name]
+		}
+
+		// The dummy class constructor
+		function Class() {
+			// All construction is actually done in the init method
+			if ( !initializing && this.initialize )
+				this.initialize.apply(this, arguments)
+		}
+
+		// Populate our constructed prototype object
+		Class.prototype = prototype
+
+		// Enforce the constructor to be what we expect
+		Class.prototype.constructor = Class
+
+		// And make this class extendable
+		Class.extend = arguments.callee
+
+		return Class
+	}
+})()/* This class provides a basic Graph datastructure. Graphs can contain 
  * both directed, undirected, and bidirected edges. 
  *	 
  * TODO: there are still some algorithmic methods in this class, these should
@@ -128,11 +131,21 @@ var Graph = Class.extend({
 	initialize : function(){
 		this.vertices = new Hash()
 		this.edges = []
+		this.type = "digraph"
 		this.managed_vertex_properties = {}
 		_.each(this.managed_vertex_property_names,function(p){
 			this.managed_vertex_properties[p] = new Hash()
 		},this)
 	},
+	
+	getType : function(){
+		return this.type
+	},
+	
+	setType : function( type ){
+		this.type = type
+	},
+	
 	getNumberOfVertices : function(){
 		return this.vertices.size()
 	},
@@ -167,13 +180,17 @@ var Graph = Class.extend({
 		var vv = this.getVertex( v )
 		return vv && this.managed_vertex_properties[p].contains( vv.id )
 	},
-	copyAllVertexPropertiesTo : function( g2 ){
+	
+	/** Copies all properties of every vertex of this graph to the same 
+	    vertex in g2 and sets the type of g2 to the type of this graph. */
+	copyAllPropertiesTo : function( g2 ){
 		var g = this
 		_.each( g.managed_vertex_property_names, ( function( p ){
 			_.each( g.getVerticesWithProperty( p ), function( v ){
-					g2.addVertexProperty( v, p ) 
+				g2.addVertexProperty( v, p ) 
 			} )
 		} ) )
+		g2.setType( this.getType() )
 	},
 	
 	getVertex : function( v ){
@@ -232,10 +249,10 @@ var Graph = Class.extend({
 		
 		_.each( v.outgoingEdges, function( e ) {
 			e.v2.incomingEdges = _.without(e.v2.incomingEdges, e )
-		} );
+		} )
 		_.each( v.incomingEdges, function( e ) {
 			e.v1.outgoingEdges = _.without(e.v1.outgoingEdges, e )
-		} );
+		} )
 		this.edges = _.filter(this.edges, 
 		function( e ){ return ! ( 
 		_.contains( v.adjacentBidirectedEdges, e ) ||
@@ -267,7 +284,8 @@ var Graph = Class.extend({
 				g2.addEdge( e.v1.id, e.v2.id, e.directed )
 			} )
 		}
-		this.copyAllVertexPropertiesTo(g2)
+		this.copyAllPropertiesTo(g2)
+		g2.setType( this.getType() )
 		return g2
 	},
 	
@@ -275,7 +293,7 @@ var Graph = Class.extend({
 	 *         TODO for now, only works with directed edges 
 	 */
 	contractVertex : function( v ){
-		var i,j;
+		var i,j
 		for( i = 0 ; i < v.incomingEdges.length ; i++ ){
 			for( j = 0 ; j < v.outgoingEdges.length ; j++ ){
 				this.addEdge( new Graph.Edge.Directed( 
@@ -426,40 +444,40 @@ var Graph = Class.extend({
 		// this gets a random vertex 
 		var root = this.getVertex( Object.keys( this.vertices.kv )[0] )
 		var v
-		if( !root ) return; 
+		if( !root ) return 
 						// calculate the depth of all nodes in the tree 
 		var q = [root]
 		_.each( this.vertices.values(), function(v){
-			v.traversal_info.depth = 0;
-		});
-		root.traversal_info.parent = null;        
+			v.traversal_info.depth = 0
+		})
+		root.traversal_info.parent = null        
 		var max_depth = 0
 		while( q.length > 0 ){
-			v = q.pop();
+			v = q.pop()
 			var children = _.reject( v.getNeighbours(), 
 			function(v2){ return (v2 === root) || (v2.traversal_info.depth > 0) })
 			_.each( children, function(v2){
-				v2.traversal_info.depth = v.traversal_info.depth + 1;
+				v2.traversal_info.depth = v.traversal_info.depth + 1
 				if(  Graph.Vertex.isVisited(v2) && 
 					v2.traversal_info.depth > max_depth ){
 					max_depth = v2.traversal_info.depth
 				}
 				v2.traversal_info.parent = v
 				q.push(v2)
-			});
+			})
 		}
 		// layer the tree
 		var tokens = new Array( max_depth + 1 )
 		for( var i = 0 ; i <= max_depth ; i ++ ){
 			tokens[i] = []
 		}
-		var nr_tokens = 0;
+		var nr_tokens = 0
 		_.chain(this.vertices.values()).filter(Graph.Vertex.isVisited).each(function(v){
 			tokens[v.traversal_info.depth].push(v)
 			nr_tokens ++
-		});
+		})
 		while( nr_tokens > 1 ){
-			v = tokens[max_depth].pop();
+			v = tokens[max_depth].pop()
 			if( v.traversal_info.parent && !Graph.Vertex.isVisited( v.traversal_info.parent ) ){
 				Graph.Vertex.markAsVisited( v.traversal_info.parent )
 				tokens[max_depth-1].push( v.traversal_info.parent )
@@ -482,17 +500,32 @@ var Graph = Class.extend({
 		if( typeof edgetype == "undefined" ){
 			edgetype = Graph.Edgetype.Directed
 		}
-		if( !(v1 && v2) ){ return undefined; }
-		switch( edgetype ){
-		case Graph.Edgetype.Undirected :
-			return _.find( v1.adjacentUndirectedEdges, function( e ){
-				return e.v2.id === v2.id || e.v1.id == v2.id } )
-		case Graph.Edgetype.Directed :
-			return _.find( v1.outgoingEdges, function( e ){
-				return e.v2.id === v2.id } )
-		case Graph.Edgetype.Bidirected :
-			return _.find( v1.adjacentBidirectedEdges, function( e ){
-				return ( e.v2.id === v2.id || e.v1.id === v2.id ) } )
+		if( !(v1 && v2) ){ return undefined }
+		if (v1 !== v2) {
+			switch( edgetype ){
+			case Graph.Edgetype.Undirected :
+				return _.find( v1.adjacentUndirectedEdges, function( e ){
+					return e.v2.id === v2.id || e.v1.id == v2.id } )
+			case Graph.Edgetype.Directed :
+				return _.find( v1.outgoingEdges, function( e ){
+					return e.v2.id === v2.id } )
+			case Graph.Edgetype.Bidirected :
+				return _.find( v1.adjacentBidirectedEdges, function( e ){
+					return ( e.v2.id === v2.id || e.v1.id === v2.id ) } )
+			}
+		} else {
+			var v = v1
+			switch( edgetype ){
+			case Graph.Edgetype.Undirected :
+				return _.find( v.adjacentUndirectedEdges, function( e ){
+					return e.v2.id === v.id && e.v1.id == v.id } )
+			case Graph.Edgetype.Directed :
+				return _.find( v1.outgoingEdges, function( e ){
+					return e.v2.id === v.id } )
+			case Graph.Edgetype.Bidirected :
+				return _.find( v1.adjacentBidirectedEdges, function( e ){
+					return ( e.v2.id === v.id && e.v1.id === v.id ) } )
+			}
 		}
 		return undefined
 	},
@@ -509,7 +542,8 @@ var Graph = Class.extend({
 			case Graph.Edgetype.Undirected :
 				e = new Graph.Edge.Undirected({v1:v1,v2:v2})
 				e.v1.adjacentUndirectedEdges.push( e )
-				e.v2.adjacentUndirectedEdges.push( e )
+				if (v1 != v2)
+					e.v2.adjacentUndirectedEdges.push( e )
 				break
 			case Graph.Edgetype.Directed :
 				e = new Graph.Edge.Directed({v1:v1,v2:v2})
@@ -519,7 +553,8 @@ var Graph = Class.extend({
 			case Graph.Edgetype.Bidirected :
 				e = new Graph.Edge.Bidirected({v1:v1,v2:v2})
 				e.v1.adjacentBidirectedEdges.push( e )
-				e.v2.adjacentBidirectedEdges.push( e )
+				if (v1 != v2)
+					e.v2.adjacentBidirectedEdges.push( e )
 				break
 			}
 			this.edges.push( e )
@@ -550,43 +585,6 @@ var Graph = Class.extend({
 		}
 		this.edges = _.without( this.edges, e )
 		return true
-	},
-	
-	containsCycle: function(){
-		var vv = this.vertices.values();
-		for( var i = 0 ; i < vv.length ; i ++ ){
-			var v = vv[i];
-			this.clearVisited();
-			var c = this.searchCycleFrom( v );
-			if( c !== undefined ){
-				var v_count = []
-				for( var j = 0 ; j < c.length ; j ++ ){
-					v_count[c[j]]?v_count[c[j]]++:v_count[c[j]]=1
-				}
-				for( j = 0 ; j < c.length ; j ++ ){
-					if( v_count[c[j]] > 1 ){
-						return c.slice( c.indexOf( c[j] ),  c.lastIndexOf( c[j] )+1 ).join("&rarr;")
-					}
-				}
-			}
-		}
-	},
-	
-	searchCycleFrom: function( v, p ){
-		if( p === undefined ){ p = []; }
-		if( Graph.Vertex.isVisited( v ) ){ return p.concat(v.id) } 
-		Graph.Vertex.markAsVisited( v )
-		var children = v.getChildren() 
-		// consider only simple directed edges, because
-		// bidirected edges can never lie on a cycle
-		for( var i = 0 ; i < children.length ; i ++ ){
-			var pp = this.searchCycleFrom( children[i], p.concat(v.id) )
-			if( pp !== undefined ){
-				return pp
-			}
-		}
-		Graph.Vertex.markAsNotVisited( v )
-		return undefined
 	},
 	
 	toAdjacencyList: function(){
@@ -637,7 +635,7 @@ var Graph = Class.extend({
 				rc.sort()
 				ra.push(encodeURIComponent(v.id)+" "+rc.join(" "))
 			}
-		} );
+		} )
 		ra.sort()
 		return ra.join("\n")
 	},
@@ -647,22 +645,22 @@ var Graph = Class.extend({
 			var property_string = (g.isSource(v) ? "E" : "")
 			+ (g.isTarget(v) ? "O" : "")
 			+ (g.isAdjustedNode(v) ? "A" : "")
-			+ (g.isLatentNode(v) ? "U" : "");
+			+ (g.isLatentNode(v) ? "U" : "")
 			//+ (v.weight !== undefined ? v.weight : "");
-			if( !property_string ){ property_string = 1; }
+			if( !property_string ){ property_string = 1 }
 			return encodeURIComponent(v.id) + " " + property_string + (v.layout_pos_x !== undefined ? 
 			" @"+v.layout_pos_x.toFixed( 3 ) +","
-			+v.layout_pos_y.toFixed( 3 ) : "");
-		};
-		var r = "";
-		var g = this;
-		var ra = [];
+			+v.layout_pos_y.toFixed( 3 ) : "")
+		}
+		var r = ""
+		var g = this
+		var ra = []
 		_.each( 
 		this.vertices.values(), function( v ){
-			ra.push(expandLabel( v, g )+"\n");
-		} );
-		ra.sort();
-		return r + ra.join("");
+			ra.push(expandLabel( v, g )+"\n")
+		} )
+		ra.sort()
+		return r + ra.join("")
 	},
 	
 	toString : function(){
@@ -675,7 +673,7 @@ var Graph = Class.extend({
 	
 	hasCompleteLayout : function(){
 		return _.all(this.vertices.values(),function(v){
-			return v.layout_pos_x !== undefined && v.layout_pos_y !== undefined});
+			return v.layout_pos_x !== undefined && v.layout_pos_y !== undefined})
 	},
 	
 	/*
@@ -685,37 +683,37 @@ var Graph = Class.extend({
 	 */
 	countPaths: function(){
 		if( this.getSources().length == 0 || this.getTargets().length == 0 ){
-			return 0;
+			return 0
 			//throw( "Source and/or target not set!" ); 
 		}
 		
 		var visit = function( v, t ){
 			if( !Graph.Vertex.isVisited( v ) ){
-				Graph.Vertex.markAsVisited( v );
+				Graph.Vertex.markAsVisited( v )
 				if( v === t ){
-					v.traversal_info.paths_to_sink = 1;
+					v.traversal_info.paths_to_sink = 1
 				} else { 
-					v.traversal_info.paths_to_sink = 0;
+					v.traversal_info.paths_to_sink = 0
 					_.each(v.getChildren(), function( vc ){
-						v.traversal_info.paths_to_sink += visit( vc, t );
-					} );
+						v.traversal_info.paths_to_sink += visit( vc, t )
+					} )
 				}
 			}
-			return v.traversal_info.paths_to_sink;
-		};
-		var r = 0;
+			return v.traversal_info.paths_to_sink
+		}
+		var r = 0
 		_.each(this.getSources(), function( s ){
 			_.each( this.getTargets(), function( t ){
-				this.clearTraversalInfo();
-				r = r + visit( s, t );
-			}, this );
-		}, this );
-		return r;
+				this.clearTraversalInfo()
+				r = r + visit( s, t )
+			}, this )
+		}, this )
+		return r
 	},
 	
 	sourceConnectedToTarget: function(){
 		if( !this.getSource() || !this.getTarget() ){
-			return false;
+			return false
 		}
 		if( arguments.length == 0 ){
 			return this.sourceConnectedToTarget( this.getSource(), this.getTarget() )
@@ -724,7 +722,7 @@ var Graph = Class.extend({
 			this.clearTraversalInfo()
 			_.each( avoid_nodes, function(v){ 
 				this.getVertex(v) && (this.getVertex(v).traversal_info.visited = true)
-			}, this );
+			}, this )
 			return this.sourceConnectedToTarget( this.getSource(), this.getTarget() )
 		} else {
 			var s = arguments[0], t = arguments[1]
@@ -732,7 +730,7 @@ var Graph = Class.extend({
 			if( s == t ){
 				return true
 			}
-			s.traversal_info.visited = true;
+			s.traversal_info.visited = true
 			if( s.getChildren().any( function( n ){
 				return !n.traversal_info.visited && !n.traversal_info.adjusted_for 
 				&& this.sourceConnectedToTarget( n, t ) }, this ) ){
@@ -747,14 +745,14 @@ var Graph = Class.extend({
 // mixin getters & setters for managed vertex properties
 (function(c){
 	_.each( c.prototype.managed_vertex_property_names, function(p){
-		var pcamel = p.substring(0,1).toUpperCase()+p.substring(1,p.length);
-		c.prototype["is"+pcamel] = function( v ){ return this.vertexHasProperty( v, p ); };
-		c.prototype["add"+pcamel] = function( v ){ return this.addVertexProperty( v, p ); };
-		c.prototype["remove"+pcamel] = function( v ){ return this.removeVertexProperty( v, p ); };
-		c.prototype["get"+pcamel+"s"] = function(){ return this.getVerticesWithProperty( p ); };
-		c.prototype["removeAll"+pcamel+"s"] = function(){ return this.removePropertyFromAllVertices( p ); };
-	} );
-})(Graph);
+		var pcamel = p.substring(0,1).toUpperCase()+p.substring(1,p.length)
+		c.prototype["is"+pcamel] = function( v ){ return this.vertexHasProperty( v, p ) }
+		c.prototype["add"+pcamel] = function( v ){ return this.addVertexProperty( v, p ) }
+		c.prototype["remove"+pcamel] = function( v ){ return this.removeVertexProperty( v, p ) }
+		c.prototype["get"+pcamel+"s"] = function(){ return this.getVerticesWithProperty( p ) }
+		c.prototype["removeAll"+pcamel+"s"] = function(){ return this.removePropertyFromAllVertices( p ) }
+	} )
+})(Graph)
 
 
 Graph.Vertex = Class.extend({
@@ -792,7 +790,7 @@ Graph.Vertex = Class.extend({
 			_.each( 
 			n.outgoingEdges, function( e ){
 				r.push( e.v2 )
-			} );
+			} )
 		} else {
 			_.each( 
 			n.incomingEdges, function( e ){
@@ -827,32 +825,32 @@ Graph.Vertex = Class.extend({
 	degree : function(){
 		if( arguments.length >= 1 ){
 			switch( arguments[0] ){
-				case Graph.Edgetype.Bidirected :
-					return this.getSpouses().length
-				case Graph.Edgetype.Undirected :
-					return this.getNeighbours().length
-				case Graph.Edgetype.Directed :
-					return this.getChildren().length+this.getParents().length
+			case Graph.Edgetype.Bidirected :
+				return this.getSpouses().length
+			case Graph.Edgetype.Undirected :
+				return this.getNeighbours().length
+			case Graph.Edgetype.Directed :
+				return this.getChildren().length+this.getParents().length
 			}
 		} else {
 			return this.getAdjacentNodes().length
 		}
 	},
 	cloneWithoutEdges : function(){
-		var r = new Graph.Vertex( this );
+		var r = new Graph.Vertex( this )
 		return r
 	}
-} );
+} )
 
 Graph.Vertex.isVisited = function( v ){
-	return v.traversal_info.visited;
-};
+	return v.traversal_info.visited
+}
 Graph.Vertex.markAsVisited = function( v ){
-	v.traversal_info.visited = true;
-};
+	v.traversal_info.visited = true
+}
 Graph.Vertex.markAsNotVisited = function( v ){
-	v.traversal_info.visited = false;
-};
+	v.traversal_info.visited = false
+}
 
 Graph.Edge = Class.extend( {
 	initialize : function( spec ){
@@ -881,7 +879,7 @@ Graph.Edge = Class.extend( {
 		return encodeURIComponent(v1id).replace(edge_join,"["+edge_join+"]")+
 			" "+edge_join+" "+encodeURIComponent(v2id).replace(edge_join,"["+edge_join+"]")
 	}
-} );
+} )
 
 Graph.Edgetype = {
 	Directed : 1,
@@ -891,31 +889,38 @@ Graph.Edgetype = {
 
 Graph.Edge.Bidirected = Graph.Edge.extend( {
 	initialize : function( spec ){
-		this._super( spec );
+		this._super( spec )
 		this.directed = Graph.Edgetype.Bidirected
 	}
-} );
+} )
 
 Graph.Edge.Directed = Graph.Edge.extend( {
 	initialize : function( spec ){
-		this._super( spec );
+		this._super( spec )
 		this.directed = Graph.Edgetype.Directed
 	}
-} );
+} )
 
 Graph.Edge.Undirected = Graph.Edge.extend( {
 	initialize : function( spec ){
-		this._super( spec );
+		this._super( spec )
 		this.directed = Graph.Edgetype.Undirected
 	}
-} );
+} )
 /* This is a namespace containing various methods that analyze a given
- * graph. These methods to not change the graph. */
+ * graph. These methods do not change the graph. */
 
 /* globals _,Graph,GraphTransformer,Hash */
 /* exported GraphAnalyzer */
 
 var GraphAnalyzer = {
+	/*
+		test if two graphes are equal, with equal id s
+	*/
+	equalGraphs: function (g, h){
+		return g.vertices.keys().sort().join("\r") == h.vertices.keys().sort().join("\r") &&
+			g.getEdges().map(function(e){return e.toString()}).sort().join("\r") == h.getEdges().map(function(e){return e.toString()}).sort().join("\r")
+	},
 	
 	trekRule : function( g, v1, v2, use_ids_as_labels ){
 		var vnr = [], i, j, vi, vj
@@ -1013,12 +1018,12 @@ var GraphAnalyzer = {
 	
 	vanishingTetrads : function( g, nr_limit ){
 		var r = []
-		g = GraphTransformer.canonicalGraph(g).g
+		g = GraphTransformer.canonicalDag(g).g
 		var gtrek = GraphTransformer.trekGraph( g, "up_", "dw_" )		
 		var latents = g.getLatentNodes()
 		var is_latent = []; for( var i = 0 ; i < latents.length ; i ++ ){ is_latent[latents[i].id]=1 }
 		
-		var vv = _.pluck(_.reject(g.getVertices(),function(v){return is_latent[v.id]}),'id'), 
+		var vv = _.pluck(_.reject(g.getVertices(),function(v){return is_latent[v.id]}),"id"), 
 			i1, i2, i3, i4, iside, jside
 		
 		function examineQuadruple( i1, i2, j1, j2 ){
@@ -1052,126 +1057,134 @@ var GraphAnalyzer = {
 		var i, j, vv, ee, e, is_target = [], s, t
 		
 		if( !sources ) sources = g.getSources()
-			if( !targets ) targets = g.getTargets()
+		if( !targets ) targets = g.getTargets()
 				
-				for( i = 0 ; i < sources.length ; i ++ ){
-					s = sources[i]
-					for( j = 0 ; j < targets.length ; j ++ ){
-						t = targets[j]
-						if( ( s.id == t.id ) || ( g.getEdge( s.id, t.id ) ) )
-							return undefined
-							is_target[t.id] = true
-					}
-				}
+		for( i = 0 ; i < sources.length ; i ++ ){
+			s = sources[i]
+			for( j = 0 ; j < targets.length ; j ++ ){
+				t = targets[j]
+				if( ( s.id == t.id ) || ( g.getEdge( s.id, t.id ) ) )
+					return undefined
+				is_target[t.id] = true
+			}
+		}
 				
-				var flowE = [], flowV = [], parents = []
+		var flowE = [], flowV = [], parents = []
 				
-				vv = g.getVertices()
-				for( i = 0 ; i < vv.length ; i ++ ){
-					flowV[ vv[i].id ] = 0
-					if( flowE[ vv[i].id ] === undefined ) flowE[ vv[i].id ] = []
-				}
+		vv = g.getVertices()
+		for( i = 0 ; i < vv.length ; i ++ ){
+			flowV[ vv[i].id ] = 0
+			if( flowE[ vv[i].id ] === undefined ) flowE[ vv[i].id ] = []
+		}
 				
-				ee = g.getEdges()
-				for( i = 0 ; i < ee.length ; i ++ ){
-					e = ee[i]
-					flowE[ e.v1.id ][ e.v2.id ] = 0
-				}
+		ee = g.getEdges()
+		for( i = 0 ; i < ee.length ; i ++ ){
+			e = ee[i]
+			flowE[ e.v1.id ][ e.v2.id ] = 0
+		}
 				
-				var findAugmentingPath = function( vqueue ){
-					var i, vnext, qfront = 0, forwards
-					var dirqueue = []
-					for( i = 0 ; i < vqueue.length ; i ++ ){
-						dirqueue[i] = 1
-					}
+		var findAugmentingPath = function( vqueue ){
+			var i, vnext, qfront = 0, forwards
+			var dirqueue = []
+			for( i = 0 ; i < vqueue.length ; i ++ ){
+				dirqueue[i] = 1
+			}
 					
-					var pars = [ {}, {} ]
-					for( i = 0 ; i < vqueue.length ; i ++ ) pars[1][vqueue[i]] = -1
+			var pars = [ {}, {} ]
+			for( i = 0 ; i < vqueue.length ; i ++ ) pars[1][vqueue[i]] = -1
 						
-						function checkPath( vn, fw ){
-							if( pars[fw?1:0][vn.id] === undefined ){
-								vqueue.push( vn.id )
-								dirqueue.push( fw?1:0 )
-								pars[fw?1:0][vn.id] = qfront
-							}
-						}
+			function checkPath( vn, fw ){
+				if( pars[fw?1:0][vn.id] === undefined ){
+					vqueue.push( vn.id )
+					dirqueue.push( fw?1:0 )
+					pars[fw?1:0][vn.id] = qfront
+				}
+			}
 						
-						while( qfront < vqueue.length ){
-							vid = vqueue[qfront]
-							forwards = dirqueue[qfront]
+			while( qfront < vqueue.length ){
+				vid = vqueue[qfront]
+				forwards = dirqueue[qfront]
 								// vqueue = [vstart.id], dirqueue = [1],
-								if( is_target[vid] && forwards ){
-									var v2id = t.id, dir = dirqueue[qfront]
-									parents = [v2id]
-									while( pars[dir][vqueue[qfront]] >= 0 ){
-										parents.unshift( dir )
-										qfront = pars[dir][vqueue[qfront]]
-										dir = dirqueue[qfront]
-										parents.unshift( vqueue[qfront] )
-									}
-									return true
-								}
+				if( is_target[vid] && forwards ){
+					var v2id = t.id, dir = dirqueue[qfront]
+					parents = [v2id]
+					while( pars[dir][vqueue[qfront]] >= 0 ){
+						parents.unshift( dir )
+						qfront = pars[dir][vqueue[qfront]]
+						dir = dirqueue[qfront]
+						parents.unshift( vqueue[qfront] )
+					}
+					return true
+				}
 								
-								if( flowV[ vid ] ){
+				if( flowV[ vid ] ){
 									// If there has been flow, we can only move out
 									// in the opposite direction that we came in.
-									if( forwards ){
-										vnext = g.getVertex(vid).getParents()
-										for( i = 0 ; i < vnext.length ; i ++ ){
+					if( forwards ){
+						vnext = g.getVertex(vid).getParents()
+						for( i = 0 ; i < vnext.length ; i ++ ){
 											/// going backwards only if previously went forwards
-											if( flowE[vnext[i].id][vid] ){
-												checkPath( vnext[i], false )
-											}
-										}
-									} else {
-										vnext = g.getVertex(vid).getChildren()
-										for( i = 0 ; i < vnext.length ; i ++ ){
-											checkPath( vnext[i], true )
-										}
-									}
+							if( flowE[vnext[i].id][vid] ){
+								checkPath( vnext[i], false )
+							}
+						}
+					} else {
+						vnext = g.getVertex(vid).getChildren()
+						for( i = 0 ; i < vnext.length ; i ++ ){
+							checkPath( vnext[i], true )
+						}
+					}
 									
-								} else {
+				} else {
 									// If there is no flow in this vertex, none
 									// of the parent edges have flow. We can only move out
 									// forwards. Also, we must have come in forwards.
-									vnext = g.getVertex(vid).getChildren()
-									for( i = 0 ; i < vnext.length ; i ++ ){
-										checkPath( vnext[i], true )
-									}
-								}
-								qfront ++
-						}
+					vnext = g.getVertex(vid).getChildren()
+					for( i = 0 ; i < vnext.length ; i ++ ){
+						checkPath( vnext[i], true )
+					}
+				}
+				qfront ++
+			}
 						
-						return false
-				}
+			return false
+		}
 				
-				var vid, trials = g.getVertices().length
-				i = 0
-				while( findAugmentingPath( _.pluck(sources,'id') ) && --trials > 0 ){
-					i++
-					for( j = 2 ; j < parents.length-1 ; j += 2 ){
-						if( parents[j-1] && parents[j+1] ){ 
-							flowV[parents[j]] = 1
-						}
-						if( !parents[j-1] && !parents[j+1] ){ 
-							flowV[parents[j]] = 0
-						}
-					}
-					for( j = 1 ; j < parents.length ; j += 2 ){
-						if( parents[j] ){
-							flowE[parents[j-1]][parents[j+1]] ++
-						} else {
-							flowE[parents[j+1]][parents[j-1]] --
-						}
-					}
-					parents = []
+		var vid, trials = g.getVertices().length
+		i = 0
+		while( findAugmentingPath( _.pluck(sources,"id") ) && --trials > 0 ){
+			i++
+			for( j = 2 ; j < parents.length-1 ; j += 2 ){
+				if( parents[j-1] && parents[j+1] ){ 
+					flowV[parents[j]] = 1
 				}
-				return i
+				if( !parents[j-1] && !parents[j+1] ){ 
+					flowV[parents[j]] = 0
+				}
+			}
+			for( j = 1 ; j < parents.length ; j += 2 ){
+				if( parents[j] ){
+					flowE[parents[j-1]][parents[j+1]] ++
+				} else {
+					flowE[parents[j+1]][parents[j-1]] --
+				}
+			}
+			parents = []
+		}
+		return i
 	},
 	
 	listMsasTotalEffect : function( g, must, must_not ){
+		var gtype = g.getType()
+		if( gtype != "dag" && gtype != "pdag" ){
+			throw( "Don't know how to compute adjustment sets for graphs of type "+gtype )
+		}
+		if( gtype == "pdag" ){
+			g = GraphTransformer.cgToRcg( g )
+		}
+	
 		if(GraphAnalyzer.violatesAdjustmentCriterion(g)){ return [] }
-		var adjusted_nodes = g.getAdjustedNodes();
+		var adjusted_nodes = g.getAdjustedNodes()
 		var latent_nodes = g.getLatentNodes().concat( this.dpcp(g) )
 		
 		var gam = GraphTransformer.moralGraph( 
@@ -1187,6 +1200,14 @@ var GraphAnalyzer = {
 	},
 	
 	listMsasDirectEffect : function( g, must, must_not ){
+		var gtype = g.getType()
+		if( gtype != "dag" && gtype != "pdag" ){
+			throw( "Don't know how to compute adjustment sets for graphs of type "+gtype )
+		}
+		if( gtype == "pdag" ){
+			g = GraphTransformer.cgToRcg( g )
+		}
+
 		var adjusted_nodes = g.getAdjustedNodes()
 		var de_y = g.descendantsOf( _.intersection( g.descendantsOf( g.getSources() ),
 			g.getTargets() ) )
@@ -1221,32 +1242,32 @@ var GraphAnalyzer = {
 	},
 	
 	listMinimalImplications : function( g, max_nr ){
-		var r = [];
-		var g2 = g.clone();
-		var vv = g2.vertices.values();
+		var r = []
+		var g2 = g.clone()
+		var vv = g2.vertices.values()
 		// this ignores adjusted vertices for now 
 		for( var i = 0 ; i < vv.length ; i ++ ){
-			g2.removeAllAdjustedNodes();
+			g2.removeAllAdjustedNodes()
 		}
-		var n = 0;
+		var n = 0
 		for( i = 0 ; i < vv.length ; i ++ ){
 			for( var j = i+1 ; j < vv.length ; j ++ ){
 				if( !g2.isLatentNode( vv[i] ) && !g2.isLatentNode( vv[j] ) 
 					&& !g2.getEdge( vv[i].id, vv[j].id ) && !g2.getEdge( vv[j].id, vv[i].id ) ){
-					g2.removeAllSources().addSource( g2.getVertex( vv[i].id ) );
-				g2.removeAllTargets().addTarget( g2.getVertex( vv[j].id ) );
-				var seps = GraphAnalyzer.listDseparators( g2, [], [], max_nr-n );
-				if( seps.length > 0 ){
-					r.push( [vv[i].id, vv[j].id, seps] );
-					n += seps.length;
-					if( n >= max_nr ){
-						return r;
+					g2.removeAllSources().addSource( g2.getVertex( vv[i].id ) )
+					g2.removeAllTargets().addTarget( g2.getVertex( vv[j].id ) )
+					var seps = GraphAnalyzer.listDseparators( g2, [], [], max_nr-n )
+					if( seps.length > 0 ){
+						r.push( [vv[i].id, vv[j].id, seps] )
+						n += seps.length
+						if( n >= max_nr ){
+							return r
+						}
 					}
 				}
-					}
 			}
 		}
-		return r;
+		return r
 	},
 	
 	/** Given an undirected graph, this function checks whether the graph could
@@ -1258,12 +1279,12 @@ var GraphAnalyzer = {
 		if( g.edges.all( function( e ){
 			if( typeof cpdag.getEdge( e.v1.id, e.v2.id, 
 					Graph.Edgetype.Undirected ) == "undefined" ){ 
-					p1 = cpdag.getVertex(e.v1.id).getParents().pluck("id")
-					p2 = cpdag.getVertex(e.v2.id).getParents().pluck("id")
-					if( !p1.include(e.v2.id) && !p2.include(e.v1.id) 
+				p1 = cpdag.getVertex(e.v1.id).getParents().pluck("id")
+				p2 = cpdag.getVertex(e.v2.id).getParents().pluck("id")
+				if( !p1.include(e.v2.id) && !p2.include(e.v1.id) 
 						&& p1.intersect(p2).length == 0 ){
-						return false
-					}
+					return false
+				}
 			}
 			return true
 		} ) ){
@@ -1278,19 +1299,19 @@ var GraphAnalyzer = {
 	 * 
 	 * */
 	listPathPairs : function( g ){
-		var paths = g.listPaths().split('\n');
-		var r = "";
+		var paths = g.listPaths().split("\n")
+		var r = ""
 		_.each( paths, function( p ){
 			if( p == "..." ){
-				r += "\n...";
+				r += "\n..."
 			} else {
-				var p_arr = p.split("->").slice(1).map( function(s){ return s.split(':'); } );
-				var left_side = _.uniq(_.pluck(p_arr,'0')).slice(1).join('->');
-				var right_side = _.uniq(_.pluck(p_arr,'1')).reverse().join('<-');
-				r += ( r == "" ? "" : "\n" ) + right_side + "->" + left_side;
+				var p_arr = p.split("->").slice(1).map( function(s){ return s.split(":") } )
+				var left_side = _.uniq(_.pluck(p_arr,"0")).slice(1).join("->")
+				var right_side = _.uniq(_.pluck(p_arr,"1")).reverse().join("<-")
+				r += ( r == "" ? "" : "\n" ) + right_side + "->" + left_side
 			}
-		} );
-		return r;
+		} )
+		return r
 	},
 	
 	directEffectEqualsTotalEffect : function( g ){
@@ -1356,7 +1377,7 @@ var GraphAnalyzer = {
 			X = g.getSources()
 			Y = g.getTargets()
 		}
-		return g.descendantsOf( _.difference( this.properPossibleCausalPaths( g, X, Y ), 
+		return g.posteriorsOf( _.difference( this.properPossibleCausalPaths( g, X, Y ), 
 			g.getSources() ) )
 	},
 	
@@ -1365,7 +1386,7 @@ var GraphAnalyzer = {
 	},
 	
 	nodesThatViolateAdjustmentCriterionWithoutIntermediates : function( g ){
-		var is_on_causal_path = [];
+		var is_on_causal_path = []
 		var set_causal =  function(v){ is_on_causal_path[v.id]=true }
 		_.each( this.properPossibleCausalPaths(g), set_causal )
 		var is_violator = function(v){ return g.isAdjustedNode( v ) && !is_on_causal_path[v.id] }
@@ -1443,7 +1464,6 @@ var GraphAnalyzer = {
 					listPathsRec( u, v )
 					visited[u.id]=0
 				} catch( e ) {
-					console.log( e )
 					return r
 				}
 			})
@@ -1604,7 +1624,7 @@ var GraphAnalyzer = {
 			if( y.length > 1 ) return false
 			y = y[0]
 		}
-		g = GraphTransformer.canonicalGraph( g ).g
+		g = GraphTransformer.canonicalDag( g ).g
 		x = g.getVertex(x)
 		y = g.getVertex(y)
 		var vv = _.difference( g.getVertices(), [x,y] )
@@ -1653,50 +1673,50 @@ var GraphAnalyzer = {
 	 */                         
 	listMinimalSeparators: function( g, _must, _must_not, max_nr ){
 		if( g.getSources().length == 0 || g.getTargets().length == 0 ){
-			return [];
+			return []
 		}
-		var Uh = new Hash();
-		_.each( g.getTargets(), function( v ){ Uh.set(v.id,v) } );
-		_.each( g.neighboursOf( g.getTargets() ), function( v ){ Uh.set(v.id,v) } );
-		var U = Uh.values();
+		var Uh = new Hash()
+		_.each( g.getTargets(), function( v ){ Uh.set(v.id,v) } )
+		_.each( g.neighboursOf( g.getTargets() ), function( v ){ Uh.set(v.id,v) } )
+		var U = Uh.values()
 		
-		var R = [];
-		var must = [];
+		var R = []
+		var must = []
 		if( _must ){
-			_.each( _must, function(v){must.push(g.getVertex(v.id));});
+			_.each( _must, function(v){must.push(g.getVertex(v.id))})
 		}
-		var must_not = [];
+		var must_not = []
 		if( _must_not ){
-			_.each( _must_not, function(v){must_not.push(g.getVertex(v.id));});
+			_.each( _must_not, function(v){must_not.push(g.getVertex(v.id))})
 		}
 		var realN = function( V ){
-			g.clearVisited();
+			g.clearVisited()
 			_.each( V.concat(must), function(v){
-				Graph.Vertex.markAsVisited(v);
-			} );
-			var r = [];
-			var q = V.slice();
+				Graph.Vertex.markAsVisited(v)
+			} )
+			var r = []
+			var q = V.slice()
 			var mark_visited_and_push = function(w){
 				if( !Graph.Vertex.isVisited( w ) ){
-					Graph.Vertex.markAsVisited(w);
+					Graph.Vertex.markAsVisited(w)
 					if( _.contains(must_not,w) ){
-						q.push( w );
+						q.push( w )
 					} else {
-						r.push( w );                      
+						r.push( w )                      
 					}
 				}
-			}; 
+			} 
 			while( q.length > 0 ){
-				_.each( q.pop().getNeighbours(), mark_visited_and_push );
+				_.each( q.pop().getNeighbours(), mark_visited_and_push )
 			}
-			return r;
-		};
+			return r
+		}
 		
 		var nearSeparator =  function( A, b ){
 			var NA = realN( A )
 			var C = GraphAnalyzer.connectedComponentAvoiding( g, b, NA.concat(must) )
 			return realN( C )
-		};
+		}
 		
 		var listMinSep = function( A, U ){
 			if( R.length >= max_nr ) return
@@ -1704,7 +1724,7 @@ var GraphAnalyzer = {
 			var Astar = GraphAnalyzer.connectedComponentAvoiding( g, g.getSources(),
 				SA.concat(must) )
 			if( _.intersection( Astar, U ).length == 0 ){
-				var NA = realN(Astar);
+				var NA = realN(Astar)
 				NA = _.difference( NA, U )
 				if( NA.length > 0 ){
 					var v = NA[0]
@@ -1720,7 +1740,7 @@ var GraphAnalyzer = {
 			}
 		}
 		listMinSep( g.getSources(), U )
-		return R;
+		return R
 	},
 
 	/** 
@@ -1735,20 +1755,20 @@ var GraphAnalyzer = {
 	 *  Returns an array mapping vertex IDs to topological indices.
 	 */
 	topologicalOrdering: function( g ) {
-		var ind = { i : g.vertices.size() };
+		var ind = { i : g.vertices.size() }
 		var topological_index = {}
 		var visited = {}
 		var visit = function( v ){
 			if( !visited[v.id] ){
-				visited[v.id] = true;
-				var children = v.getChildren();
+				visited[v.id] = true
+				var children = v.getChildren()
 				if( g.isSource(v) || g.isTarget(v) || children.length > 0 ||
 					v.getParents().length > 0 ){ 
 					for( var i = 0 ; i < children.length ; i ++ ){
 						visit( children[i] )
 					} 
-					topological_index[v.id] = ind.i;
-					ind.i--;
+					topological_index[v.id] = ind.i
+					ind.i--
 				}
 			}
 		}
@@ -1760,8 +1780,8 @@ var GraphAnalyzer = {
 	},
 
 	bottleneckNumbers : function( g, topological_index ) {
-		var s0 = g.getSources()[0];
-		var t0 = g.getTargets()[0];
+		var s0 = g.getSources()[0]
+		var t0 = g.getTargets()[0]
 		var bottleneck_number = {}, reaches_source = {}, reaches_target = {},
 			visited = {}
 		_.each( g.ancestorsOf( g.getSources(),
@@ -1770,55 +1790,55 @@ var GraphAnalyzer = {
 				g.clearTraversalInfo()
 				_.each( adj, function(v){ Graph.Vertex.markAsVisited(v) })
 			} ), function(v){
-			reaches_source[v.id] = true;
-		});
+				reaches_source[v.id] = true
+			})
 		_.each( g.ancestorsOf( g.getTargets(),
 			function(){
 				var adj = g.getAdjustedNodes()
 				g.clearTraversalInfo()
 				_.each( adj, function(v){ Graph.Vertex.markAsVisited(v) })
 			} ), function(v){
-			reaches_target[v.id] = true;
-		});
-		var vv = g.vertices.values();
-		var bn_s = topological_index[s0.id];
-		var bn_t = topological_index[t0.id];
+				reaches_target[v.id] = true
+			})
+		var vv = g.vertices.values()
+		var bn_s = topological_index[s0.id]
+		var bn_t = topological_index[t0.id]
 		_.each( vv, function(v){
 			if( reaches_source[v.id] && 
 				!reaches_target[v.id] ){
-				bottleneck_number[v.id] = bn_s;
+				bottleneck_number[v.id] = bn_s
 			} else if(!reaches_source[v.id] && 
 				reaches_target[v.id] ){
-				bottleneck_number[v.id] = bn_t;
+				bottleneck_number[v.id] = bn_t
 			} else {
-				bottleneck_number[v.id] = undefined;
+				bottleneck_number[v.id] = undefined
 			}
-		});
+		})
 		_.each( g.getSources(), function(s){
 			topological_index[s.id] = bn_s
 			bottleneck_number[s.id] = bn_s
 			visited[s.id] = true
-		});
+		})
 		_.each( g.getTargets(), function(t){
 			bottleneck_number[t.id] = bn_t
 			topological_index[t.id] = bn_t
 			visited[t.id] = true
-		});
+		})
 		var visit = function( v ){
 			if( !visited[v.id] && 
 				(reaches_source[v.id] || reaches_target[v.id]) ){
 				visited[v.id]=true
 				var children = _.filter( v.getChildren(), function(v){
 					return reaches_source[v.id] ||
-						reaches_target[v.id];
-				});
-				_.each( children, visit);
+						reaches_target[v.id]
+				})
+				_.each( children, visit)
 				if( children.length > 1 && _.some( children,
 					function(v2){ return bottleneck_number[v2.id] != 
 						bottleneck_number[children[0].id] } ) ){
-					bottleneck_number[v.id] = topological_index[v.id];
+					bottleneck_number[v.id] = topological_index[v.id]
 				} else {
-					bottleneck_number[v.id] = bottleneck_number[children[0].id];
+					bottleneck_number[v.id] = bottleneck_number[children[0].id]
 				}
 			}
 		}
@@ -1835,11 +1855,11 @@ var GraphAnalyzer = {
 			kinship_function = "getNeighbours"
 		}
 		var visited = {}
-		var vv = g.vertices.values();
+		var vv = g.vertices.values()
 		var component = function(v){
 			var q = [v], r =[v]
 			while( q.length > 0 ){
-				var v2 = q.pop();
+				var v2 = q.pop()
 				visited[v2.id] = true
 				_.each( v2[kinship_function](), function(vn2){
 					if( !visited[vn2.id] ){
@@ -1849,15 +1869,15 @@ var GraphAnalyzer = {
 					}
 				} )
 			}
-			return r;
-		};
-		var r = [];
+			return r
+		}
+		var r = []
 		_.each( vv, function(v){
 			if( !visited[v.id] ){
-				r.push( component(v) );
+				r.push( component(v) )
 			}
-		});
-		return r;
+		})
+		return r
 	},
 	
 	/***
@@ -1895,24 +1915,24 @@ var GraphAnalyzer = {
 	 */
 	blockTree : function( g, bicomps ) {
 		if( bicomps == null ){
-			bicomps = this.biconnectedComponents( g );
+			bicomps = this.biconnectedComponents( g )
 		}
-		var bt = new Graph();
+		var bt = new Graph()
 		_.each( bicomps, function( edge_list ){
-			bt.addVertex( new Graph.Vertex( { id : "C"+edge_list[0].component_index } ) );
-		} );
+			bt.addVertex( new Graph.Vertex( { id : "C"+edge_list[0].component_index } ) )
+		} )
 		_.each( g.vertices.values(), function( v ){
 			if( v.is_articulation_point ){
-				bt.addVertex( new Graph.Vertex( { id : "A"+v.id } ) );
-				var vn = bt.getVertex("A"+v.id);
-				vn.is_articulation_point = true;
+				bt.addVertex( new Graph.Vertex( { id : "A"+v.id } ) )
+				var vn = bt.getVertex("A"+v.id)
+				vn.is_articulation_point = true
 				_.each( v.adjacentUndirectedEdges, function( e ){
 					bt.addEdge( vn, bt.getVertex("C"+e.component_index),
 						Graph.Edgetype.Undirected ) 
-				} );
+				} )
 			}
-		} );
-		return bt;
+		} )
+		return bt
 	},
 	
 	/**
@@ -1927,7 +1947,7 @@ var GraphAnalyzer = {
 			v.traversal_info.parent = 0
 			v.traversal_info.dtime = 0
 			v.traversal_info.lowlink = vv.length + 1
-		});
+		})
 		var component_index = 0
 		var visit = function(v){
 			v.traversal_info.dtime = ++time
@@ -1941,7 +1961,7 @@ var GraphAnalyzer = {
 					if( v.traversal_info.dtime == 1 ){
 						children_of_root ++
 					}
-					visit( w );
+					visit( w )
 					if( w.traversal_info.lowlink >= v.traversal_info.dtime ){
 						if( v.traversal_info.dtime > 1 ){
 							v.is_articulation_point = true
@@ -1964,42 +1984,217 @@ var GraphAnalyzer = {
 					if(  (w.traversal_info.dtime < v.traversal_info.dtime)
 						&& (w != v.traversal_info.parent) ){ // (v,w) is a back edge
 						q.push( e )
-					if( w.traversal_info.dtime < v.traversal_info.lowlink ){
-						v.traversal_info.lowlink = w.traversal_info.dtime
-					}
+						if( w.traversal_info.dtime < v.traversal_info.lowlink ){
+							v.traversal_info.lowlink = w.traversal_info.dtime
 						}
+					}
 				}
-			});
+			})
 			// special case for root
 			if( children_of_root > 1 ){
 				v.is_articulation_point = true
 			}
-		};
+		}
 		_.each( vv, function(v){
 			if( v.traversal_info.dtime == 0 ){
 				visit(v)
 			}
 		})
 		return r
+	},
+
+	//see https://en.wikipedia.org/wiki/Lexicographic_breadth-first_search
+	lexicographicBreadthFirstSearch : function( g, componentV ){
+		if (!componentV) componentV = g.getVertices()
+		else componentV = componentV.concat()
+		
+		/*
+			This uses a (doubly) linked list of sets for the ordering
+			and a cache for each to get a random element from the set without having to call keys()
+		*/
+		
+		
+		var componentSet = new Hash()
+		_.each(componentV, function(v){ componentSet.set(v.id, v) })
+		
+		var firstSet = {
+			next: null,
+			prev: null,
+			prevIteration: 0,
+			set: componentSet,
+			setKeys: componentV.map(function(v){return v.id}), //cache of this.set.keys(), not updated for removed elements
+			setKeyIndex: 0, //processed keys. 
+			id: 0
+		}
+		
+		var containedSet = new Hash()
+		_.each(componentV, function(v){ containedSet.set(v.id, firstSet) })
+			
+		var iteration = 0
+		var result = []
+			
+		while (firstSet) {		
+			while (firstSet.setKeyIndex < firstSet.setKeys.length && 
+				!firstSet.set.contains(firstSet.setKeys[firstSet.setKeyIndex]))
+				firstSet.setKeyIndex++
+			if (firstSet.setKeyIndex >= firstSet.setKeys.length) {
+				firstSet = firstSet.next
+				if (firstSet) firstSet.prev = null
+				continue
+			}
+			
+			var v = firstSet.set.get(firstSet.setKeys[firstSet.setKeyIndex])
+			result.push(v)
+			firstSet.setKeyIndex++
+			iteration++
+			
+			firstSet.set.unset(v.id)
+			containedSet.unset(v.id)
+				
+			
+			_.each(v.getNeighbours(), function(w){
+				var set = containedSet.get(w.id), newSet
+				if (!set) return
+				
+				if (set.prevIteration != iteration) {
+					//set has not yet been splitted in this iteration
+					
+					//create new empty set 
+					newSet = {
+						next: set,
+						prev: set.prev,
+						prevIteration: iteration,
+						set: new Hash(),
+						setKeys: [],
+						setKeyIndex: 0
+					}
+					set.prevIteration = iteration
+					//insert newSet in linked list
+					if (set.prev) set.prev.next = newSet
+					else firstSet = newSet
+					set.prev = newSet
+				}
+				//move w from set to newSet
+				newSet = set.prev
+				newSet.setKeys.push(w.id)
+				newSet.set.set(w.id, w)
+				set.set.unset(w.id)
+				containedSet.set(w.id, newSet)
+			})
+		}
+
+		return result
+	},
+
+	/**
+	 *  Test for chordality
+	 */
+	isChordal : function( g, componentV ){
+		var ordering = GraphAnalyzer.lexicographicBreadthFirstSearch(g, componentV)
+		var positions = new Hash()
+		_.each(ordering, function(v,i) { positions.set(v.id, i) } )
+		return _.every(ordering, function(v,i) { 
+			var j = _.max(_.map(v.getNeighbours(), function(w) {
+				var p = positions.get(w.id)
+				if (p < i) return p
+				else return -1
+			}))
+			if (j < 0) return true
+			var w = ordering[j]
+			//alert(w + " " + j  +" < " + i)
+			var earlierNeigboursOfW = new Hash()
+			_.each(w.getNeighbours(), function(x) {
+				var p = positions.get(x.id)
+				if (p < j) earlierNeigboursOfW.set(x.id, true)
+			})
+			return _.every(v.getNeighbours(), function(x){
+				var p = positions.get(x.id)
+				return (p >= j) || earlierNeigboursOfW.get(x.id)
+			})
+		})
+	},
+
+	/** Check whether the graph is syntactically valid for its type */
+	validate : function( g ){
+		switch( g.getType() ){
+		case "dag":
+			if( !_.every(g.getEdges(),function(e){ return e.directed ==
+				Graph.Edgetype.Directed || e.directed == Graph.Edgetype.Bidirected }) ){
+				return false
+			}
+			if( GraphAnalyzer.containsCycle( g ) ){
+				return false
+			}
+			return true
+		case "mag":
+			// TODO implement proper MAG validation
+			if( GraphAnalyzer.containsSemiCycle( g ) ){
+				return false
+			}
+			return true
+		case "graph":
+			return _.every(g.getEdges(),function(e){ return e.directed ==
+				Graph.Edgetype.Undirected })
+		case "digraph":
+			return true
+		case "pdag":
+			if( !_.every(g.getEdges(),function(e){ return e.directed ==
+				Graph.Edgetype.Directed || e.directed == Graph.Edgetype.Undirected }) ){
+				return false
+			}
+			if( GraphAnalyzer.containsSemiCycle( g ) ){
+				return false
+			}
+			return true
+		default:
+			throw("Do not know how to validate graph of type "+g.getType())
+		}
+	},
+
+	containsCycle: function(g){
+		var vv = g.vertices.values()
+		for( var i = 0 ; i < vv.length ; i ++ ){
+			var v = vv[i]
+			g.clearVisited()
+			var c = this.searchCycleFrom( v )
+			if( c !== undefined ){
+				var v_count = []
+				for( var j = 0 ; j < c.length ; j ++ ){
+					v_count[c[j]]?v_count[c[j]]++:v_count[c[j]]=1
+				}
+				for( j = 0 ; j < c.length ; j ++ ){
+					if( v_count[c[j]] > 1 ){
+						return c.slice( c.indexOf( c[j] ),  c.lastIndexOf( c[j] )+1 ).join("&rarr;")
+					}
+				}
+			}
+		}
+	},
+	
+	searchCycleFrom: function( v, p ){
+		if( p === undefined ){ p = [] }
+		if( Graph.Vertex.isVisited( v ) ){ return p.concat(v.id) } 
+		Graph.Vertex.markAsVisited( v )
+		var children = v.getChildren() 
+		// consider only simple directed edges, because
+		// bidirected edges can never lie on a cycle
+		for( var i = 0 ; i < children.length ; i ++ ){
+			var pp = this.searchCycleFrom( children[i], p.concat(v.id) )
+			if( pp !== undefined ){
+				return pp
+			}
+		}
+		Graph.Vertex.markAsNotVisited( v )
+		return undefined
+	},
+	
+
+	containsSemiCycle: function (g){
+		return GraphAnalyzer.containsCycle( GraphTransformer.contractComponents(g, 
+			GraphAnalyzer.connectedComponents(g), [Graph.Edgetype.Directed])
+			)
 	}
-};
-
-/* DAGitty - a browser-based software for causal modelling and analysis
-   Copyright (C) 2010,2011 Johannes Textor
-
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. */
+}
 
 /*
  * 
@@ -2022,150 +2217,153 @@ var GraphAnalyzer = {
  *
 /*--------------------------------------------------------------------------*/
 
-var GraphLayouter = {};
+/* globals _  */
+/* exported GraphLayouter */
+
+var GraphLayouter = {}
 GraphLayouter.prototype = {
-   layoutCalcBounds: function() {
-      var minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
-      _.each(this.graph.vertices.values(), function( v ){
-            var x = v.layout_pos_x;
-            var y = v.layout_pos_y;
-                     
-            if(x > maxx) maxx = x;
-            if(x < minx) minx = x;
-            if(y > maxy) maxy = y;
-            if(y < miny) miny = y;            
-      } );
-      if( maxx-minx>0 ){
-         this.graph.layoutMinX = minx;
-         this.graph.layoutMaxX = maxx;
-      } else {
-         this.graph.layoutMinX = -.1;
-         this.graph.layoutMaxX = .1;
-      }
-      if( maxy-miny>0 ){
-         this.graph.layoutMinY = miny;
-         this.graph.layoutMaxY = maxy;
-      } else {
-         this.graph.layoutMinY = -.1;
-         this.graph.layoutMaxY = .1;
-      }
-    }
-};
+	layoutCalcBounds: function() {
+		var minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity
+		_.each(this.graph.vertices.values(), function( v ){
+			var x = v.layout_pos_x
+			var y = v.layout_pos_y
+
+			if(x > maxx) maxx = x
+			if(x < minx) minx = x
+			if(y > maxy) maxy = y
+			if(y < miny) miny = y            
+		} )
+		if( maxx-minx>0 ){
+			this.graph.layoutMinX = minx
+			this.graph.layoutMaxX = maxx
+		} else {
+			this.graph.layoutMinX = -.1
+			this.graph.layoutMaxX = .1
+		}
+		if( maxy-miny>0 ){
+			this.graph.layoutMinY = miny
+			this.graph.layoutMaxY = maxy
+		} else {
+			this.graph.layoutMinY = -.1
+			this.graph.layoutMaxY = .1
+		}
+	}
+}
 
 GraphLayouter.Spring = function(graph) {
-	this.graph = graph;
-	this.iterations = 500;
-	this.maxRepulsiveForceDistance = 6;
-	this.k = 2;
-	this.c = 0.01;
-	this.maxVertexMovement = 0.5;
-};
+	this.graph = graph
+	this.iterations = 500
+	this.maxRepulsiveForceDistance = 6
+	this.k = 2
+	this.c = 0.01
+	this.maxVertexMovement = 0.5
+}
 
 GraphLayouter.Spring.prototype = {
 	layoutCalcBounds : GraphLayouter.prototype.layoutCalcBounds,
 
 	layout: function() {
-			this.layoutPrepare();
-			for (var i = 0; i < this.iterations; i++) {
-					this.layoutIteration();
-			}
-			this.layoutCalcBounds();
+		this.layoutPrepare()
+		for (var i = 0; i < this.iterations; i++) {
+			this.layoutIteration()
+		}
+		this.layoutCalcBounds()
 	},
 
 	layoutPrepare: function() {
 		_.each(this.graph.vertices.values(), function( v ){
-		v.layout_pos_x = 0;
-		   v.layout_pos_y = 0;
-		   v.layoutForceX = 0;
-		   v.layoutForceY = 0;            
-		} );
+			v.layout_pos_x = 0
+			v.layout_pos_y = 0
+			v.layoutForceX = 0
+			v.layoutForceY = 0            
+		} )
 		_.each(this.graph.edges, function( e ){
-			delete e.attraction;
-		} );
+			delete e.attraction
+		} )
 	},
 
 
 	layoutIteration: function() {
 		// Forces on nodes due to node-node repulsions
-		var nodelist = this.graph.vertices.values();
+		var nodelist = this.graph.vertices.values()
 		for (var i = 0; i < nodelist.length; i++) {
-				var node1 = nodelist[i];
-				for (var j = i + 1; j < nodelist.length; j++) {
-						var node2 = nodelist[j];
-							this.layoutRepulsive(node1, node2);
-					}
+			var node1 = nodelist[i]
+			for (var j = i + 1; j < nodelist.length; j++) {
+				var node2 = nodelist[j]
+				this.layoutRepulsive(node1, node2)
 			}
+		}
 		// Forces on nodes due to edge attractions
 		for ( i = 0; i < this.graph.edges.length; i++) {
-				var edge = this.graph.edges[i];
-					this.layoutAttractive(edge);             
-			}
-		   
+			var edge = this.graph.edges[i]
+			this.layoutAttractive(edge)             
+		}
+  
 		// Move by the given force
 		for ( i = 0 ; i < nodelist.length; i ++) {
-				var node = nodelist[i];
-				var xmove = this.c * node.layoutForceX;
-				var ymove = this.c * node.layoutForceY;
+			var node = nodelist[i]
+			var xmove = this.c * node.layoutForceX
+			var ymove = this.c * node.layoutForceY
 
-				var max = this.maxVertexMovement;
-				if(xmove > max) xmove = max;
-				if(xmove < -max) xmove = -max;
-				if(ymove > max) ymove = max;
-				if(ymove < -max) ymove = -max;
-			   
-				node.layout_pos_x += xmove;
-				node.layout_pos_y += ymove;
-				node.layoutForceX = 0;
-				node.layoutForceY = 0;
-	   }
+			var max = this.maxVertexMovement
+			if(xmove > max) xmove = max
+			if(xmove < -max) xmove = -max
+			if(ymove > max) ymove = max
+			if(ymove < -max) ymove = -max
+
+			node.layout_pos_x += xmove
+			node.layout_pos_y += ymove
+			node.layoutForceX = 0
+			node.layoutForceY = 0
+		}
 	},
 
 	layoutRepulsive: function(node1, node2) {
-			var dx = node2.layout_pos_x - node1.layout_pos_x;
-			var dy = node2.layout_pos_y - node1.layout_pos_y;
-			var d2 = dx * dx + dy * dy;
-			if(d2 < 0.01) {
-					dx = 0.1 * Math.random() + 0.1;
-					dy = 0.1 * Math.random() + 0.1;
-					d2 = dx * dx + dy * dy;
-			}
-			var d = Math.sqrt(d2);
-			if(d < this.maxRepulsiveForceDistance) {
-					var repulsiveForce = this.k * this.k / d;
-					node2.layoutForceX += repulsiveForce * dx / d;
-					node2.layoutForceY += repulsiveForce * dy / d;
-					node1.layoutForceX -= repulsiveForce * dx / d;
-					node1.layoutForceY -= repulsiveForce * dy / d;
-			}
+		var dx = node2.layout_pos_x - node1.layout_pos_x
+		var dy = node2.layout_pos_y - node1.layout_pos_y
+		var d2 = dx * dx + dy * dy
+		if(d2 < 0.01) {
+			dx = 0.1 * Math.random() + 0.1
+			dy = 0.1 * Math.random() + 0.1
+			d2 = dx * dx + dy * dy
+		}
+		var d = Math.sqrt(d2)
+		if(d < this.maxRepulsiveForceDistance) {
+			var repulsiveForce = this.k * this.k / d
+			node2.layoutForceX += repulsiveForce * dx / d
+			node2.layoutForceY += repulsiveForce * dy / d
+			node1.layoutForceX -= repulsiveForce * dx / d
+			node1.layoutForceY -= repulsiveForce * dy / d
+		}
 	},
 
 	layoutAttractive: function(edge) {
-			var node1 = edge.v1;
-			var node2 = edge.v2;
-		   
-			var dx = node2.layout_pos_x - node1.layout_pos_x;
-			var dy = node2.layout_pos_y - node1.layout_pos_y;
-			var d2 = dx * dx + dy * dy;
-			if(d2 < 0.01) {
-					dx = 0.1 * Math.random() + 0.1;
-					dy = 0.1 * Math.random() + 0.1;
-					d2 = dx * dx + dy * dy;
-			}
-			var d = Math.sqrt(d2);
-			if(d > this.maxRepulsiveForceDistance) {
-					d = this.maxRepulsiveForceDistance;
-					d2 = d * d;
-			}
-			var attractiveForce = (d2 - this.k * this.k) / this.k;
-			if(edge.attraction == undefined || edge.attraction < 1) edge.attraction = 1;
-			attractiveForce *= Math.log(edge.attraction) * 0.5 + 1;
-		   
-			node2.layoutForceX -= attractiveForce * dx / d;
-			node2.layoutForceY -= attractiveForce * dy / d;
-			node1.layoutForceX += attractiveForce * dx / d;
-			node1.layoutForceY += attractiveForce * dy / d;
+		var node1 = edge.v1
+		var node2 = edge.v2
+
+		var dx = node2.layout_pos_x - node1.layout_pos_x
+		var dy = node2.layout_pos_y - node1.layout_pos_y
+		var d2 = dx * dx + dy * dy
+		if(d2 < 0.01) {
+			dx = 0.1 * Math.random() + 0.1
+			dy = 0.1 * Math.random() + 0.1
+			d2 = dx * dx + dy * dy
+		}
+		var d = Math.sqrt(d2)
+		if(d > this.maxRepulsiveForceDistance) {
+			d = this.maxRepulsiveForceDistance
+			d2 = d * d
+		}
+		var attractiveForce = (d2 - this.k * this.k) / this.k
+		if(edge.attraction == undefined || edge.attraction < 1) edge.attraction = 1
+		attractiveForce *= Math.log(edge.attraction) * 0.5 + 1
+
+		node2.layoutForceX -= attractiveForce * dx / d
+		node2.layoutForceY -= attractiveForce * dy / d
+		node1.layoutForceX += attractiveForce * dx / d
+		node1.layoutForceY += attractiveForce * dy / d
 	}
-};
+}
 /** 
     This namespace contains functions that parse a graph structure from text.
     Three different formats are supported, but two of them for legacy reasons
@@ -2187,34 +2385,37 @@ GraphLayouter.Spring.prototype = {
 /* exported GraphParser */
 
 var GraphParser = {
+	VALIDATE_GRAPH_STRUCTURE : false,
 	/**
 		This is work in progress ... not safe to use yet.
 		For the time being, edge statements are assumed to come line 
 		by line.
 	*/
 	parseDot : function( code ){
-		'use strict'
-		var isdot = code.match(  /^\s*(di)?graph(\s+\w+)?\s*\{([\s\S]+)\}/m )
+		"use strict"
+		var isdot = code.trim().match(  /^(digraph|graph|dag|pdag|mag)(\s+\w+)?\s*\{([\s\S]+)\}$/m )
 		var edgestatements = isdot[isdot.length-1]
+		var gtype = isdot[1]
 		var txt = edgestatements.trim()
-		var lines = txt.split(/\n/)
+		var lines = txt.split(/[\n;]/)
 		
-		var vertexnamere = new RegExp( '^[+%0-9A-Za-z*-._~]+' )
-		var optionnamere = new RegExp( '^([a-z]+)\\s*(=)?\\s*("[^"]+")?' )
-		var edgetypere = new RegExp( '^<?--?>?' )
-		var positionre = new RegExp( '"\\s*(-?[0-9.]+)\\s*,\\s*(-?[0-9.]+)\\s*"' )
-		var labelre = new RegExp( '"\\s*([^"]+)\\s*"' )
+		var vertexnamere = new RegExp( "^[+%0-9A-Za-z*-._~]+" )
+		var optionnamere = new RegExp( "^([a-z]+)\\s*(=)?\\s*(\"[^\"]+\")?" )
+		var edgetypere = new RegExp( "^<?--?>?" )
+		var positionre = new RegExp( "\"\\s*(-?[0-9.]+)\\s*,\\s*(-?[0-9.]+)\\s*\"" )
+		var labelre = new RegExp( "\"\\s*([^\"]+)\\s*\"" )
 		
 		var parse_position = function( s ){
 			tok = s.match(positionre)
 			if( typeof tok[1] !== "string" || 
 				typeof tok[2] !== "string" ){
-				throw('Syntax error in "pos" option')
+				throw("Syntax error in \"pos\" option")
 			}
 			return {x:parseFloat(tok[1]),y:parseFloat(tok[2])}
 		}
 		
 		var g = new Graph()
+		g.setType( gtype )
 		var i,j,n,n2,e
 		
 		for( i = 0 ; i < lines.length ; i ++ ){
@@ -2228,7 +2429,7 @@ var GraphParser = {
 				case 0: // expecting vertex ID
 					tok = l.match(vertexnamere)
 					if( tok === null || tok[0].length === 0 ){
-						throw('Syntax error: expecting vertex ID at line '+i)
+						throw("Syntax error: expecting vertex ID at line "+i)
 					}
 					tok = tok[0]
 					vertex_names.push( tok )
@@ -2242,7 +2443,7 @@ var GraphParser = {
 					} else {
 						tok = l.match( edgetypere )
 						if( tok === null ){
-							throw('Syntax error: expecting edge type at line '+i)
+							throw("Syntax error: expecting edge type at line "+i)
 						}
 						edgetypes.push( tok[0] )
 						parser_mode = 0
@@ -2258,7 +2459,7 @@ var GraphParser = {
 					} else {
 						match = l.match( optionnamere )
 						if( match === null ){
-							throw('Syntax error! Expection option at line '+i)
+							throw("Syntax error! Expection option at line "+i)
 						}
 						if( match[1] ){
 							option_names.push(match[1])
@@ -2292,7 +2493,7 @@ var GraphParser = {
 						break
 					case "pos":
 						if( typeof option_values[j] !== "string" ){
-							throw('Syntax error pos statement')
+							throw("Syntax error pos statement")
 						}
 						pos = parse_position( option_values[j] )
 						n.layout_pos_x = parseFloat( pos.x )
@@ -2307,16 +2508,16 @@ var GraphParser = {
 					if( !g.getVertex( n ) ) g.addVertex( n )
 					if( !g.getVertex( n2 ) ) g.addVertex( n2 )
 					switch( edgetypes[0] ){
-					case '--' :
+					case "--" :
 						e = g.addEdge( n, n2, Graph.Edgetype.Undirected )
 						break
-					case '<->' :
+					case "<->" :
 						e = g.addEdge( n, n2, Graph.Edgetype.Bidirected )
 						break
-					case '->' :
+					case "->" :
 						e = g.addEdge( n, n2, Graph.Edgetype.Directed )
 						break
-					case '<-' :
+					case "<-" :
 						e = g.addEdge( n2, n, Graph.Edgetype.Directed )
 						break
 					}
@@ -2327,7 +2528,7 @@ var GraphParser = {
 					switch( option_names[j] ){ // string-only options
 					case "pos":
 						if( typeof option_values[j] !== "string" ){
-							throw('Syntax error pos statement')
+							throw("Syntax error pos statement")
 						}
 						pos = parse_position( option_values[j] )
 						e.layout_pos_x = parseFloat( pos.x )
@@ -2335,7 +2536,7 @@ var GraphParser = {
 						break
 					case "label":
 						if( typeof option_values[j] !== "string" ){
-							throw('Syntax error label statement')
+							throw("Syntax error label statement")
 						}
 						e.id = decodeURIComponent( option_values[j].match(labelre)[1] )
 						break
@@ -2343,11 +2544,16 @@ var GraphParser = {
 				}
 			}
 		}
+		if( this.VALIDATE_GRAPH_STRUCTURE ){
+			if( !GraphAnalyzer.validate( g ) ){
+				throw("invalid graph : ",g.toString() )
+			}
+		}
 		return g
 	},
 
 	parseVertexLabelsAndWeights : function( vertexLabelsAndWeights ){
-		'use strict'
+		"use strict"
 		var g = new Graph()
 		var txt = vertexLabelsAndWeights.trim()
 		var lines = txt.split(/\n/)
@@ -2395,11 +2601,12 @@ var GraphParser = {
 				g.getVertex( vid ).layout_pos_y = parseFloat(posn[1])
 			}
 		}
+		g.setType("dag")
 		return g
 	},
   
 	parseAdjacencyList : function( adjacencyList, vertexLabelsAndWeights ){
-		'use strict'
+		"use strict"
 		var g = this.parseVertexLabelsAndWeights( vertexLabelsAndWeights )
 		var adj_list = adjacencyList.split("\n")
 		var i,adj,v1, v1id, v2,v2id
@@ -2441,11 +2648,16 @@ var GraphParser = {
 				}
 			}
 		}
+		if( this.VALIDATE_GRAPH_STRUCTURE ){
+			if( !GraphAnalyzer.validate( g ) ){
+				throw("invalid graph : ",g.toString() )
+			}
+		}
 		return g
 	},
 
 	parseAdjacencyMatrix : function( adjacencyMatrix, vertexLabelsAndWeights ){
-		'use strict'
+		"use strict"
 		var g = this.parseVertexLabelsAndWeights( vertexLabelsAndWeights )
 
 		var m = adjacencyMatrix.trim()
@@ -2470,11 +2682,17 @@ var GraphParser = {
 				}
 			}
 		}
+		if( this.VALIDATE_GRAPH_STRUCTURE ){
+			if( !GraphAnalyzer.validate( g ) ){
+				throw("invalid graph : ",g.toString() )
+			}
+		}
+		g.setType( "dag" )
 		return g
 	},
 
 	parseGuess : function( adjacencyListOrMatrix, vertexLabelsAndWeights ){
-		'use strict'
+		"use strict"
 		var first_blank, firstarg = adjacencyListOrMatrix
 		if( !vertexLabelsAndWeights ){
 			first_blank = adjacencyListOrMatrix.search( /\r?\n[ \t]*\r?\n/ )
@@ -2485,7 +2703,7 @@ var GraphParser = {
 			return this.parseAdjacencyMatrix( adjacencyListOrMatrix, vertexLabelsAndWeights )
 		} else {
 			// [\s\S] is like . but also matches newline!
-			var isdot = firstarg.match(  /^\s*(di)?graph(\s+\w+)?\s*\{([\s\S]+)\}/m )
+			var isdot = firstarg.trim().match(  /^(digraph|graph|dag|pdag|mag)(\s+\w+)?\s*\{([\s\S]+)\}$/m )
 			if( isdot && isdot.length > 1 ){
 				return this.parseDot( firstarg )
 			} else {
@@ -2518,17 +2736,17 @@ var GraphTransformer = {
 			gn.addVertex( new Graph.Vertex( vertex_array[i] ) )
 		}
 		
-		var other_vertex_ids = _.pluck(vertex_array,'id')
+		var other_vertex_ids = _.pluck(vertex_array,"id")
 		
 		for( i = 0 ; i < g.edges.length ; i++ ){
-			var e = g.edges[i];
+			var e = g.edges[i]
 			if( _.contains( other_vertex_ids, e.v1.id ) && 
 				_.contains( other_vertex_ids, e.v2.id ) ){
 				gn.addEdge( e.v1.id, e.v2.id, e.directed )
 			}
 		}
 		
-		g.copyAllVertexPropertiesTo( gn )
+		g.copyAllPropertiesTo( gn )
 		return gn
 	},
 	
@@ -2542,10 +2760,11 @@ var GraphTransformer = {
 			gn.addEdge( edge_other.v1.id, edge_other.v2.id,
 				Graph.Edgetype.Undirected )
 		}
-		g.copyAllVertexPropertiesTo( gn )
+		g.copyAllPropertiesTo( gn )
+		gn.setType( "graph" )
 		return gn
 	},
-	
+
 	/**
 	 * The sugraph of this graph induced by the edges in edge_array.
 	 */
@@ -2563,7 +2782,7 @@ var GraphTransformer = {
 				gn.addEdge( edge_my.v1.id, edge_my.v2.id, edge_my.directed )
 			}
 		}
-		g.copyAllVertexPropertiesTo( gn ) 
+		g.copyAllPropertiesTo( gn ) 
 		return gn
 	},
 	
@@ -2583,8 +2802,8 @@ var GraphTransformer = {
 			concat(g.getAdjustedNodes()).
 			concat(g.getSelectionNodes())
 		}
-		var g_an = this.inducedSubgraph( g, g.ancestorsOf( V ) );
-		return g_an;
+		var g_an = this.inducedSubgraph( g, g.anteriorsOf( V ) )
+		return g_an
 	},
 	
 	/***
@@ -2617,19 +2836,19 @@ var GraphTransformer = {
 		
 		var visit = function( v ){
 			if( !v.traversal_info.visited ){
-				v.traversal_info.visited = true;
+				v.traversal_info.visited = true
 				if( in_Y[ v.id ] ){
-					v.traversal_info.reaches_target = true;
+					v.traversal_info.reaches_target = true
 				} else {
 					var children = _.reject(v.getChildren(),function(v){return in_X[v.id]})
 					_.each( children, visit )
 					v.traversal_info.reaches_target = _.chain(children)
-						.pluck('traversal_info')
-						.pluck('reaches_target')
+						.pluck("traversal_info")
+						.pluck("reaches_target")
 						.some().value()
 				}
 			}
-		};
+		}
 		
 		_.each( X, function(s){
 			visit( s )
@@ -2637,59 +2856,73 @@ var GraphTransformer = {
 				if( c.traversal_info.reaches_target ){
 					gback.deleteEdge( s, c, Graph.Edgetype.Directed )
 				}
-			});
-		});
-		return gback;
+			})
+		})
+		return gback
 	},
 	
 	/** This is the counterpart of the back-door graph for direct effects.
 	 * We remove only edges pointing from X to Y.
 	 */
-	indirectGraph : function(g){
-		var gback = g.clone();
-		var ee = [];
+	indirectGraph : function( g, X, Y ){
+		var gback = g.clone()
+		var ee = []
+		if( arguments.length == 1 ){
+			X = g.getSources()
+			Y = g.getTargets()
+		}
 		_.each(gback.getSources(),function( s ){
 			_.each( gback.getTargets(),function( t ){
-				var e = gback.getEdge( s, t );
-				if( e ) ee.push( e );
-			});
-		});
-		_.each(ee,function(e){gback.deleteEdge(e.v1,e.v2,e.directed);});
-		return gback;
+				var e = gback.getEdge( s, t )
+				if( e ) ee.push( e )
+			})
+		})
+		_.each(ee,function(e){gback.deleteEdge(e.v1,e.v2,e.directed)})
+		return gback
 	},
 	
 	/** TODO
 	 *		this is such a minor change from the usual descendants/ancestors
 	 *		that there should be a nice generalization of both to avoid duplicating
 	 *		the code here. */
-	causalFlowGraph : function(g){
+	causalFlowGraph : function( g, X, Y ){
+		if( arguments.length == 1 ){
+			X = g.getSources()
+			Y = g.getTargets()
+		}
 		var clearVisitedWhereNotAdjusted = function(){
 			_.each( g.vertices.values(), function(v){
 				if( g.isAdjustedNode( v ) ) 
-					Graph.Vertex.markAsVisited( v );
+					Graph.Vertex.markAsVisited( v )
 				else 
-					Graph.Vertex.markAsNotVisited( v );
-			});
-		};
+					Graph.Vertex.markAsNotVisited( v )
+			})
+		}
 		return this.inducedSubgraph( g, 
 				_.intersection(g.ancestorsOf( g.getTargets(), clearVisitedWhereNotAdjusted ),
-						g.descendantsOf( g.getSources(), clearVisitedWhereNotAdjusted ) ) );
+						g.descendantsOf( g.getSources(), clearVisitedWhereNotAdjusted ) ) )
 	},
 	
 	/**
 	 *		This function returns the subgraph of this graph that is induced
 	 *		by all open simple non-causal routes from s to t. 
 	 */
-	activeBiasGraph : function( g ){
-		var g_chain, g_canon, L, S,
+	activeBiasGraph : function( g, X, Y ){
+		var g_chain, g_canon, L, S, in_type = g.getType(),
 			reaches_source = {}, reaches_adjusted_node = {}, retain = {}
 		var preserve_previous_visited_information = function(){}
 		
-		if( g.getSources().length == 0 || g.getTargets().length == 0 ){
-			return new Graph();
+		if( arguments.length > 1 ){
+			g = g.clone()
+			_.each(X,function(v){g.addSource(v.id)})
+			_.each(Y,function(v){g.addTarget(v.id)})
 		}
 		
-		g_canon = GraphTransformer.canonicalGraph(g)
+		if( g.getSources().length == 0 || g.getTargets().length == 0 ){
+			return new Graph()
+		}
+		
+		g_canon = GraphTransformer.canonicalDag(g)
 		g = g_canon.g
 		g_chain = GraphTransformer.ancestorGraph(g)
 		
@@ -2699,12 +2932,12 @@ var GraphTransformer = {
 				g.clearTraversalInfo()
 				_.each( adj, function(v){ Graph.Vertex.markAsVisited(v) } )
 			} ), function(v){
-			reaches_source[v.id] = true
-		});
+				reaches_source[v.id] = true
+			})
 			
 		_.each( g.ancestorsOf( g.getAdjustedNodes() ), function(v){
 			reaches_adjusted_node[v.id] = true
-		});
+		})
 		
 		// ..for this line, such that "pure causal paths" are traced backwards 
 		var target_ancestors_except_ancestors_of_violators = 
@@ -2726,8 +2959,8 @@ var GraphTransformer = {
 				if( g.isSource(e.v2 ) || _.contains(intermediates_after_source, e.v2 ) ){
 					g_chain.deleteEdge( e.v1, e.v2, Graph.Edgetype.Directed )
 				}
-			});
-		});
+			})
+		})
 
 		// Delete edges emitting from adjusted nodes
 		_.each( g_chain.getAdjustedNodes(), function( v ){
@@ -2759,50 +2992,50 @@ var GraphTransformer = {
 		var vv = g_chain.getVertices()
 		
 		for( var comp_i = 0 ; comp_i < comps.length ; comp_i ++ ){
-			var comp = comps[comp_i];
+			var comp = comps[comp_i]
 			if( comp.length > 1 ){
 				var bridge_nodes = _.filter( comp, check_bridge_node )
 
 				var current_component = GraphTransformer.inducedSubgraph( 
-					g_chain, comp );
-				var bridge_node_edges = [];
-				var bridge_nodes_bottlenecks = [];
+					g_chain, comp )
+				var bridge_node_edges = []
+				var bridge_nodes_bottlenecks = []
 				_.each( bridge_nodes, function(bn){
 					bridge_nodes_bottlenecks.push(bottleneck_number[bn.id])
 				})
 				_.each( _.uniq(bridge_nodes_bottlenecks), function( i ){
-					current_component.addVertex( '__START'+i )
-					current_component.addVertex( '__END'+i )
+					current_component.addVertex( "__START"+i )
+					current_component.addVertex( "__END"+i )
 					bridge_node_edges.push( 
-						current_component.addEdge( '__START'+i, '__END'+i, 
+						current_component.addEdge( "__START"+i, "__END"+i, 
 							Graph.Edgetype.Undirected ) )
-				});
+				})
 				
 				_.each( bridge_nodes, function( bridge ) {
 					current_component.addEdge( 
-						'__END'+bottleneck_number[bridge.id],
+						"__END"+bottleneck_number[bridge.id],
 						bridge.id, Graph.Edgetype.Undirected )
-				});
+				})
 								
-				var bicomps = GraphAnalyzer.biconnectedComponents( current_component );
+				var bicomps = GraphAnalyzer.biconnectedComponents( current_component )
 								
-				var current_block_tree = GraphAnalyzer.blockTree( current_component, bicomps );
+				var current_block_tree = GraphAnalyzer.blockTree( current_component, bicomps )
 
 				_.each( bridge_node_edges, function( e ){
 					Graph.Vertex.markAsVisited(
-						current_block_tree.getVertex( 'C'+e.component_index ) );
-				} );
-				current_block_tree.visitAllPathsBetweenVisitedNodesInTree();
+						current_block_tree.getVertex( "C"+e.component_index ) )
+				} )
+				current_block_tree.visitAllPathsBetweenVisitedNodesInTree()
 				
 				var visited_components = _.filter( current_block_tree.vertices.values(),
 					function(v){
-						return v.id.charAt(0) == 'C' && v.traversal_info.visited 
-					});
+						return v.id.charAt(0) == "C" && v.traversal_info.visited 
+					})
 								
 				/** TODO is in O(|E|) - can this be accelerated? */
 				_.each( visited_components, function( vc ){
-					var component_index = parseInt(vc.id.substring(1));
-					var component = bicomps[component_index-1];
+					var component_index = parseInt(vc.id.substring(1))
+					var component = bicomps[component_index-1]
 					if( component.length > 1 || 
 						component[0].v1.id.indexOf("__") !== 0 || 
 						component[0].v2.id.indexOf("__") !== 0
@@ -2816,9 +3049,9 @@ var GraphTransformer = {
 							if( cv2 ){
 								retain[cv2.id] = true
 							}
-						} );
+						} )
 					}
-				} );
+				} )
 			}
 		}
 		// after the above loop, all vertices that have two disjoint paths to 
@@ -2843,18 +3076,18 @@ var GraphTransformer = {
 			else{
 				Graph.Vertex.markAsNotVisited(v)
 			}
-		} );
+		} )
 		
 		
 		var start_nodes = _.filter( vv, function(v){ 
-				return retain[v.id]
+			return retain[v.id]
 				|| ( topological_index[v.id] !== undefined &&
 				topological_index[v.id] === bottleneck_number[v.id] ) } )
 		
 				
 		var nodes_to_be_retained = g_chain.descendantsOf( start_nodes, 
-			preserve_previous_visited_information );
-		_.each( nodes_to_be_retained, function( v ){ retain[v.id] = true; } )
+			preserve_previous_visited_information )
+		_.each( nodes_to_be_retained, function( v ){ retain[v.id] = true } )
 
 		
 		// All vertices on "back-door" biasing paths (starting with a x <- ) 
@@ -2909,7 +3142,7 @@ var GraphTransformer = {
 		} )
 		
 		// Replace dummy nodes from canonical graph with original nodess
-		var Lids = _.pluck(g_canon.L,'id'), Sids = _.pluck(g_canon.S,'id')
+		var Lids = _.pluck(g_canon.L,"id"), Sids = _.pluck(g_canon.S,"id")
 		L=[], S=[]
 		_.each(Lids, function(vid){
 			var v = g_chain.getVertex(vid)
@@ -2919,7 +3152,9 @@ var GraphTransformer = {
 			var v = g_chain.getVertex(vid)
 			if( v ) S.push( v )
 		})
-		return GraphTransformer.decanonicalize( g_chain, L, S )
+		g = GraphTransformer.decanonicalize( g_chain, L, S )
+		g.setType( in_type )
+		return g
 	}, // end of activeBiasGraph
 	
 	trekGraph : function( g, up_prefix, down_prefix ) {
@@ -2928,71 +3163,76 @@ var GraphTransformer = {
 		var ee = g.getEdges()
 		var vup, vdown, ch, i
 		if( ! up_prefix ) up_prefix = "up_"
-			if( ! down_prefix ) down_prefix = "dw_"
-				for( i = 0 ; i < vv.length ; i ++ ){
-					vup = up_prefix+vv[i].id; vdown = down_prefix+vv[i].id
-					n.addVertex( new Graph.Vertex( {id:vup} ) )
-					n.addVertex( new Graph.Vertex( {id:vdown} ) )
-					if( g.isSource( vv[i] ) ) n.addSource( n.getVertex(vup) )
-						if( g.isTarget( vv[i] ) ) n.addSource( n.getVertex(vdown) )
-							n.addEdge( vup, vdown )
-				}
-				for( i = 0 ; i < ee.length ; i ++ ){
-					if( ee[i].directed == 2 ){ // bidirected edge
+		if( ! down_prefix ) down_prefix = "dw_"
+		for( i = 0 ; i < vv.length ; i ++ ){
+			vup = up_prefix+vv[i].id; vdown = down_prefix+vv[i].id
+			n.addVertex( new Graph.Vertex( {id:vup} ) )
+			n.addVertex( new Graph.Vertex( {id:vdown} ) )
+			if( g.isSource( vv[i] ) ) n.addSource( n.getVertex(vup) )
+			if( g.isTarget( vv[i] ) ) n.addSource( n.getVertex(vdown) )
+			n.addEdge( vup, vdown )
+		}
+		for( i = 0 ; i < ee.length ; i ++ ){
+			if( ee[i].directed == 2 ){ // bidirected edge
 				vup = up_prefix+ee[i].v1.id; vdown = down_prefix+ee[i].v2.id
 				n.addEdge( vup, vdown )
-				//vup = up_prefix+ee[i].v2.id; vdown = down_prefix+ee[i].v1.id
-				//n.addEdge( new Graph.Edge.Directed( { v1: n.getVertex(vup),
-				//	v2: n.getVertex(vdown) } ) )
-					}
-				} 
-				for( i = 0 ; i < vv.length ; i ++ ){
-					vup = up_prefix+vv[i].id; vdown = down_prefix+vv[i].id
-					ch = vv[i].getChildren( false ) // true -> consider also bidirected edges
-					for( var j = 0 ; j < ch.length ; j ++ ){
-						n.addEdge( vdown, down_prefix+ch[j].id )
-						n.addEdge( up_prefix+ch[j].id, vup )
-					}
-				}
-				return n
+			}
+		} 
+		for( i = 0 ; i < vv.length ; i ++ ){
+			vup = up_prefix+vv[i].id; vdown = down_prefix+vv[i].id
+			ch = vv[i].getChildren( false ) // true -> consider also bidirected edges
+			for( var j = 0 ; j < ch.length ; j ++ ){
+				n.addEdge( vdown, down_prefix+ch[j].id )
+				n.addEdge( up_prefix+ch[j].id, vup )
+			}
+		}
+		return n
 	},
 	
 	/**
 		For a graph with bi- and undirected edges, forms the "canonical version"
 		by replacing each <->  with <- L -> and each -- with -> S <-. Returns 
 		an object {g,L,S] containing the graph and the newly created nodes L and
-		S. */
-	canonicalGraph : function( g ){
+		S. 
+		
+		The output graph is always a DAG.
+		
+		*/
+	canonicalDag : function( g ){
 		var rg = new Graph(), i = 1, L = [], S = [], v
 		_.each( g.getVertices(), function( v ){
-				rg.addVertex( v.cloneWithoutEdges() )
+			rg.addVertex( v.cloneWithoutEdges() )
 		} )
-		g.copyAllVertexPropertiesTo( rg )
+		g.copyAllPropertiesTo( rg )
 		_.each( g.getEdges(), function( e ){
-				switch( e.directed ){
-					case Graph.Edgetype.Undirected:
-						while( rg.getVertex( "S"+i ) ){ i ++ }
-						v = new Graph.Vertex({id:"S"+i})
-						rg.addVertex( v ); rg.addSelectionNode( v )
-						rg.addEdge(e.v2,v)
-						rg.addEdge(e.v1,v)
-						S.push(v)
-						break
-					case Graph.Edgetype.Directed:
-						rg.addEdge(e.v1,e.v2)
-						break
-					case Graph.Edgetype.Bidirected:
-						while( rg.getVertex( "L"+i ) ){ i ++ }
-						v = new Graph.Vertex({id:"L"+i})
-						rg.addVertex( v ); rg.addLatentNode( v )
-						rg.addEdge(v,e.v2)
-						rg.addEdge(v,e.v1)
-						L.push(v)
-						break
-				}
+			switch( e.directed ){
+			case Graph.Edgetype.Undirected:
+				while( rg.getVertex( "S"+i ) ){ i ++ }
+				v = new Graph.Vertex({id:"S"+i})
+				rg.addVertex( v ); rg.addSelectionNode( v )
+				rg.addEdge(e.v2,v)
+				rg.addEdge(e.v1,v)
+				S.push(v)
+				break
+
+			case Graph.Edgetype.Directed:
+				rg.addEdge(e.v1,e.v2)
+				break
+
+			case Graph.Edgetype.Bidirected:
+				while( rg.getVertex( "L"+i ) ){ i ++ }
+				v = new Graph.Vertex({id:"L"+i})
+				rg.addVertex( v ); rg.addLatentNode( v )
+				rg.addEdge(v,e.v2)
+				rg.addEdge(v,e.v1)
+				L.push(v)
+				break
+			}
 		} )
+		rg.setType( "dag" )
 		return {g:rg,L:L,S:S}
 	},
+
 	decanonicalize : function( g, L, S ){
 		var rg = g.clone(), vv, i, j
 		_.each( L, function(v){
@@ -3013,6 +3253,11 @@ var GraphTransformer = {
 			}
 			rg.deleteVertex(v)
 		})
+		if( S.length == 0 ){
+			rg.setType("dag")
+		} else {
+			rg.setType("mag")
+		}
 		return rg
 	},
 	
@@ -3030,7 +3275,7 @@ var GraphTransformer = {
 		var mg = new Graph()
 		
 		_.each( g.getVertices(), function( v ){
-				mg.addVertex( v.cloneWithoutEdges() )
+			mg.addVertex( v.cloneWithoutEdges() )
 		} )
 
 		var comp = GraphAnalyzer.connectedComponents( g, "getSpouses" )
@@ -3049,8 +3294,8 @@ var GraphTransformer = {
 				mg.addEdge( e.v1.id, e.v2.id, e.directed )
 			}
 		} )
-		
-		g.copyAllVertexPropertiesTo( mg )
+		g.copyAllPropertiesTo( mg )
+		mg.setType("graph")
 		return mg
 	},
 	
@@ -3069,51 +3314,51 @@ var GraphTransformer = {
 	flowNetwork : function(g, capacities) {
 		var i, v, vin, vout
 		if( capacities === undefined ) capacities = new Hash()
-			var n = g.clone()
-			for( i = 0 ; i < g.edges.length ; i++ ){
-				var e = g.edges[i]
-				var eback = g.getEdge( e.v2.id, e.v1.id )
-				if( !eback ){
-					eback = n.addEdge( e.v2.id, e.v1.id, Graph.Edgetype.Directed )
-				}
-				
-				if( capacities.get(e) === undefined ){
-					capacities.set(e,1)
-				}
-				if( capacities.get(eback) === undefined ){
-					capacities.set(eback,0)
-				}
-			}
-			var ssource = "__SRC"
-			while( g.getVertex( ssource ) ){
-				ssource = "_" + ssource
-			}
-			var ssink = "__SNK"
-			while( g.getVertex( ssink ) ){
-				ssink = "_" + ssink
-			}
-			n.addVertex( new Graph.Vertex( {id:ssource} ) )
-			n.removeAllSources(); n.addSource( ssource )
-			n.addVertex( new Graph.Vertex( {id:ssink} ) )
-			n.removeAllTargets(); n.addTarget( ssink )
-			
-			vout = n.getVertex(ssource)
-			vin = n.getVertex(ssink)
-			
-			var srcs = g.getSources()
-			for( i = 0 ; i < srcs.length ; i ++ ){
-				v = n.getVertex(srcs[i].id)
-				capacities.set( n.addEdge( vout, v ), Number.MAX_VALUE )
-				capacities.set( n.addEdge( v, vout ), 0 )
+		var n = g.clone()
+		for( i = 0 ; i < g.edges.length ; i++ ){
+			var e = g.edges[i]
+			var eback = g.getEdge( e.v2.id, e.v1.id )
+			if( !eback ){
+				eback = n.addEdge( e.v2.id, e.v1.id, Graph.Edgetype.Directed )
 			}
 			
-			var tgts = g.getTargets()
-			for( i = 0 ; i < tgts.length ; i ++ ){
-				v = n.getVertex(tgts[i].id)
-				capacities.set( n.addEdge( v, vin ), Number.MAX_VALUE )
-				capacities.set( n.addEdge( vin, v ), 0 )
+			if( capacities.get(e) === undefined ){
+				capacities.set(e,1)
 			}
-			return { graph: n, capacities: capacities }
+			if( capacities.get(eback) === undefined ){
+				capacities.set(eback,0)
+			}
+		}
+		var ssource = "__SRC"
+		while( g.getVertex( ssource ) ){
+			ssource = "_" + ssource
+		}
+		var ssink = "__SNK"
+		while( g.getVertex( ssink ) ){
+			ssink = "_" + ssink
+		}
+		n.addVertex( new Graph.Vertex( {id:ssource} ) )
+		n.removeAllSources(); n.addSource( ssource )
+		n.addVertex( new Graph.Vertex( {id:ssink} ) )
+		n.removeAllTargets(); n.addTarget( ssink )
+			
+		vout = n.getVertex(ssource)
+		vin = n.getVertex(ssink)
+			
+		var srcs = g.getSources()
+		for( i = 0 ; i < srcs.length ; i ++ ){
+			v = n.getVertex(srcs[i].id)
+			capacities.set( n.addEdge( vout, v ), Number.MAX_VALUE )
+			capacities.set( n.addEdge( v, vout ), 0 )
+		}
+			
+		var tgts = g.getTargets()
+		for( i = 0 ; i < tgts.length ; i ++ ){
+			v = n.getVertex(tgts[i].id)
+			capacities.set( n.addEdge( v, vin ), Number.MAX_VALUE )
+			capacities.set( n.addEdge( vin, v ), 0 )
+		}
+		return { graph: n, capacities: capacities }
 	},
 	
 	/****
@@ -3124,35 +3369,35 @@ var GraphTransformer = {
 	 *		to v_out.
 	 **/
 	vertexCapacityGraph : function( g ) {
-		var gn = new Graph();
+		var gn = new Graph()
 		g.vertices.values().each( function( v ){
 			if( g.getSource() !== v ){
-				gn.addVertex( new Graph.Vertex( { id : "I" + v.id } ) );
+				gn.addVertex( new Graph.Vertex( { id : "I" + v.id } ) )
 			}
 			if( g.getTarget() !== v ){
-				gn.addVertex( new Graph.Vertex( { id : "O" + v.id } ) );
+				gn.addVertex( new Graph.Vertex( { id : "O" + v.id } ) )
 			}
 			if( g.getSource() !== v && g.getTarget() !== v ){
 				gn.addEdge( new Graph.Edge.Directed( { 
-					v1:gn.getVertex("I"+v.id), v2:gn.getVertex("O"+v.id), capacity: 1, is_backedge : false } ) );
-					gn.addEdge( new Graph.Edge.Directed( { 
-						v2:gn.getVertex("I"+v.id), v1:gn.getVertex("O"+v.id), capacity: 0, is_backedge : true } ) );
+					v1:gn.getVertex("I"+v.id), v2:gn.getVertex("O"+v.id), capacity: 1, is_backedge : false } ) )
+				gn.addEdge( new Graph.Edge.Directed( { 
+					v2:gn.getVertex("I"+v.id), v1:gn.getVertex("O"+v.id), capacity: 0, is_backedge : true } ) )
 			}
-		} );
+		} )
 		g.edges.each( function( e ){
 			if( e.v1 !== g.getTarget() && e.v2 !== g.getSource() ){
 				gn.addEdge( new Graph.Edge.Directed( { v1 : gn.getVertex("O"+e.v1.id),
-							v2 : gn.getVertex("I"+e.v2.id) , capacity: 1, is_backedge : false } ) );
-		gn.addEdge( new Graph.Edge.Directed( { 
-				v2 : gn.getVertex("O"+e.v1.id),
-				v1 : gn.getVertex("I"+e.v2.id), 
-				capacity: 0, is_backedge : true 
-				} ) );
+							v2 : gn.getVertex("I"+e.v2.id) , capacity: 1, is_backedge : false } ) )
+				gn.addEdge( new Graph.Edge.Directed( { 
+					v2 : gn.getVertex("O"+e.v1.id),
+					v1 : gn.getVertex("I"+e.v2.id), 
+					capacity: 0, is_backedge : true 
+				} ) )
 			}
-		} );
+		} )
 		return gn.
 		setSource(gn.getVertex("O"+g.getSource().id)).
-		setTarget(gn.getVertex("I"+g.getTarget().id));
+		setTarget(gn.getVertex("I"+g.getTarget().id))
 	},
 	
 	/***
@@ -3175,7 +3420,7 @@ var GraphTransformer = {
 					gn.deleteEdge( e.v1, e.v2, Graph.Edgetype.Directed )
 				}
 			}
-		} );
+		} )
 		return gn
 	},
 	
@@ -3191,7 +3436,7 @@ var GraphTransformer = {
 	
 	/** TODO make this work with undirected edges */
 	dependencyGraph : function( g ){
-		var gc = GraphTransformer.canonicalGraph( g ).g
+		var gc = GraphTransformer.canonicalDag( g ).g
 		var gd = GraphTransformer.dag2DependencyGraph( gc )
 		var vn = []
 		g.vertices.values().each( function(v){ vn.push(gd.getVertex(v.id)) } )
@@ -3210,11 +3455,13 @@ var GraphTransformer = {
 				}
 			}
 		} )
+		gm.setType("graph")
 		return gm
 	},
 	
 	dependencyGraph2CPDAG : function( g ){
 		var gn = new Graph()
+		gn.setType( "pdag" )
 		var vv = g.vertices.values()
 		vv.each( function(v){ gn.addVertex( v.cloneWithoutEdges() ) } )
 		g.edges.each(function(e){
@@ -3285,27 +3532,102 @@ var GraphTransformer = {
 		}
 		
 		return gp
-	}
-};
-/* DAGitty - a browser-based software for causal modelling and analysis
- *   Copyright (C) 2010-2015 Johannes Textor
- * 
- *   This program is free software; you can redistribute it and/or
- *   modify it under the terms of the GNU General Public License
- *   as published by the Free Software Foundation; either version 2
- *   of the License, or (at your option) any later version.
- * 
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- * 
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. */
+	},
+	
+	/*
+	  Replace every occurence of the induced subgraph A -> B -- C with A -> B -> C
+	*/
+	cgToRcg: function(g) {
+		var gn = new Graph()
+		gn.setType( g.getType() )
 
+		_.each(g.vertices.values(), function(v){gn.addVertex( v.cloneWithoutEdges() )})
+		var fail = false
+		//checks if v is connected to a node with id w.id in the graph containing v
+		function areConnected(v,w) { 
+			return _.some(v.getAdjacentNodes(), function(x){ return x.id == w.id })
+		}
+		function processDirectedEdge(a,b){
+			if (fail) return
+			_.each(b.getNeighbours(), function(c){
+				if (a.id != c.id && !areConnected(a, c)) {
+					_.each(gn.getVertex(c.id).getParents(),  //parents in gn is a superset of the parents in g
+									function(d){ 
+										if (a.id != d.id && b.id != d.id && !areConnected(b,d)) 
+											fail = true 
+									})
+					if (fail) return
+					if (!gn.getEdge(b.id, c.id, Graph.Edgetype.Directed)) {
+						gn.addEdge(b.id, c.id, Graph.Edgetype.Directed)
+						processDirectedEdge(b,c)
+					}
+				}
+			})
+		}
+		_.each(g.getEdges(), function(e){
+			if (e.directed == Graph.Edgetype.Directed) 
+				gn.addEdge(e.v1.id, e.v2.id, Graph.Edgetype.Directed)
+		})
+		_.each(g.getEdges(), function(e){
+			if (e.directed == Graph.Edgetype.Directed) 
+				processDirectedEdge(e.v1,e.v2)
+		})
+		if (fail) return null
+		_.each(g.getEdges(), function(e){
+			if (e.directed != Graph.Edgetype.Directed && !areConnected(gn.getVertex(e.v1.id), e.v2)) 
+				gn.addEdge(e.v1.id, e.v2.id, e.directed)
+		})
+		g.copyAllPropertiesTo( gn )
+		return gn
+	},
+	
+	/*
+		Contracts every array C of vertices in components to a single vertex V_c that is connected to a vertex W
+		if one of the vertices in C was connected to W
+	*/
+	contractComponents: function(g, components, includeSelfEdges) {
+		var selfEdges = [false, false, false]
+		if (typeof includeSelfEdges === "boolean" ) selfEdges = selfEdges.map(function() { return includeSelfEdges })
+		else if (_.isArray( includeSelfEdges ) ) _.each(includeSelfEdges, function(t) { selfEdges[t] = true })
+		var targetVertices = new Hash()
+
+		var gn = new Graph()
+		gn.setType( g.getType() )
+
+		_.each(components, function(component) { 
+			var ids = component.map(function(v){
+				if (typeof v === "string" ) return v
+				else return v.id 
+			})
+			var mergedVertex = gn.addVertex(ids.sort().join(","))
+			_.each(ids,function(vid){
+				targetVertices.set(vid, mergedVertex)
+			})
+		})
+		_.each( g.getVertices(), function( v ){
+			if (targetVertices.contains(v.id)) return
+			var w = gn.addVertex( v.cloneWithoutEdges() )
+			targetVertices.set(v.id, w)
+		} )
+		_.each(g.getEdges(), function(e){
+			var c1 = targetVertices.get(e.v1.id)
+			var c2 = targetVertices.get(e.v2.id)
+			if (c1 == c2 && !selfEdges[e.directed]) return
+			gn.addEdge( c1, c2, e.directed )
+		})
+		_.each( g.managed_vertex_property_names, ( function( p ){
+			_.each( g.getVerticesWithProperty( p ), function( v ){
+				gn.addVertexProperty( targetVertices.get(v.id), p ) 
+			} )
+		} ) )
+		return gn
+	}
+}
 /* This is a namespace containing various methods that generate graphs,
  * e.g. at random.*/
+ 
+/* globals Graph  */
+/* exported GraphGenerator */
 
 var GraphGenerator = {
 	/**
@@ -3352,77 +3674,66 @@ var GraphGenerator = {
 	GraphAnalyzer and GraphTransform should not be used with this class but rather
 	with the underlying Graph itself (exposed to the outside world via the getGraph()
 	method). */
+	
+/* globals Class  */
+/* exported ObservedGraph */
 
 var ObservedGraph = Class.extend({
 	event_mapping : {
-		'addVertex' : 'change',
-		'renameVertex' : 'change',
-		'addEdge' : 'change',
-		'deleteVertex' : 'change',
-		'deleteEdge' : 'change',
-		'addSource' : 'change',
-		'removeSource' : 'change',
-		'addTarget' : 'change',
-		'removeTarget' : 'change',
-		'addLatentNode' : 'change',
-		'removeLatentNode' : 'change',
-		'addAdjustedNode' : 'change',
-		'removeAdjustedNode' : 'change'
+		"addVertex" : "change",
+		"renameVertex" : "change",
+		"addEdge" : "change",
+		"deleteVertex" : "change",
+		"deleteEdge" : "change",
+		"addSource" : "change",
+		"removeSource" : "change",
+		"addTarget" : "change",
+		"removeTarget" : "change",
+		"addLatentNode" : "change",
+		"removeLatentNode" : "change",
+		"addAdjustedNode" : "change",
+		"removeAdjustedNode" : "change"
 	},
 	initialize : function( graph ){
-		this.graph = graph;
-		this.event_listeners = {};
+		this.graph = graph
+		this.event_listeners = {}
 		Object.keys( this.event_mapping ).each(function(k){
-			this.event_listeners[this.event_mapping[k]]=[];
-		},this);
+			this.event_listeners[this.event_mapping[k]]=[]
+		},this)
 		for( var k in graph ){
 			if( Object.isFunction(graph[k]) ){
-				var f = graph[k];
+				var f = graph[k]
 				if( this.event_mapping[k] ){
 					this[k] = (function(f,k){
 						return function(){
-							var r = f.apply( graph, arguments );
+							var r = f.apply( graph, arguments )
 							this.event_listeners[this.event_mapping[k]].each(
 							function(l){
-								l();
-							});
-							return r;
+								l()
+							})
+							return r
 						}
-					})(f,k);
+					})(f,k)
 				} else {
 					this[k] = (function(f){
-						return function(){return f.apply( graph, arguments );}
-					})(f);
+						return function(){return f.apply( graph, arguments )}
+					})(f)
 				}
 			}
-		};
+		}
 	},
 	observe : function( event, listener ){
-		this.event_listeners[event].push(listener);
+		this.event_listeners[event].push(listener)
 	}
-} );
+} )
 
-/* DAGitty - a browser-based software for causal modelling and analysis
-   Copyright (C) 2010-2014 Johannes Textor
-
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. */
+/* globals _,Graph,GraphAnalyzer */
+/* exported GraphSerializer */
 
 var GraphSerializer = {
 
 	toDot : function( g ){
-		return "graph {\n" + this.toDotVertexStatements(g)+
+		return g.getType()+" {\n" + this.toDotVertexStatements(g)+
 			this.toDotEdgeStatements(g)+"\n}\n"
 	},
 	
@@ -3434,24 +3745,24 @@ var GraphSerializer = {
 			g.isAdjustedNode(v) && properties.push("adjusted")
 			g.isLatentNode(v) && properties.push("latent")
 			g.isSelectionNode(v) && properties.push("selected")
-			if( typeof v.layout_pos_x!== 'undefined'  ){
-				properties.push( 'pos="' + 
+			if( typeof v.layout_pos_x!== "undefined"  ){
+				properties.push( "pos=\"" + 
 					v.layout_pos_x.toFixed(3) + "," + 
-					v.layout_pos_y.toFixed(3) + '"' )
+					v.layout_pos_y.toFixed(3) + "\"" )
 			}
 			if( properties.length > 0 ){
 				property_string = " ["+properties.join(",")+"]"
 			}
 			return encodeURIComponent(v.id) + property_string
-		};
-		var r = "";
-		var ra = [];
+		}
+		var r = ""
+		var ra = []
 		_.each( 
 		g.vertices.values(), function( v ){
-			ra.push(expandLabel( v, g )+"\n");
-		} );
-		ra.sort();
-		return r + ra.join('');
+			ra.push(expandLabel( v, g )+"\n")
+		} )
+		ra.sort()
+		return r + ra.join("")
 	},
 	
 	toDotEdgeStatements : function( g ){
@@ -3460,12 +3771,12 @@ var GraphSerializer = {
 			es = e.toString()
 			eop = []
 			if( e.layout_pos_x ){
-				eop.push('pos="' + 
+				eop.push("pos=\"" + 
 					e.layout_pos_x.toFixed(3) + "," + 
-					e.layout_pos_y.toFixed(3) + '"')
+					e.layout_pos_y.toFixed(3) + "\"")
 			}
 			if( e.id ){
-				eop.push('label="' + encodeURIComponent( e.id ) + '"')
+				eop.push("label=\"" + encodeURIComponent( e.id ) + "\"")
 			}
 			if( eop.length > 0 ){
 				es += " ["+eop.join(",")+"]"
@@ -3524,7 +3835,7 @@ var GraphSerializer = {
 			r = "# Remember to set lavaan's fixed.x appopriately!\n"
 		_.each( ee, function(e){
 			edgetype = ""
-			reverse = true
+			var reverse = true
 			if( e instanceof Graph.Edge.Directed ){
 				if( g.isLatentNode( e.v1 ) ){
 					if( g.isLatentNode( e.v2 ) ){
@@ -3552,14 +3863,15 @@ var GraphSerializer = {
 
 	toTikz : function( g, precision ){
 		if( precision == null ){ precision = 5 }
-		var vv = g.getVertices(), i, r = "", ee = g.getEdges(), v_index = [], edgetype
+		var vv = g.getVertices(), i, r = "", ee = g.getEdges(), v_index = [], edgetype,
+			p1x, p1y, p2x, p2y
 		for( i = 0 ; i < vv.length ; i ++ ){
 			r += "\\node (v"+i+") at ("+vv[i].layout_pos_x.toPrecision(precision)+
 				","+(-vv[i].layout_pos_y).toPrecision(precision)+") {"+vv[i].id+"};\n"
 			v_index[vv[i].id] = i
 		}
 		for( i = 0 ; i < ee.length ; i ++ ){
-			edgetype = "";
+			edgetype = ""
 			if( ee[i] instanceof Graph.Edge.Directed ){
 				edgetype = "[->] "
 			}
@@ -3651,19 +3963,19 @@ var GraphSerializer = {
 	},
 	
 	toImplicationTestRCode : function( g, max_nr ){
-		var imp, i, j
+		var imp, i, j, r_str
 		if( max_nr == null ){ max_nr = 1000 }
 		imp = GraphAnalyzer.listMinimalImplications( g, max_nr )
 		r_str = []
 		for( i = 0 ; i < imp.length ; i ++ ){
-				for( j = 0 ; j < imp[i][2].length ; j ++ ){
+			for( j = 0 ; j < imp[i][2].length ; j ++ ){
 				r_str.push( "c(\""+
-					imp[i][0]+"\",\""+imp[i][1]+"\""+
-					( imp[i][2][j].length > 0 ?
-						",\""+imp[i][2][j].pluck("id").join("\",\"")+"\""
-						: "" ) +
-					")" )
-				}
+				imp[i][0]+"\",\""+imp[i][1]+"\""+
+				( imp[i][2][j].length > 0 ?
+					",\""+imp[i][2][j].pluck("id").join("\",\"")+"\""
+					: "" ) +
+				")" )
+			}
 		}
 		return "testImplications <- function( covariance.matrix, sample.size ){\n"+
 				"\tlibrary(ggm)\n\t"+
@@ -3673,7 +3985,7 @@ var GraphSerializer = {
 				r_str.join(",\n\t\t")+")\n\t"+
 				"data.frame( implication=unlist(lapply(implications,tos)),\n\t\t"+
 				"pvalue=unlist( lapply( implications, tst ) ) )\n"+
-			"\n}";
+			"\n}"
 	},
 	
 	toJavascriptMultilineString : function( g ){
@@ -3683,4 +3995,4 @@ var GraphSerializer = {
 		}
 		return "\t\""+r_str.join("\\n\"+\n\t\"")+"\""
 	}
-};
+}
