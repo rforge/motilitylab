@@ -4,6 +4,8 @@ outcomes(small1) <- 'T'
 
 mixed <- dagitty("graph{ a -- x -> b \n c <-> x <- d \n f }")
 
+coll <- dagitty('graph{A -> B <- C}')
+
 # covers old unittests 1 t/m 3
 
 test_that("parsing / serializing", {
@@ -43,3 +45,10 @@ test_that("path tracing", {
 	expect_equal( sort(dseparated( mixed, "d" )), c("c","f") )
 
 })
+
+test_that("ci tests", {
+	expect_equal( nrow(localTests( coll, simulateSEM(coll), type="cis" )), 1 )
+	expect_equal( nrow(localTests( coll, sample.cov=cov(simulateSEM(coll,N=500)), 
+		sample.nobs=500, type="cis" )), 1 )
+})
+

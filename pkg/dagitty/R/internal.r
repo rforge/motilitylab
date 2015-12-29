@@ -198,14 +198,19 @@
 }
 
 .ri.test <- function( x, ind, conf.level ){
-	f <- as.formula( paste(ind$X,"~",paste(ind$Y,paste(ind$Z,collapse=" + "),sep=" + ") ) )
+	if( length(ind$Z) > 0 ){
+		f <- as.formula( paste(ind$X,"~",paste(ind$Y,paste(ind$Z,collapse=" + "),sep=" + ") ) )
+	} else {
+		f <- as.formula( paste(ind$X,"~",ind$Y) )
+	}
 	mdl <- lm( f, data=x )
 	c( coef(summary(mdl))[2,c(1,2,4)], confint( mdl, ind$Y, level=conf.level ) )
 }
 
 .ci.test.covmat <- function( sample.cov, sample.nobs,
 	ind, conf.level ){
-	sample.cov <- sample.cov[c(ind$X,ind$Y,ind$Z),c(ind$X,ind$Y,ind$Z)]
+	vars <- unlist(c(ind$X,ind$Y,ind$Z))
+	sample.cov <- sample.cov[vars,vars]
 	M <- MASS::ginv(sample.cov)
 	pcor <- -M[1,2] / sqrt( M[1,1] * M[2,2] )
 	pcor.z <- atanh( pcor )
