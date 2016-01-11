@@ -360,13 +360,13 @@ setVariableStatus <- function( x, status, value ) {
 #' @param x the input graph.
 #' @export
 #' @examples
-#' ## A "DAG" with Greek and Portuguese variable names. These are input using 
-#' ## URL-encoding.
-#' g <- dagitty( "graph {
-#'   %CE%BA%CE%B1%CF%81%CE%B4%CE%AF%CE%B1 [pos=\"0.297,0.502\"]
-#'   cora%C3%A7%C3%A3o [pos=\"0.482,0.387\"]
-#'   %CE%BA%CE%B1%CF%81%CE%B4%CE%AF%CE%B1 -> cora%C3%A7%C3%A3o
-#' }" )
+#' ## A "DAG" with Greek and Portuguese variable names. These can be
+#' ## input using quotes to overcome the limitations on unquoted identifiers.
+#' g <- dagitty( 'digraph {
+#'   "coração" [pos="0.297,0.502"]
+#'   "inimă" [pos="0.482,0.387"]
+#'   "coração" -> "inimă"
+#' }' )
 #' names( g )
 names.dagitty <- function( x ){
 	ct <- .getJSContext()
@@ -1095,6 +1095,36 @@ dseparated <- function(x,X,Y=list(),Z=list()){
 	}
 }
 
+#' Generate DAG at Random
+#'
+#' Generates a random DAG with N variables called x1,...,xN. For each
+#' pair of variables xi,xj with i<j, an edge i->j will be present with
+#' probability p. 
+#' @param N desired number of variables.
+#' @param p connectivity parameter, a number between 0 and 1.
+#' @export
+randomDAG <- function( N, p ){
+	N <- as.integer(N)
+	if( N < 1 ){
+		stop("N must be positive!")
+	}
+	p <- as.double(p)
+	if( p < 0 || p > 1 ){
+		stop("p is not a probability!")
+	}
+	xv <- .getJSVar()
+	pv <- .getJSVar()
+	tryCatch({
+	.jsassign( pv, p )
+	.jsassign( xv, as.list(paste0("x",seq_len(N))) )
+	.jsassign( xv, .jsp("GraphGenerator.randomDAG(",xv,",",pv,").toString()") )
+	r <- .jsget(xv)
+	},finally={
+		.deleteJSVar(xv)
+		.deleteJSVar(pv)
+	})
+	r
+}
 
 #' @export
 print.dagitty.ivs <- function( x, prefix="", ... ){

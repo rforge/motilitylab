@@ -13,13 +13,13 @@
 Names of Variables in Graph
 }
 \examples{
-## A "DAG" with Greek and Portuguese variable names. These are input using 
-## URL-encoding.
-g <- dagitty( "graph {
-  \%CE\%BA\%CE\%B1\%CF\%81\%CE\%B4\%CE\%AF\%CE\%B1 [pos=\\"0.297,0.502\\"]
-  cora\%C3\%A7\%C3\%A3o [pos=\\"0.482,0.387\\"]
-  \%CE\%BA\%CE\%B1\%CF\%81\%CE\%B4\%CE\%AF\%CE\%B1 -> cora\%C3\%A7\%C3\%A3o
-}" )
+## A "DAG" with Greek and Portuguese variable names. These can be
+## input using quotes to overcome the limitations on unquoted identifiers.
+g <- dagitty( 'digraph {
+  "coração" [pos="0.297,0.502"]
+  "inimă" [pos="0.482,0.387"]
+  "coração" -> "inimă"
+}' )
 names( g )
 }
 
