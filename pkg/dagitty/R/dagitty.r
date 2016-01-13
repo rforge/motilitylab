@@ -98,30 +98,43 @@ getExample <- function( x ){
 #' 
 #' @export
 simulateSEM <- function( x, b.lower=-.6, b.upper=.6, eps=1, N=500 ){
-	if( !requireNamespace( "lavaan", quietly=TRUE ) ){
-		stop("This function requires the 'lavaan' package!")
+	if( !requireNamespace( "MASS", quietly=TRUE ) ){
+		stop("This function requires the 'MASS' package!")
 	}
 	x <- as.dagitty( x )
+	xc <- canonicalize( x )
+	x <- xc$g
     vars <- names( x )
-    x <- canonicalize( x )
-    mdl <- lavaan::lavaanify( toString(x$g,"lavaan"), fixed.x=FALSE )
-    for( l in x$L ){
-    	b <- runif( 1, b.lower, b.upper )
-    	if( b < 0 ){
-    		b2 <- -sqrt( -b )
-    		b <- sqrt( -b )
-    	} else {
-    		b2 <- sqrt( b )
-    		b <- sqrt( b )
-    	}
-    	mdl$ustart[(mdl$op == "~") & (mdl$rhs == l)] <- c( b, b2 )
-    }
-    arrows <- which( (mdl$op == "~") & !(mdl$rhs %in% x$L) )
-    residvars <- which( mdl$op == "~~" & (mdl$rhs == mdl$lhs) )
-    mdl$ustart[arrows] <- runif( length(arrows), b.lower, b.upper )
-    mdl$ustart[residvars] <- eps
-    r <- lavaan::simulateData( mdl, sample.nobs=N ) 
-    r[,setdiff(vars,latents(x$g))]
+    e <- edges( x )
+    if( nrow(e) > 0 ){
+		Beta <- matrix( 0, nrow=length(vars), ncol=length(vars) )
+		rownames(Beta) <- colnames(Beta) <- vars
+		ecovs <- runif( length(xc$L), b.lower, b.upper )
+		names(ecovs) <- xc$L
+		e[,1] <- as.character(e[,1])
+		e[,2] <- as.character(e[,2])
+		for( i in seq_len( nrow( e ) ) ){
+			if( e[i,1] %in% xc$L ){
+				Beta[(e[i,1]),(e[i,2])] <- sqrt(abs(ecovs[e[i,1]]))
+				if( ecovs[e[i,1]] < 0 ){
+					Beta[(e[i,1]),(e[i,2])] <- - Beta[(e[i,1]),(e[i,2])]
+					ecovs[e[i,1]] <- -ecovs[e[i,1]]
+				}
+			} else {
+				Beta[(e[i,1]),(e[i,2])] <- runif(1,b.lower,b.upper)			
+			}
+		}
+		L <- (diag( 1, length(vars) ) - Beta)
+		Li <- MASS::ginv( L )
+		Phi <- MASS::ginv( t(Li)^2 ) %*% rep(1,nrow(Beta))
+		Phi <- diag( c(Phi), length(vars) )
+		Sigma <- t(Li) %*% Phi %*% Li
+	} else {
+		Sigma <- diag(1,length(vars))
+	}
+	r <- MASS::mvrnorm( N, rep(0,length(vars)), Sigma )
+	colnames(r) <- vars
+	as.data.frame(r[,setdiff(vars,xc$L)])
 }
 
 #' Ancestral Relations
