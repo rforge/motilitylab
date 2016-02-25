@@ -771,16 +771,34 @@ instrumentalVariables <- function( x, exposure=NULL, outcome=NULL ){
 
 #' List Vanishing Tetrads Implied by Gaussian Graphical Model
 #' @param x the input graph.
+#' @param type restrict output to one level of Kenny's tetrad typology.
+#' Possible values are "within" (homogeneity within constructs; all four
+#' variables have the same parents), "between" (homogeneity between constructs;
+#' two pairs of variables each sharing one parent) 
+#' and "epistemic" (consistency of epistemic correlations; three variables have
+#' the same parent). By default, all tetrads are listed.
+#' @return a data frame with four columns, where each row of the form
+#' i,j,k,l means that the tetrad Cov(i,j)Cov(k,l) - Cov(i,k)Cov(j,l) vanishes
+#' (is equal to 0) according to the model.
+#' 
 #' @export
-vanishingTetrads <- function( x ){
+vanishingTetrads <- function( x, type=NA ){
 	x <- as.dagitty( x )
 
 	xv <- .getJSVar()
 	tryCatch({
 		.jsassigngraph( xv, x )
-		.jsassign( xv, .jsp("GraphAnalyzer.vanishingTetrads(global.",xv,")") )
+		if( is.character( type ) ){
+			.jsassign( xv, .jsp("GraphAnalyzer.vanishingTetrads(global.",
+				xv,",undefined,'",type,"')") )
+		} else {
+			.jsassign( xv, .jsp("GraphAnalyzer.vanishingTetrads(global.",
+				xv,")") )
+	
+		}
 		r <- .jsget(xv)
 	}, finally={.deleteJSVar(xv)})
+
 	r
 }
 
@@ -926,8 +944,9 @@ downloadGraph <- function(x="dagitty.net/mz-Tuw9"){
 #' Either \code{data} or \code{sample.cov} and \code{sample.nobs} must be supplied.
 #' @param sample.nobs number of observations; ignored if \code{data} is supplied.
 #' @param type character indicating which kind of local
-#'  test to perform. Supported values are \code{"tetrads"} and 
-#'  \code{"cis"}.
+#'  test to perform. Supported values are \code{"cis"},
+#'  \code{"tetrads"} and \code{"tetrads.type"}, where "type" is one of the items of the 
+#'  tetrad typology, e.g. \code{"tetrads.within"} (see \code{\link{vanishingTetrads}}).
 #' @param R how many bootstrap replicates for estimating confidence
 #'   intervals. If \code{NULL}, then confidence intervals are based on normal
 #'   approximation. For tetrads, the normal approximation is only valid in 
@@ -948,8 +967,8 @@ localTests <- function(x, data=NULL, type="tetrads",
 		stop("Please provide either data or sample covariance matrix!")
 	}
 	w <- (1-conf.level)/2
-	if( type == "tetrads" ){
-		tets <- vanishingTetrads( x )
+	if( type %in% c("tetrads","tetrads.within","tetrads.between","tetrads.epistemic") ){
+		tets <- vanishingTetrads( x, strsplit(type,"\\.")[[1]][2] )
 		if( length(tets) == 0 ){
 			return(data.frame())
 		}

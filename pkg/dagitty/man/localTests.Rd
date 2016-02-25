@@ -13,8 +13,9 @@ localTests(x, data = NULL, type = "tetrads", sample.cov = NULL,
 \item{data}{matrix or data frame containing the data.}
 
 \item{type}{character indicating which kind of local
-test to perform. Supported values are \code{"tetrads"} and 
-\code{"cis"}.}
+test to perform. Supported values are \code{"cis"},
+\code{"tetrads"} and \code{"tetrads.type"}, where "type" is one of the items of the 
+tetrad typology, e.g. \code{"tetrads.within"} (see \code{\link{vanishingTetrads}}).}
 
 \item{sample.cov}{the sample covariance matrix; ignored if \code{data} is supplied.
 Either \code{data} or \code{sample.cov} and \code{sample.nobs} must be supplied.}
