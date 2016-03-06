@@ -206,15 +206,55 @@ adjacentNodes <- function( x, v ){
 	.kins( x, v, "adjacentNodes" )
 }
 
-#' Orient undirected edges in PDAG.
+#' Orient Edges in PDAG.
 #'
-#' Orients as many edges as possible in a PDAG by converting induced subgraphs
+#' Orients as many edges as possible in a  partially directed acyclic graph (PDAG)
+#'  by converting induced subgraphs
 #' X -> Y -- Z to X -> Y -> Z.
 #'
 #' @param x the input graph, a PDAG.
 #' @export
 orientPDAG <- function( x ){
 	.graphTransformer( x, "cgToRcg" )
+}
+
+#' Generating Equivalent Models
+#' 
+#' \code{equivalenceClass(x)} generates a complete partially directed acyclic graph 
+#' (CPDAG) from an input DAG \code{x}. The CPDAG represents all graphs that are Markov 
+#' equivalent to \code{x}: undirected
+#' edges in the CPDAG can be oriented either way, as long as this does not create a cycle
+#' or a new v-structure (a sugraph a -> m <- b, where a and b are not adjacent).
+#' 
+#' \code{equivalentDAGs(x,n)} enumerates at most \code{n} DAGs that are Markov equivalent
+#' to \code{x}.
+#'
+#' @param x the input graph, a DAG.
+#' @param n maximal number of returned graphs.
+#' @name EquivalentModels
+NULL
+
+#' @rdname EquivalentModels
+#' @export
+equivalenceClass <- function( x ){
+	.graphTransformer( x, "dagToCpdag" )
+}
+
+#' @rdname EquivalentModels
+#' @export
+equivalentDags <- function( x, n=100 ){
+	x <- as.dagitty(x)
+	xv <- .getJSVar()
+	r <- NULL
+	tryCatch({
+		.jsassigngraph( xv, x )
+		.jsassign( xv, .jsp("_.map(GraphTransformer.markovEquivalentDags(global.",
+			xv,",",n,"),function(x){return x.toString()})") )
+		r <- .jsget( xv )
+	}, 
+	error=function(e) stop(e),
+	finally={.deleteJSVar(xv)})
+	lapply( r, dagitty )
 }
 
 #' Moral Graph

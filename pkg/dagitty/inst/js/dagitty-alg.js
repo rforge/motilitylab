@@ -196,7 +196,7 @@ var Graph = Class.extend({
 		return vv && this.managed_vertex_properties[p].contains( vv.id )
 	},
 	
-	/** Copies all properties of every vertex of this graph to the same 
+	/** Copies all properties of every vertex and edge of this graph to the same 
 	    vertex in g2 and sets the type of g2 to the type of this graph. */
 	copyAllPropertiesTo : function( g2 ){
 		var g = this
@@ -205,6 +205,14 @@ var Graph = Class.extend({
 				g2.addVertexProperty( v, p ) 
 			} )
 		} ) )
+		_.each( g.getEdges(), function(e){
+			var e2 = g2.getEdge( e.v1, e.v2, e.directed )
+			if( e2 ){
+				e2.layout_pos_x = e.layout_pos_x
+				e2.layout_pos_y = e.layout_pos_y
+				e2.style = e.style
+			}
+		} )
 		g2.setType( this.getType() )
 	},
 	
@@ -446,6 +454,15 @@ var Graph = Class.extend({
 		})
 		return rh.values()
 	},
+
+	areAdjacent : function( v1, v2 ){
+		v1 = this.getVertex(v1)
+		v2 = this.getVertex(v2)
+		if( _.any( _.map( v1.outgoingEdges, function(e){ return e.v2 == v2 } ) ) ){
+			return true
+		}
+		return _.any( _.map( v1.incomingEdges, function(e){ return e.v1 == v2 } ) ) 
+	},
 	
 	nodesOnCausalPaths : function(){
 		return _.intersection( this.descendantsOf( this.getSources() ),
@@ -508,7 +525,7 @@ var Graph = Class.extend({
 	getEdges : function(){
 		return this.edges
 	},
-	
+
 	getEdge : function( v1, v2, edgetype ){
 		v1 = this.getVertex( v1 )
 		v2 = this.getVertex( v2 )
@@ -516,31 +533,12 @@ var Graph = Class.extend({
 			edgetype = Graph.Edgetype.Directed
 		}
 		if( !(v1 && v2) ){ return undefined }
-		if (v1 !== v2) {
-			switch( edgetype ){
-			case Graph.Edgetype.Undirected :
-				return _.find( v1.adjacentUndirectedEdges, function( e ){
-					return e.v2.id === v2.id || e.v1.id == v2.id } )
-			case Graph.Edgetype.Directed :
-				return _.find( v1.outgoingEdges, function( e ){
-					return e.v2.id === v2.id } )
-			case Graph.Edgetype.Bidirected :
-				return _.find( v1.adjacentBidirectedEdges, function( e ){
-					return ( e.v2.id === v2.id || e.v1.id === v2.id ) } )
-			}
-		} else {
-			var v = v1
-			switch( edgetype ){
-			case Graph.Edgetype.Undirected :
-				return _.find( v.adjacentUndirectedEdges, function( e ){
-					return e.v2.id === v.id && e.v1.id == v.id } )
-			case Graph.Edgetype.Directed :
-				return _.find( v1.outgoingEdges, function( e ){
-					return e.v2.id === v.id } )
-			case Graph.Edgetype.Bidirected :
-				return _.find( v1.adjacentBidirectedEdges, function( e ){
-					return ( e.v2.id === v.id && e.v1.id === v.id ) } )
-			}
+		var e = _.find( v1.outgoingEdges, function( e ){ 
+			return e.v2.id==v2.id && e.directed == edgetype } )
+		if( e ){ return e }
+		if( Graph.Edgetype.Symmetric[edgetype] ){
+			return _.find( v1.incomingEdges, function( e ){ 
+				return e.v1.id==v2.id && e.directed == edgetype } )
 		}
 		return undefined
 	},
@@ -552,30 +550,18 @@ var Graph = Class.extend({
 			edgetype = Graph.Edgetype.Directed
 		}
 		var e = this.getEdge( v1, v2, edgetype )
-		if( e === undefined ){
-			switch( edgetype ){
-			case Graph.Edgetype.Undirected :
-				e = new Graph.Edge.Undirected({v1:v1,v2:v2})
-				e.v1.adjacentUndirectedEdges.push( e )
-				if (v1 != v2)
-					e.v2.adjacentUndirectedEdges.push( e )
-				break
-			case Graph.Edgetype.Directed :
-				e = new Graph.Edge.Directed({v1:v1,v2:v2})
-				e.v1.outgoingEdges.push( e )
-				e.v2.incomingEdges.push( e )
-				break
-			case Graph.Edgetype.Bidirected :
-				e = new Graph.Edge.Bidirected({v1:v1,v2:v2})
-				e.v1.adjacentBidirectedEdges.push( e )
-				if (v1 != v2)
-					e.v2.adjacentBidirectedEdges.push( e )
-				break
-			}
+		if( typeof e == "undefined" && Graph.Edgetype.Symmetric[edgetype] ){
+			e = this.getEdge( v2, v1, edgetype )
+		}
+		if( typeof e == "undefined" ){
+			e = new Graph.Edge({v1:v1,v2:v2,directed:edgetype})
+			e.v1.outgoingEdges.push( e )
+			e.v2.incomingEdges.push( e )
 			this.edges.push( e )
 		} 
 		return e
 	},
+
 	deleteEdge : function( v1, v2, edgetype ) {
 		if( typeof edgetype == "undefined" ){
 			throw("too few parameters for deleteEdge!")
@@ -584,34 +570,53 @@ var Graph = Class.extend({
 		if( typeof e == "undefined" ){
 			return false
 		}
-		switch( edgetype ){
-		case Graph.Edgetype.Undirected:
-			e.v1.adjacentUndirectedEdges = _.without( e.v1.adjacentUndirectedEdges, e )
-			e.v2.adjacentUndirectedEdges = _.without( e.v2.adjacentUndirectedEdges, e )
-			break
-		case Graph.Edgetype.Directed:
-			e.v1.outgoingEdges = _.without( e.v1.outgoingEdges, e )
-			e.v2.incomingEdges = _.without( e.v2.incomingEdges, e )
-			break
-		case Graph.Edgetype.Bidirected:
-			e.v1.adjacentBidirectedEdges = _.without( e.v1.adjacentBidirectedEdges, e )
-			e.v2.adjacentBidirectedEdges = _.without( e.v2.adjacentBidirectedEdges, e )
-			break
-		}
+		e.v1.outgoingEdges = _.without( e.v1.outgoingEdges, e )
+		e.v2.incomingEdges = _.without( e.v2.incomingEdges, e )
 		this.edges = _.without( this.edges, e )
 		return true
 	},
+
+	changeEdge : function( e, edgetype_new, v1_new ){
+		if( typeof v1_new == "undefined" ){
+			v1_new = e.v1
+		} else {
+			v1_new = this.getVertex( v1_new )
+		}
+		var v2_new = v1_new == e.v1 ? e.v2 : e.v1
+		if( typeof this.getEdge( v1_new, v2_new, edgetype_new ) != "undefined" ){
+			return false
+		}
+		if( Graph.Edgetype.Symmetric[edgetype_new] ){
+			e.directed = edgetype_new
+		} else {
+			if( v1_new != e.v1 ){
+				this.reverseEdge( e )
+			}
+			e.directed = edgetype_new
+		}
+		return true
+	},
 	
+	reverseEdge : function( e ){
+		e.v1.outgoingEdges = _.without( e.v1.outgoingEdges, e )
+		e.v2.incomingEdges = _.without( e.v2.incomingEdges, e )
+		var vn = e.v2
+		e.v2 = e.v1
+		e.v1 = vn
+		e.v1.outgoingEdges.push( e )
+		e.v2.incomingEdges.push( e )
+	},
+
 	toAdjacencyList: function(){
 		var ra = []
 		var g = this
 		_.each( g.vertices.values(), function( v ){
-			var children = v.getChildren()
+			var children = v.getChildren(), neighbours = v.getNeighbours(), spouses= v.getSpouses()
 			var r = "",rc = []
-			if( children.length + v.adjacentBidirectedEdges.length
-				+ v.adjacentUndirectedEdges.length > 0 ){
-				_.each( 
-				v.adjacentUndirectedEdges, function( e ){
+			if( children.length + neighbours.length
+				+ spouses.length > 0 ){
+				_.each( neighbours, function( v2 ){
+					var e = g.getEdge( v, v2, Graph.Edgetype.Undirected )
 					if( e.v1.id === v.id ){
 						r = encodeURIComponent(e.v2.id)
 						if( e.layout_pos_x ){
@@ -624,8 +629,8 @@ var Graph = Class.extend({
 					rc.push(r)
 				} )
 				_.each( 
-				v.getChildren(), function( v2 ){
-					var e = g.getEdge( v, v2 )
+				children, function( v2 ){
+					var e = g.getEdge( v, v2, Graph.Edgetype.Directed )
 					r = encodeURIComponent(v2.id)
 					if( e.layout_pos_x ){
 						r += " @"+e.layout_pos_x.toFixed(3)+","
@@ -633,7 +638,8 @@ var Graph = Class.extend({
 					}
 					rc.push(r)
 				} )
-				_.each( v.adjacentBidirectedEdges, function( e ){
+				_.each( spouses, function( v2 ){
+					var e = g.getEdge( v, v2, Graph.Edgetype.Bidirected )
 					if( e.v1.id === v.id ){
 						r = encodeURIComponent(e.v2.id)
 						if( e.layout_pos_x ){
@@ -778,8 +784,8 @@ Graph.Vertex = Class.extend({
 			this.layout_pos_x = spec.layout_pos_x
 			this.layout_pos_y = spec.layout_pos_y
 		} 
-		this.adjacentUndirectedEdges = []
-		this.adjacentBidirectedEdges = []
+		//this.adjacentEdges = {}
+		//this.adjacentBidirectedEdges = []
 		this.incomingEdges = []
 		this.outgoingEdges = []
 		this.traversal_info = {}
@@ -787,29 +793,17 @@ Graph.Vertex = Class.extend({
 	/**
 		*      see below for meaning of this generic function 
 		*/
-	getKinship : function( inverse_direction, consider_undirected_edges, 
-			consider_bidirected_edges ){
+	getKinship : function( edgetype, outward ){
 		var r = [], n = this
-		if( consider_undirected_edges ){
-			_.each( 
-			n.adjacentUndirectedEdges, function( e ){
-				r.push( e.v1 === n ? e.v2 : e.v1 )
+		if( arguments.length == 1 ){ outward = true }
+		if( outward || Graph.Edgetype.Symmetric[edgetype] ){
+			_.each( n.outgoingEdges, function( e ){
+				if( e.directed == edgetype ) r.push( e.v1 === n ? e.v2 : e.v1 )
 			} )
 		}
-		else if( consider_bidirected_edges ){
-			_.each( 
-			n.adjacentBidirectedEdges, function( e ){
-				r.push( e.v1 === n ? e.v2 : e.v1 )
-			} )
-		} else if( !inverse_direction ){
-			_.each( 
-			n.outgoingEdges, function( e ){
-				r.push( e.v2 )
-			} )
-		} else {
-			_.each( 
-			n.incomingEdges, function( e ){
-				r.push( e.v1 )
+		if( !outward || Graph.Edgetype.Symmetric[edgetype] ){
+			_.each( n.incomingEdges, function( e ){
+				if( e.directed == edgetype ) r.push( e.v1 === n ? e.v2 : e.v1 )
 			} )
 		}
 		return r
@@ -821,16 +815,16 @@ Graph.Vertex = Class.extend({
 		return this.getNeighbours().concat(this.getParents())
 	},
 	getNeighbours : function(){
-		return this.getKinship( false, true, false )
-	},	
+		return this.getKinship( Graph.Edgetype.Undirected )
+	},
 	getSpouses : function(){
-		return this.getKinship( false, false, true )
+		return this.getKinship( Graph.Edgetype.Bidirected )
 	},
 	getChildren : function(){
-		return this.getKinship( false, false, false )
+		return this.getKinship( Graph.Edgetype.Directed )
 	},
 	getParents : function(){
-		return this.getKinship( true, false, false )
+		return this.getKinship( Graph.Edgetype.Directed, false )
 	},
 	getAdjacentNodes : function(){
 		return (this.getChildrenAndNeighbours().
@@ -885,7 +879,7 @@ Graph.Edge = Class.extend( {
 		var v1id = GraphSerializer.dotQuoteVid(this.v1.id)
 		var v2id = GraphSerializer.dotQuoteVid(this.v2.id)
 		
-		if( this.directed != 1 && (v1id.localeCompare( v2id ) > 0) ){
+		if( this.directed != Graph.Edgetype.Directed && (v1id.localeCompare( v2id ) > 0) ){
 			var tmp = v1id
 			v1id = v2id
 			v2id = tmp
@@ -896,9 +890,14 @@ Graph.Edge = Class.extend( {
 } )
 
 Graph.Edgetype = {
-	Directed : 1,
 	Undirected : 0,
-	Bidirected : 2
+	Directed : 1,
+	Bidirected : 2,
+	Symmetric : {
+		0 : true,
+		1 : false,
+		2 : true
+	}
 }
 
 Graph.Edge.Bidirected = Graph.Edge.extend( {
@@ -1950,7 +1949,8 @@ var GraphAnalyzer = {
 	 * Returns the block tree given a pre-computed list of 
 	 * biconnected components of graph g. The pre-computation of 
 	 * biconnected components is assumed to have left the Boolean
-	 * property "is_articulation_point" on every vertex object.
+	 * property "is_articulation_point" on every vertex object
+	 * and the integer "component_index" on every edge.
 	 * 
 	 * If the second argument is not given, then the biconnected
 	 * components are re-computed from scratch.
@@ -1968,7 +1968,8 @@ var GraphAnalyzer = {
 				bt.addVertex( new Graph.Vertex( { id : "A"+v.id } ) )
 				var vn = bt.getVertex("A"+v.id)
 				vn.is_articulation_point = true
-				_.each( v.adjacentUndirectedEdges, function( e ){
+				_.each( v.getNeighbours(), function( n ){
+					var e = g.getEdge( v, n, Graph.Edgetype.Undirected )
 					bt.addEdge( vn, bt.getVertex("C"+e.component_index),
 						Graph.Edgetype.Undirected ) 
 				} )
@@ -1995,7 +1996,8 @@ var GraphAnalyzer = {
 			v.traversal_info.dtime = ++time
 			v.traversal_info.lowlink = time
 			var children_of_root = 0
-			_.each( v.adjacentUndirectedEdges, function(e){
+			_.each( v.getNeighbours(), function(n){
+				var e = g.getEdge( v, n, Graph.Edgetype.Undirected )
 				var w = (e.v1 == v ? e.v2 : e.v1)
 				if( w.traversal_info.dtime == 0 ){
 					q.push(e)
@@ -2235,7 +2237,45 @@ var GraphAnalyzer = {
 		return GraphAnalyzer.containsCycle( GraphTransformer.contractComponents(g, 
 			GraphAnalyzer.connectedComponents(g), [Graph.Edgetype.Directed])
 			)
-	}
+	},
+
+	/* Check whether the directed edge e is stronlgy protected */
+        isEdgeStronglyProtected: function( g, e ) {
+		var a = e.v1
+		var b = e.v2
+
+		// test m -> a -> b (turning generates new v structure)
+		var adp = a.getParents();
+		for (var i=0;i<adp.length;i++){
+			if (adp[i].id != b.id && ! g.areAdjacent(adp[i],b)){
+				return true
+			}
+		}
+
+		// test a -> b <- m  or a -> b <- m <- a
+		var bdp = b.getParents();
+		for (var i=0;i<bdp.length;i++){
+			if (bdp[i].id != a.id) {
+				if ( !g.areAdjacent(bdp[i],a) || g.getEdge(a,bdp[i],Graph.Edgetype.Directed) ){
+					return true
+				}
+			}
+		}
+
+
+
+		for (var i=0;i<bdp.length;i++){ 
+			for (var j=0;j<bdp.length;j++){
+				if( i != j && bdp[i].id != a.id && bdp[j].id != a.id
+				  && !g.areAdjacent(bdp[i],bdp[j])
+				  && g.getEdge(bdp[i],a,Graph.Edgetype.Undirected)
+				  && g.getEdge(bdp[j],a,Graph.Edgetype.Undirected) ){
+				 	return true
+				}
+			}
+		}
+		return false
+        }
 }
 
 /*
@@ -3453,7 +3493,26 @@ var GraphTransformer = {
 		} )
 		return gn
 	},
-	
+
+	dagToCpdag : function( g ){
+		var r = g.clone()
+
+		var changed = true
+		var es = r.getEdges()
+		while( changed ){
+			changed = false
+			for( var i=0; i<es.length; i++ ){
+				if( es[i].directed == Graph.Edgetype.Directed &&
+					!GraphAnalyzer.isEdgeStronglyProtected(r, es[i])) {
+					r.changeEdge(es[i], Graph.Edgetype.Undirected)
+					changed = true
+				}
+			}
+		}
+		r.setType("pdag")
+		return r
+	},
+		
 	/** TODO make this work with undirected edges, add unit test */
 	dependencyGraph : function( g ){
 		var gc = GraphTransformer.canonicalDag( g ).g
@@ -3642,7 +3701,41 @@ var GraphTransformer = {
 			} )
 		} ) )
 		return gn
-	}
+	},
+
+	
+	markovEquivalentDags : function(g,n){
+var c = this.dagToCpdag(g)
+g = c.clone()
+var result = []
+
+function enumerate() {
+if(GraphAnalyzer.containsCycle(g)){ return }
+if(result.length >=n ){ return } 
+var es = g.getEdges()
+for (var i=0;i<es.length;i++)
+if (es[i].directed == Graph.Edgetype.Undirected) {
+g.changeEdge(es[i],Graph.Edgetype.Directed)
+enumerate()
+
+g.reverseEdge(es[i])
+enumerate()
+
+g.reverseEdge(es[i])
+g.changeEdge(es[i], Graph.Edgetype.Undirected)         
+return
+}
+var d = GraphTransformer.dagToCpdag(g)
+if (GraphAnalyzer.equals(c,d)){
+var gr = g.clone()
+gr.setType("dag")
+result.push(gr)
+}
+}
+
+enumerate()
+return result
+}  
 }
 /* This is a namespace containing various methods that generate graphs,
  * e.g. at random.*/
@@ -3874,7 +3967,7 @@ var GraphSerializer = {
 		_.each( ee, function(e){
 			edgetype = ""
 			var reverse = true
-			if( e instanceof Graph.Edge.Directed ){
+			if( e.directed == Graph.Edgetype.Directed ){
 				if( g.isLatentNode( e.v1 ) ){
 					if( g.isLatentNode( e.v2 ) ){
 						edgetype = "~"
@@ -3885,10 +3978,10 @@ var GraphSerializer = {
 				} else {
 					edgetype = "~"
 				}
-			} else if( e instanceof Graph.Edge.Bidirected ){
+			} else if( e.directed == Graph.Edgetype.Bidirected ){
 				edgetype = " ~~ "
 			} else {
-				throw( "Unsupported edge for lavaan conversion : ", e.toString() )
+				throw( "Unsupported edge for lavaan conversion : " + e.toString() )
 			}
 			if( reverse ){
 				r += e.v2.id + edgetype + e.v1.id+ "\n"
@@ -3918,10 +4011,10 @@ var GraphSerializer = {
 		}
 		for( i = 0 ; i < ee.length ; i ++ ){
 			edgetype = ""
-			if( ee[i] instanceof Graph.Edge.Directed ){
+			if( ee[i].directed == Graph.Edgetype.Directed ){
 				edgetype = "[->] "
 			}
-			if( ee[i] instanceof Graph.Edge.Bidirected ){
+			if( ee[i].directed == Graph.Edgetype.Bidirected ){
 				edgetype = "[->,<-] "
 			}
 			if( ee[i].layout_pos_x ){

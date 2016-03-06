@@ -2,7 +2,7 @@
 % Please edit documentation in R/dagitty.r
 \name{orientPDAG}
 \alias{orientPDAG}
-\title{Orient undirected edges in PDAG.}
+\title{Orient Edges in PDAG.}
 \usage{
 orientPDAG(x)
 }
@@ -10,7 +10,8 @@ orientPDAG(x)
 \item{x}{the input graph, a PDAG.}
 }
 \description{
-Orients as many edges as possible in a PDAG by converting induced subgraphs
+Orients as many edges as possible in a  partially directed acyclic graph (PDAG)
+ by converting induced subgraphs
 X -> Y -- Z to X -> Y -> Z.
 }
 

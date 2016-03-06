@@ -52,3 +52,7 @@ test_that("ci tests", {
 		sample.nobs=500, type="cis" )), 1 )
 })
 
+test_that("equiv class", {
+	expect_equal( length(equivalentDags("dag{a->{b c d} b->{c d}}")), 10 )
+	expect_equal( length(equivalentDags("dag{a->{b c d} b->{c d}}",3)), 3 )	
+} )
