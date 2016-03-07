@@ -242,7 +242,7 @@ equivalenceClass <- function( x ){
 
 #' @rdname EquivalentModels
 #' @export
-equivalentDags <- function( x, n=100 ){
+equivalentDAGs <- function( x, n=100 ){
 	x <- as.dagitty(x)
 	xv <- .getJSVar()
 	r <- NULL

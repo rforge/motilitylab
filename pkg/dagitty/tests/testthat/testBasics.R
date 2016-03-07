@@ -53,6 +53,6 @@ test_that("ci tests", {
 })
 
 test_that("equiv class", {
-	expect_equal( length(equivalentDags("dag{a->{b c d} b->{c d}}")), 10 )
-	expect_equal( length(equivalentDags("dag{a->{b c d} b->{c d}}",3)), 3 )	
+	expect_equal( length(equivalentDAGs("dag{a->{b c d} b->{c d}}")), 10 )
+	expect_equal( length(equivalentDAGs("dag{a->{b c d} b->{c d}}",3)), 3 )	
 } )
