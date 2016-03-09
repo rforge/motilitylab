@@ -6,6 +6,7 @@
 \alias{ancestors}
 \alias{children}
 \alias{descendants}
+\alias{markovBlanket}
 \alias{neighbours}
 \alias{parents}
 \alias{spouses}
@@ -24,6 +25,8 @@ neighbours(x, v)
 spouses(x, v)
 
 adjacentNodes(x, v)
+
+markovBlanket(x, v)
 }
 \arguments{
 \item{x}{the input graph.}
@@ -41,6 +44,10 @@ by an edge \eqn{v} -> \eqn{w}.
 
 \code{parents(x,v)} finds all variables \code{w} connected to \code{v} 
 by an edge \eqn{w} -> \eqn{v}.
+
+\code{markovBlanket(x,v}) returns \code{x}'s parents, its children, and all other
+parents of its children. The Markov blanket always renders \code{x} independent
+of all other nodes in the graph.
 
 By convention, \code{descendants(x,v)} and \code{ancestors(x,v)} include 
 \code{v} but \code{children(x,v)} and \code{parents(x,v)} do not.}

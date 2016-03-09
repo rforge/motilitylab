@@ -157,6 +157,10 @@ simulateSEM <- function( x, b.lower=-.6, b.upper=.6, eps=1, N=500 ){
 #' \code{parents(x,v)} finds all variables \code{w} connected to \code{v} 
 #' by an edge \eqn{w} -> \eqn{v}.
 #'
+#' \code{markovBlanket(x,v}) returns \code{x}'s parents, its children, and all other
+#' parents of its children. The Markov blanket always renders \code{x} independent
+#' of all other nodes in the graph.
+#'
 #' By convention, \code{descendants(x,v)} and \code{ancestors(x,v)} include 
 #' \code{v} but \code{children(x,v)} and \code{parents(x,v)} do not. 
 #' 
@@ -204,6 +208,13 @@ spouses <- function( x, v ){
 #' @export
 adjacentNodes <- function( x, v ){
 	.kins( x, v, "adjacentNodes" )
+}
+
+#' @rdname AncestralRelations
+#' @export
+markovBlanket <- function( x, v ){
+	setdiff( union( union( parents( x, v ), children( x, v ) ),
+        	parents( x, children( x, v ) ) ), v )
 }
 
 #' Orient Edges in PDAG.
