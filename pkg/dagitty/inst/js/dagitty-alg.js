@@ -1212,11 +1212,26 @@ var GraphAnalyzer = {
 		}
 		return i
 	},
+
+	isAdjustmentSet : function( g, Z ){
+		var gtype = g.getType()
+		Z = _.map( Z, g.getVertex, g )
+		if( gtype != "dag" ){
+			throw( "Cannot compute adjustment sets for graph of type "+gtype )
+		}
+		if( g.getSources().length == 0 || g.getTargets().length == 0 ){
+			return false
+		}
+		if( _.intersection( this.dpcp(g), Z ).length > 0 ){
+			return false
+		}		var gbd = GraphTransformer.backDoorGraph(g)
+		return !this.dConnected( gbd, gbd.getSources(), gbd.getTargets(), Z )
+	},
 	
 	listMsasTotalEffect : function( g, must, must_not ){
 		var gtype = g.getType()
 		if( gtype != "dag" && gtype != "pdag" ){
-			throw( "Don't know how to compute adjustment sets for graphs of type "+gtype )
+			throw( "Cannot compute adjustment sets for graph of type "+gtype )
 		}
 		if( gtype == "pdag" ){
 			g = GraphTransformer.cgToRcg( g )
@@ -1280,6 +1295,22 @@ var GraphAnalyzer = {
 			latent_nodes = latent_nodes.concat( must_not )
 
 		return this.listMinimalSeparators( gam, adjusted_nodes, latent_nodes, max_nr )
+	},
+
+	listBasisImplications : function( g ){
+		var r = []
+		var vv = g.vertices.values()
+		var i
+		_.each( vv, function(v){
+			var nondescendants = _.difference( vv, g.descendantsOf( [v] ) )
+			var parents = g.parentsOf( [v] )
+			var sepnodes = _.difference( nondescendants, parents )
+			if( sepnodes.length > 0 ){
+				r.push( [v.id, _.pluck(sepnodes,"id"),
+					[parents]] )
+			}
+		} )
+		return r
 	},
 	
 	listMinimalImplications : function( g, max_nr ){
@@ -2240,12 +2271,12 @@ var GraphAnalyzer = {
 	},
 
 	/* Check whether the directed edge e is stronlgy protected */
-        isEdgeStronglyProtected: function( g, e ) {
+	isEdgeStronglyProtected: function( g, e ) {
 		var a = e.v1
 		var b = e.v2
 
 		// test m -> a -> b (turning generates new v structure)
-		var adp = a.getParents();
+		var adp = a.getParents()
 		for (var i=0;i<adp.length;i++){
 			if (adp[i].id != b.id && ! g.areAdjacent(adp[i],b)){
 				return true
@@ -2253,8 +2284,8 @@ var GraphAnalyzer = {
 		}
 
 		// test a -> b <- m  or a -> b <- m <- a
-		var bdp = b.getParents();
-		for (var i=0;i<bdp.length;i++){
+		var bdp = b.getParents()
+		for ( i=0;i<bdp.length;i++){
 			if (bdp[i].id != a.id) {
 				if ( !g.areAdjacent(bdp[i],a) || g.getEdge(a,bdp[i],Graph.Edgetype.Directed) ){
 					return true
@@ -2264,18 +2295,18 @@ var GraphAnalyzer = {
 
 
 
-		for (var i=0;i<bdp.length;i++){ 
+		for ( i=0;i<bdp.length;i++){ 
 			for (var j=0;j<bdp.length;j++){
 				if( i != j && bdp[i].id != a.id && bdp[j].id != a.id
-				  && !g.areAdjacent(bdp[i],bdp[j])
-				  && g.getEdge(bdp[i],a,Graph.Edgetype.Undirected)
-				  && g.getEdge(bdp[j],a,Graph.Edgetype.Undirected) ){
-				 	return true
+					&& !g.areAdjacent(bdp[i],bdp[j])
+					&& g.getEdge(bdp[i],a,Graph.Edgetype.Undirected)
+					&& g.getEdge(bdp[j],a,Graph.Edgetype.Undirected) ){
+					return true
 				}
 			}
 		}
 		return false
-        }
+	}
 }
 
 /*
@@ -2478,13 +2509,26 @@ var GraphParser = {
 		"use strict"
 		var ast = GraphDotParser.parse( code )
 		var g = new Graph()
+		this.parseDotStatementArray( ast.statements, g )
 		g.setType( ast.type )
-		if( ast.name ){ g.setName( ast.name ) }
+		if( ast.name ){ g.setName( ast.name ) }	
+		if( this.VALIDATE_GRAPH_STRUCTURE ){
+			if( !GraphAnalyzer.validate( g ) ){
+				throw("invalid graph : ",g.toString() )
+			}
+		}
+		return g	
+	},
+
+	parseDotStatementArray : function( statements, g ){
+		var vsub = new Graph() // holds the vertices of this subgraph
+
 		var v = function(id){ 
 			if( id == "graph" || id == "node" ){
 				throw("Syntax error: variables cannot be named 'graph' or 'node'. "+
 					"Use the 'label' attribute instead.")
 			}
+			vsub.getVertex( id ) || vsub.addVertex( id )
 			return( g.getVertex( id ) || g.addVertex( id ) ) 
 		}
 		var i,j,n,n2,e,pos,bb
@@ -2506,7 +2550,14 @@ var GraphParser = {
 			}
 			return _.map( tok, parseFloat )
 		}
-		_.each( ast.statements, function(s) {
+		var recurse = function( sa ){
+			var vsubnew = GraphParser.parseDotStatementArray( sa, g )
+			_.each( vsubnew, function(v){
+				vsub.getVertex(v.id) || vsub.addVertex( v.id )
+			})
+			return vsubnew
+		}
+		_.each( statements, function(s) {
 			if( s.type == "node" && s.id == "graph" ){
 				for( i = 0 ; i < s.attributes.length ; i ++ ){
 					switch( s.attributes[i][0] ){
@@ -2552,22 +2603,12 @@ var GraphParser = {
 					if( typeof(s.content[i-3]) === "string" ){
 						n = [v(s.content[i-3])]
 					} else {
-						n = []
-						_.each( s.content[i-3].statements, function(s){
-							if( s.type == "node" ){
-								n.push(v(s.id))
-							}
-						})
+						n = recurse(s.content[i-3].statements)
 					}
 					if( typeof(s.content[i-1]) === "string" ){
 						n2 = [v(s.content[i-1])]
 					} else {
-						n2 = []
-						_.each( s.content[i-1].statements, function(s){
-							if( s.type == "node" ){
-								n2.push(v(s.id))
-							}
-						})
+						n2 = recurse(s.content[i-1].statements)
 					}
 
 					_.each( n, function(n){
@@ -2604,12 +2645,7 @@ var GraphParser = {
 				}
 			}
 		} )
-		if( this.VALIDATE_GRAPH_STRUCTURE ){
-			if( !GraphAnalyzer.validate( g ) ){
-				throw("invalid graph : ",g.toString() )
-			}
-		}
-		return g
+		return _.map( vsub.getVertices(), function(v){ return g.getVertex( v ) } )
 	},
 	
 	parseVertexLabelsAndWeights : function( vertexLabelsAndWeights ){
@@ -3705,37 +3741,38 @@ var GraphTransformer = {
 
 	
 	markovEquivalentDags : function(g,n){
-var c = this.dagToCpdag(g)
-g = c.clone()
-var result = []
+		var c = this.dagToCpdag(g)
+		g = c.clone()
+		var result = []
 
-function enumerate() {
-if(GraphAnalyzer.containsCycle(g)){ return }
-if(result.length >=n ){ return } 
-var es = g.getEdges()
-for (var i=0;i<es.length;i++)
-if (es[i].directed == Graph.Edgetype.Undirected) {
-g.changeEdge(es[i],Graph.Edgetype.Directed)
-enumerate()
+		function enumerate() {
+			if(GraphAnalyzer.containsCycle(g)){ return }
+			if(result.length >=n ){ return } 
+			var es = g.getEdges()
+			for (var i=0;i<es.length;i++){
+				if (es[i].directed == Graph.Edgetype.Undirected) {
+					g.changeEdge(es[i],Graph.Edgetype.Directed)
+					enumerate()
 
-g.reverseEdge(es[i])
-enumerate()
+					g.reverseEdge(es[i])
+					enumerate()
 
-g.reverseEdge(es[i])
-g.changeEdge(es[i], Graph.Edgetype.Undirected)         
-return
-}
-var d = GraphTransformer.dagToCpdag(g)
-if (GraphAnalyzer.equals(c,d)){
-var gr = g.clone()
-gr.setType("dag")
-result.push(gr)
-}
-}
+					g.reverseEdge(es[i])
+					g.changeEdge(es[i], Graph.Edgetype.Undirected)         
+					return
+				}
+			}
+			var d = GraphTransformer.dagToCpdag(g)
+			if (GraphAnalyzer.equals(c,d)){
+				var gr = g.clone()
+				gr.setType("dag")
+				result.push(gr)
+			}
+		}
 
-enumerate()
-return result
-}  
+		enumerate()
+		return result
+	}  
 }
 /* This is a namespace containing various methods that generate graphs,
  * e.g. at random.*/

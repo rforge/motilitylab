@@ -751,10 +751,19 @@ adjustmentSets <- function( x, exposure=NULL, outcome=NULL, effect="total" ){
 
 #' List Conditional Indpendencies Implied by Graphical Model
 #' @param x the input graph.
+#' @param type can be one of "missing.edge" or "basis.set". With the former, one testable 
+#' implication is returned per missing edge of the graph. With the latter, one testable
+#' implication is returned per vertex of the graph that has non-descendants other than
+#' its parents. Basis sets can be smaller, but they involve higher-dimensional independencies,
+#' whereas missing edge sets involve only bivariate independencies.
 #' @param max.results integer. The listing of conditional independencies is stopped once
-#' this many results have been found. Use \code{Inf} to generate them all.
+#' this many results have been found. Use \code{Inf} to generate them all. This applies
+#' only when \code{type="missing.edge"}. 
 #' @export
-impliedConditionalIndependencies <- function( x, max.results=100 ){
+impliedConditionalIndependencies <- function( x, type="missing.edge", max.results=100 ){
+	if( ! type %in% c("missing.edge","basis.set") ){
+		stop("'type' must be one of: missing.edge, basis.set")
+	}
 	x <- as.dagitty( x )
 
 	xv <- .getJSVar()
@@ -762,11 +771,15 @@ impliedConditionalIndependencies <- function( x, max.results=100 ){
 		.jsassign( xv, as.character(x) )
 		.jsassign( xv, .jsp("GraphParser.parseGuess(global.",xv,")") )
 
-		if( is.finite( max.results ) ){
-			.jsassign( xv, .jsp("GraphAnalyzer.listMinimalImplications(global.",xv,",",
-				as.numeric(max.results),")"))
+		if( type == "missing.edge" ){
+			if( is.finite( max.results ) ){
+				.jsassign( xv, .jsp("GraphAnalyzer.listMinimalImplications(global.",xv,",",
+					as.numeric(max.results),")"))
+			} else {
+				.jsassign( xv, .jsp("GraphAnalyzer.listMinimalImplications(global.",xv,")"))
+			}
 		} else {
-			.jsassign( xv, .jsp("GraphAnalyzer.listMinimalImplications(global.",xv,")"))
+			.jsassign( xv, .jsp("GraphAnalyzer.listBasisImplications(global.",xv,")"))
 		}
 		.jsassign( xv, .jsp("DagittyR.imp2r(global.",xv,")") )
 		r  <- structure( lapply( .jsget(xv), 
@@ -1127,6 +1140,43 @@ paths <- function(x,from=exposures(x),to=outcomes(x),Z=list(),limit=100,directed
 	r
 }
 
+#' Adjustment Criterion
+#' 
+#' Test whether a set fulfills the adjustment criterion, that means,
+#' it removes all confounding bias when estimating a *total* effect.
+#' This is an extension of Pearl's 
+#' Back-door criterion which is complete in the sense that either a set
+#' fulfills this criterion, or it does not remove all confounding bias.
+#'
+#' @param x the input graph.
+#' @param exposure name(s) of the exposure variable(s). If not given (default), then the 
+#'  exposure variables are supposed to be defined in the graph itself.
+#' @param outcome name(s) of the outcome variable(s), also taken from the graph if 
+#' not given.
+#' @param Z vector of variable names.
+#'
+#' @export
+isAdjustmentSet <- function( x, Z, exposure=NULL, outcome=NULL ){
+	xv <- .getJSVar()
+	Zv <- .getJSVar()
+	if( !is.null( exposure ) ){
+		exposures(x) <- exposure
+	}
+	if( !is.null( outcome ) ){
+		outcomes(x) <- outcome
+	}
+	tryCatch({
+		.jsassigngraph( xv, x )
+		.jsassign( Zv, as.list(Z) )
+		.jsassign( xv, .jsp("GraphAnalyzer.isAdjustmentSet(",xv,",",Zv,")") )
+		r <- .jsget(xv)
+	},finally={
+		.deleteJSVar(xv)
+		.deleteJSVar(Zv)
+	})
+	r
+}
+
 #' d-Separation
 #'
 #' @param x the input graph.
@@ -1222,7 +1272,7 @@ print.dagitty.sets <- function( x, prefix="", ... ){
 
 #' @export
 as.character.dagitty.ci <- function( x, ... ){
-	r <- paste0( x$X, " _||_ ", x$Y )
+	r <- paste0( x$X, " _||_ ", paste(x$Y,collapse=", ") )
 	if( length( x$Z > 0 ) ){
 		r <- paste0( r, " | ", paste(x$Z,collapse=", ") )
 	}
