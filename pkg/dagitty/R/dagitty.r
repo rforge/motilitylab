@@ -711,7 +711,7 @@ plot.dagitty <- function( x, ... ){
 	arrows( ax1[directed], -ay1[directed], 
 		ax2[directed], -ay2[directed], length=0.1, col="gray" )
 	segments( ax1[undirected], -ay1[undirected], 
-		ax2[undirected], -ay2[undirected], col="gray" )
+		ax2[undirected], -ay2[undirected], col="black", lwd=2 )
 	for( i in which( has.control.point ) ){
 		.arc( ax1[i], -ay1[i], 
 			ax2[i], -ay2[i], axc[i], -ayc[i], col="gray", 
