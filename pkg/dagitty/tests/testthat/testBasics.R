@@ -1,15 +1,18 @@
-small1 <- dagitty('graph {A -> S -> T}')
+small1 <- dagitty('dag {A -> S -> T}')
 exposures(small1) <- 'S'
 outcomes(small1) <- 'T'
 
-mixed <- dagitty("graph{ a -- x -> b \n c <-> x <- d \n f }")
+mixed <- dagitty("mag { a -- x -> b \n c <-> x <- d \n f }")
 
-coll <- dagitty('graph{A -> B <- C}')
+coll <- dagitty('dag {A -> B <- C}')
+
+longpath <- dagitty("dag{ X -> R -> S -> T <- U <- V -> Y T -> P }")
 
 # covers old unittests 1 t/m 3
 
 test_that("parsing / serializing", {
-	expect_equal(toString(small1,"dagitty.old"), "A 1\nS E\nT O\n\nA S\nS T")	
+	expect_equal(toString(small1,"dagitty.old"), "A 1\nS E\nT O\n\nA S\nS T")
+	expect_equal(graphType("pag{}"),"pag")	
 })
 
 test_that("relationships", {
@@ -26,7 +29,7 @@ test_that("ancestor moral graph", {
 		"A 1\nS E\nT O\n\nA S\nS T")
 	expect_equal(toString(moralize(ancestorGraph(small1)),"dagitty.old"), 
 		"A 1\nS E\nT O\n\nA S\nS A T\nT S")
-	expect_equal(nrow(edges(moralize(dagitty("graph{ a -> x <-> z <- b}")))),6)
+	expect_equal(nrow(edges(moralize(dagitty("dag{ a -> x <-> z <- b}")))),6)
 })
 
 test_that("path tracing", {
@@ -40,6 +43,20 @@ test_that("path tracing", {
 	expect_equal( paths( mixed, "a", c("b","c","d"), "x" )$open, rep(FALSE,3) )
 	expect_equal( paths( mixed, "b", c("c","d"), "x" )$open, rep(FALSE,2) )
 	expect_equal( paths( mixed, "c", "d", "x" )$open, TRUE )
+
+	expect_equal( paths( coll,"A","C","B")$open, TRUE )
+
+	expect_equal( paths( coll,"A","C")$open, FALSE )
+
+
+	expect_equal( paths( longpath,"S","U","T")$open, TRUE )
+
+	expect_equal( paths( longpath,"R","U","T")$open, TRUE )
+
+	expect_equal( paths( longpath,"X","Y","P")$open, TRUE )
+
+	expect_equal( paths( longpath,"X","Y","T")$open, TRUE )
+
 	
 	expect_equal( sort(dconnected( mixed, "d" )), c("a","b","d","x") )
 	expect_equal( sort(dseparated( mixed, "d" )), c("c","f") )

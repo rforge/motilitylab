@@ -7,13 +7,13 @@
 \method{plot}{dagitty}(x, ...)
 }
 \arguments{
-\item{x}{the input graph.}
+\item{x}{the input graph, a DAG, MAG, or PDAG.}
 
 \item{...}{not used.}
 }
 \description{
 A simple plot method to quickly visualize a graph. This is intended mainly for 
-validation purposes and is not meant to become a full-fledged graph drawing
+simple visualization purposes and not as a full-fledged graph drawing
 function.
 }
 

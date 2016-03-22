@@ -29,7 +29,7 @@ adjacentNodes(x, v)
 markovBlanket(x, v)
 }
 \arguments{
-\item{x}{the input graph.}
+\item{x}{the input graph, of any type.}
 
 \item{v}{name(s) of variable(s).
 
@@ -55,5 +55,12 @@ By convention, \code{descendants(x,v)} and \code{ancestors(x,v)} include
 \description{
 Retrieve the names of all variables in a given graph that are in the specified 
 ancestral relationship to the input variable \code{v}.
+}
+\examples{
+g <- dagitty("graph{ a <-> x -> b ; c -- x <- d }")
+descendants(g,"x")
+parents(g,"x")
+spouses(g,"x") 
+
 }
 

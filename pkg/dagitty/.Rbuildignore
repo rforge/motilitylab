@@ -1,1 +1,2 @@
-inst/js/.eslintrc
+^inst/js/.eslintrc$
+^cran-comments.md$

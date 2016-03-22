@@ -42,6 +42,10 @@ var DagittyR = {
 		} )
 		return r
 	},
+
+	canonicalAdjustment : function( g ){
+		return this.adj2r( GraphAnalyzer.canonicalAdjustmentSet( g ) )
+	},
 	
 	edge2r : function( g ){
 		'use strict'
@@ -51,26 +55,20 @@ var DagittyR = {
 			r.w.push( e.v2.id )
 			r.x.push( e.layout_pos_x )
 			r.y.push( e.layout_pos_y )
-			switch( e.directed ){
-			case Graph.Edgetype.Directed :
-				r.e.push("->"); break
-			case Graph.Edgetype.Undirected :
-				r.e.push("--"); break
-			case Graph.Edgetype.Bidirected :
-				r.e.push("<->"); break
-			}
+			r.e.push( Graph.Edgetype.Symbol[e.directed] )
 		} )
 		return r
 	},
 	
-	paths2r : function( ga, Z ){
+	paths2r : function( ga, Z, g ){
+		var AnZ = g.ancestorsOf( g.getVertex( Z ) )
 		var i = 0, r = { paths : [], open : [] }
 		for( ; i < ga.length ; i ++ ){
 			r.paths.push( GraphSerializer.pathToDot( ga[i] ) )
 			r.open.push( GraphAnalyzer.dConnected( ga[i], 
 				ga[i].getSources(), ga[i].getTargets(), 
-				ga[i].getVertex( Z )
-			) )
+				ga[i].getVertex( Z ), AnZ )
+			)
 		}
 		return r
 	},
